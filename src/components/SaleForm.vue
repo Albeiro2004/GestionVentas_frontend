@@ -1,110 +1,198 @@
 <template>
   <div>
-    <div class="container my-5">
-      <div class="card shadow-lg border-0">
-        <div class="card-header bg-primary text-white text-center py-4">
-          <h1 class="card-title mb-0">Gestión de Ventas</h1>
-          <p class="mb-0">Completa tu transacción de manera rápida y segura</p>
-        </div>
+    <div class="container my-0">
+      <div class="card border-0" style="min-height: 30vh;">
+
         <div class="card-body p-4">
-
-          <div class="mb-5">
-            <label class="form-label fs-5 fw-bold">1. Seleccionar Cliente</label>
-
-            <div v-if="!selectedCustomer" class="input-group">
-              <input type="text" class="form-control form-control-lg" placeholder="Buscar por documento o nombre..."
-                v-model="customerSearchQuery" @input="fetchCustomerSuggestions" />
-              <button class="btn btn-primary" type="button" @click="searchCustomer">
-                <i class="fas fa-search"></i>
-              </button>
-            </div>
-
-            <div v-else
-              class="d-flex align-items-center justify-content-between alert alert-success mt-3 animated-fade-in">
-              <div>
-                <i class="fas fa-user-check me-2"></i> Cliente seleccionado: <strong>{{ selectedCustomer.nombre
-                  }}</strong>
+          <div class="mb-4">
+            <label class="form-label fs-5 fw-semibold text-dark mb-3">
+              <span class="badge bg-primary me-2 fs-6">1</span>
+              <i class="fas fa-users me-2"></i>Selección de Cliente
+            </label>
+            <div v-if="!selectedCustomer" class="customer-search-container">
+              <div class="input-group input-group-lg shadow-sm">
+                <span class="input-group-text bg-light border-end-0">
+                  <i class="fas fa-search text-muted"></i>
+                </span>
+                <input type="text" class="form-control border-start-0 ps-0"
+                  placeholder="Buscar por documento, nombre o teléfono..." v-model="customerSearchQuery"
+                  @input="fetchCustomerSuggestions" autocomplete="off" />
+                <button class="btn btn-primary px-4" type="button" @click="searchCustomer"
+                  :disabled="!customerSearchQuery.trim()">
+                  <i class="fas fa-search me-2"></i>
+                  Buscar
+                </button>
               </div>
-              <button class="btn btn-outline-danger btn-sm" type="button" @click="clearCustomerSelection">
-                <i class="fas fa-times me-2"></i> Cambiar
-              </button>
             </div>
 
-            <ul v-if="showCustomerSuggestions" class="list-group position-absolute w-auto z-1000 mt-1">
-              <li v-for="cust in customerSuggestions" :key="cust.documento"
-                class="list-group-item list-group-item-action" @click="selectCustomer(cust)">
-                {{ cust.nombre }} ({{ cust.documento }})
-              </li>
-              <li v-if="allowNoCustomer && !selectedCustomer"
-                class="list-group-item list-group-item-action list-group-item-secondary" @click="selectNoCustomer">
-                Continuar sin cliente
-              </li>
-            </ul>
-          </div>
-
-          <div class="mb-5">
-            <label class="form-label fs-5 fw-bold">2. Agregar Productos</label>
-            <div class="input-group">
-              <input type="text" class="form-control form-control-lg"
-                placeholder="Buscar producto por nombre, código o referencia..." v-model="productSearchQuery"
-                @input="fetchProductSuggestions" />
-            </div>
-
-            <div v-if="showProductSuggestions" class="mt-3 animated-fade-in">
-              <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-3">
-                <div v-for="prod in productSuggestions" :key="prod.id" class="col">
-                  <div class="card h-100 shadow-sm product-card">
-                    <div class="card-body d-flex flex-column">
-                      <h5 class="card-title mb-1">{{ prod.nombre }}</h5>
-                      <p class="card-text text-muted mb-2">Ref: {{ prod.referencia }}</p>
-                      <div class="d-flex justify-content-between align-items-center mt-auto">
-                        <div>
-                          <span class="fs-4 fw-bold text-success">${{ prod.precioVenta.toFixed(2) }}</span>
-                          <span class="ms-3 text-sm text-info fw-bold">
-                            Stock: {{ prod.stock }}
+            <div v-else class="selected-customer-card w-50">
+              <div class="card border-0 shadow-sm bg-light">
+                <div class="card-body py-3">
+                  <div class="d-flex align-items-center justify-content-between">
+                    <div class="d-flex align-items-center">
+                      <div class="customer-avatar me-3 bg-success bg-opacity-10 text-success">
+                        <i class="fas fa-user-check fs-4"></i>
+                      </div>
+                      <div>
+                        <h6 class="mb-1 fw-semibold">{{ selectedCustomer.nombre }}</h6>
+                        <small class="text-muted">
+                          <i class="fas fa-id-card me-1"></i>{{ selectedCustomer.documento }}
+                          <span v-if="selectedCustomer.telefono" class="ms-3">
+                            <i class="fas fa-phone me-1"></i>{{ selectedCustomer.telefono }}
                           </span>
-                        </div>
-                        <button class="btn btn-primary btn-sm" @click="selectProduct(prod)" :disabled="prod.stock <= 0">
-                          <i class="fas fa-plus"></i> Añadir
-                        </button>
+                        </small>
                       </div>
                     </div>
+                    <button class="btn btn-outline-secondary btn-sm" @click="clearCustomerSelection">
+                      <i class="fas fa-exchange-alt me-1"></i> Cambiar
+                    </button>
                   </div>
                 </div>
               </div>
             </div>
+
+            <div v-if="showCustomerSuggestions" class="customer-suggestions">
+              <div class="dropdown-menu show position-absolute w-100 mt-2 shadow-lg border-0 pb-0">
+
+                <div class="suggestions-container" style="max-height: 300px; overflow-y: auto;">
+                  <button v-for="customer in customerSuggestions" :key="customer.documento"
+                    class="dropdown-item customer-suggestion-item py-3 border-bottom" @click="selectCustomer(customer)">
+                    <div class="d-flex align-items-center">
+                      <div class="suggestion-avatar me-3">
+                        <i class="fas fa-user text-primary"></i>
+                      </div>
+                      <div class="flex-grow-1">
+                        <div class="fw-semibold text-dark">{{ customer.nombre }}</div>
+                        <small class="text-muted">
+                          Doc: {{ customer.documento }}
+                          <span v-if="customer.email" class="ms-2">| {{ customer.email }}</span>
+                        </small>
+                      </div>
+                      <i class="fas fa-chevron-right text-muted"></i>
+                    </div>
+                  </button>
+                </div>
+
+                <div v-if="allowNoCustomer && !selectedCustomer" class="dropdown-divider bg-success-subtle mb-0"></div>
+                <button v-if="allowNoCustomer && !selectedCustomer"
+                  class="dropdown-item text-center py-3 text-muted fw-medium bg-success-subtle mb-0" @click="selectNoCustomer">
+                  <i class="fas fa-user-slash me-2"></i>
+                  Continuar sin seleccionar cliente
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div v-if="selectedCustomer" class="my-5 animated-fade-in">
+            <label class="form-label fs-5 fw-bold d-flex align-items-center mb-3">
+              <span class="badge bg-primary me-2 fs-6">2</span> Agregar Productos
+            </label>
+
+            <div class="input-group shadow-sm">
+              <span class="input-group-text bg-white">
+                <i class="fas fa-search text-muted"></i>
+              </span>
+              <input type="text" class="form-control form-control-lg"
+                placeholder="Buscar por nombre, código o referencia..." v-model="productSearchQuery"
+                @input="fetchProductSuggestions" />
+              <button v-if="productSearchQuery" class="btn btn-outline-danger" type="button"
+                @click="clearProductSearch">
+                <i class="fas fa-times"></i>
+              </button>
+            </div>
+
+            <div v-if="productSuggestions.length > 0" class="mt-3">
+              <div class="product-table-container">
+                <table class="table table-hover table-striped align-middle">
+                  <thead class="table-dark sticky-top">
+                    <tr>
+                      <th><i class="fas fa-tag me-1"></i> Nombre</th>
+                      <th><i class="fas fa-barcode me-1"></i> Referencia</th>
+                      <th class="text-end"><i class="fas fa-dollar-sign me-1"></i> Precio</th>
+                      <th class="text-center"><i class="fas fa-warehouse me-1"></i> Stock</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr v-for="prod in productSuggestions" :key="prod.id" @click="selectProduct(prod)"
+                      :class="{ 'table-danger': prod.stock <= 0 }" style="cursor: pointer;">
+                      <td>
+                        <i class="fas fa-box text-secondary me-1"></i>
+                        {{ prod.nombre }}
+                      </td>
+                      <td>
+                        <span class="badge bg-light text-dark">
+                          {{ prod.id }}
+                        </span>
+                      </td>
+                      <td class="text-end fw-semibold text-success">
+                        ${{ prod.precioVenta.toFixed(2) }}
+                      </td>
+                      <td class="text-center">
+                        <span :class="prod.stock > 0 ? 'badge bg-success' : 'badge bg-danger'">
+                          <i :class="prod.stock > 0 ? 'fas fa-check' : 'fas fa-times'"></i>
+                          {{ prod.stock }}
+                        </span>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div v-else-if="productSearchQuery.length > 0 && productSuggestions.length === 0"
+              class="alert alert-info mt-3 d-flex align-items-center">
+              <i class="fas fa-info-circle me-2"></i>
+              No se encontraron productos con la búsqueda actual.
+            </div>
           </div>
 
           <div v-if="showCartSection" class="mb-5 animated-fade-in">
-            <label class="form-label fs-5 fw-bold">3. Tipo de Pago</label>
+            <label class="form-label fs-5 fw-bold d-flex align-items-center">
+              <i class="fas fa-credit-card me-2 text-primary"></i> Tipo de Pago
+            </label>
+
             <select v-model="paymentType" class="form-select form-select-lg">
-              <option value="INMEDIATE">Pago Inmediato</option>
-              <option value="DEBT">Dejar como Deuda</option>
-              <option value="ABONO">Abono</option>
+              <option value="INMEDIATE">
+                💵 Pago Inmediato
+              </option>
+              <option value="DEBT">
+                🧾 Dejar como Deuda
+              </option>
+              <option value="ABONO">
+                💳 Abono
+              </option>
             </select>
+
             <div v-if="paymentType === 'ABONO'" class="mt-3 animated-fade-in">
-              <label class="form-label">Monto del Abono</label>
-              <input type="number" v-model.number="abonoAmount" class="form-control form-control-lg" :max="cartTotal"
-                min="0" placeholder="Ingresa el monto del abono" />
+              <label class="form-label d-flex align-items-center">
+                <i class="fas fa-wallet me-2 text-success"></i> Monto del Abono
+              </label>
+              <div class="input-group">
+                <span class="input-group-text fw-bold">$</span>
+                <input type="number" v-model.number="abonoAmount" class="form-control form-control-lg" :max="cartTotal"
+                  min="0" placeholder="Ingresa el monto del abono" />
+                <button class="btn btn-outline-secondary" type="button" @click="abonoAmount = 0">
+                  <i class="fas fa-eraser"></i>
+                </button>
+              </div>
+              <small class="text-muted">
+                Máximo permitido: <strong>${{ cartTotal.toFixed(2) }}</strong>
+              </small>
             </div>
           </div>
 
           <div v-if="showFinalizeButton" class="d-grid gap-2 animated-fade-in">
-            <button class="btn btn-success btn-lg" @click="finalizeSale">
-              <i class="fas fa-check-circle me-2"></i> Finalizar Venta
+            <button class="btn btn-success btn-lg" @click="finalizeSale" :disabled="isFinalizing">
+              <span v-if="isFinalizing" class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+              <span v-if="isFinalizing">Finalizando...</span>
+              <span v-else>
+                <i class="fas fa-check-circle me-2"></i> Finalizar Venta
+              </span>
             </button>
           </div>
-
-          <transition name="fade">
-            <div v-if="feedbackMessage" class="alert mt-4 animated-fade-in" :class="feedbackClass">
-              {{ feedbackMessage }}
-            </div>
-          </transition>
-
         </div>
       </div>
     </div>
-
     <div v-if="showRegisterModal">
       <div class="modal fade show d-block" tabindex="-1" role="dialog">
         <div class="modal-dialog modal-dialog-centered" role="document">
@@ -146,24 +234,41 @@
 
     <transition name="slide-fade">
       <div v-if="showCartSection" class="cart-floating-panel p-3">
-        <h4 class="fw-bold mb-3">
-          <i class="fas fa-shopping-cart me-2"></i> Resumen de Venta
-        </h4>
+
+        <h5 class="fw-bold mb-3 border-bottom pb-2">
+          <i class="fas fa-shopping-cart me-2 text-primary"></i> Resumen de Venta
+        </h5>
+
         <div class="cart-items-container">
-          <table class="table table-sm table-striped">
+          <table class="table table-sm align-middle">
             <tbody>
               <tr v-for="item in cart" :key="item.id">
-                <td class="align-middle">
-                  <small>{{ item.nombre }}</small>
+                <td>
+                  <small class="fw-semibold">{{ item.nombre }}</small><br>
+                  <small class="text-muted">Stock: {{ item.stock }}</small>
                 </td>
-                <td class="align-middle text-center" style="width: 50px;">
-                  <input type="number" class="form-control form-control-sm text-center" v-model.number="item.cantidad"
-                    min="1" :max="item.stock" @input="validateCartItem(item)" />
+
+                <td class="text-center" style="width: 110px;">
+                  <div class="input-group input-group-sm">
+                    <button class="btn btn-outline-secondary" type="button"
+                      @click="item.cantidad > 1 ? item.cantidad-- : null">
+                      <i class="fas fa-minus"></i>
+                    </button>
+                    <input type="number" class="form-control text-center" v-model.number="item.cantidad" min="1"
+                      :max="item.stock" @input="validateCartItem(item)" />
+                    <button class="btn btn-outline-secondary" type="button"
+                      @click="item.cantidad < item.stock ? item.cantidad++ : null">
+                      <i class="fas fa-plus"></i>
+                    </button>
+                  </div>
                 </td>
-                <td class="align-middle text-end fw-bold">${{ (item.cantidad * item.precioUnitario -
-                  item.descuento).toFixed(2) }}</td>
-                <td class="align-middle text-center" style="width: 30px;">
-                  <button class="btn btn-danger btn-sm" @click="removeFromCart(item)">
+
+                <td class="text-end fw-bold text-success" style="width: 90px;">
+                  ${{ (item.cantidad * item.precioUnitario - item.descuento).toFixed(2) }}
+                </td>
+
+                <td class="text-center" style="width: 40px;">
+                  <button class="btn btn-outline-danger btn-sm" title="Eliminar" @click="removeFromCart(item)">
                     <i class="fas fa-trash"></i>
                   </button>
                 </td>
@@ -171,36 +276,49 @@
             </tbody>
           </table>
         </div>
+
         <div class="mt-3 pt-2 border-top">
-          <h5 class="text-end fw-bold">
-            Total: <span class="text-success">${{ cartTotal.toFixed(2) }}</span>
+          <h5 class="text-end fw-bold mb-3">
+            Total: <span class="badge bg-success fs-6">${{ cartTotal.toFixed(2) }}</span>
           </h5>
+          <div class="d-grid gap-2">
+            <button class="btn btn-outline-secondary btn-sm" @click="resetForm">
+              Cancelar
+            </button>
+          </div>
         </div>
+
+      </div>
+    </transition>
+
+    <transition name="fade">
+      <div v-if="feedbackMessage" class="feedback-fixed-top alert animated-fade-in mt-2" :class="feedbackClass">
+        {{ feedbackMessage }}
       </div>
     </transition>
   </div>
 </template>
 
 <script setup>
-import { ref, computed } from "vue";
+import { ref, computed, watch } from "vue";
 import axios from "axios";
+import { useDeudas } from "@/composables/useDeudas";
+
+const { fetchDeudasPendientes } = useDeudas();
 
 // Reactividad
 const customerSearchQuery = ref("");
 const customerSuggestions = ref([]);
 const selectedCustomer = ref(null);
 const allowNoCustomer = ref(true);
-
 const productSearchQuery = ref("");
 const productSuggestions = ref([]);
-
 const cart = ref([]);
-
 const paymentType = ref("INMEDIATE");
 const abonoAmount = ref(0);
-
 const feedbackMessage = ref("");
 const feedbackClass = ref("alert-info");
+const isFinalizing = ref(false); // <--- Variable reactiva para el estado de carga
 
 // Propiedades del Modal
 const showRegisterModal = ref(false);
@@ -212,7 +330,6 @@ const newCustomer = ref({
 
 // Propiedades Computadas para lógica de la interfaz
 const showCustomerSuggestions = computed(() => customerSuggestions.value.length > 0 || allowNoCustomer.value);
-const showProductSuggestions = computed(() => productSearchQuery.value.length > 2 && productSuggestions.value.length > 0);
 const showCartSection = computed(() => cart.value.length > 0);
 const showFinalizeButton = computed(() => cart.value.length > 0 && selectedCustomer.value);
 
@@ -223,9 +340,18 @@ const cartTotal = computed(() => {
   );
 });
 
+// Watcher para cargar productos al seleccionar cliente
+watch(selectedCustomer, (newVal) => {
+  if (newVal) {
+    fetchInitialProducts();
+  } else {
+    productSuggestions.value = [];
+  }
+});
+
 // Métodos de Clientes
 const fetchCustomerSuggestions = async () => {
-  if (customerSearchQuery.value.length < 2) {
+  if (customerSearchQuery.value.length < 1) {
     customerSuggestions.value = [];
     return;
   }
@@ -312,9 +438,25 @@ const registerAndSelectCustomer = async () => {
 };
 
 // Métodos de Productos
-const fetchProductSuggestions = async () => {
-  if (productSearchQuery.value.length < 2) {
+const fetchInitialProducts = async () => {
+  try {
+    const { data } = await axios.get(
+      `http://localhost:8080/Ventas/products`
+    );
+    productSuggestions.value = data;
+  } catch (error) {
+    console.error("Error fetching initial products:", error);
     productSuggestions.value = [];
+  }
+};
+
+const clearProductSearch = () => {
+  productSearchQuery.value = "";
+};
+
+const fetchProductSuggestions = async () => {
+  if (productSearchQuery.value.length < 1) {
+    fetchInitialProducts();
     return;
   }
   try {
@@ -330,12 +472,15 @@ const fetchProductSuggestions = async () => {
 
 const selectProduct = (prod) => {
   addToCart(prod);
-  productSearchQuery.value = "";
-  productSuggestions.value = [];
 };
 
 // Métodos del Carrito
 const addToCart = (prod) => {
+
+  if (prod.stock <= 0) {
+    showFeedback("Este producto no tiene stock disponible", "danger");
+    return; // Detiene la ejecución si no hay stock
+  }
   const existing = cart.value.find((i) => i.id === prod.id);
   if (existing) {
     if (existing.cantidad < prod.stock) {
@@ -380,27 +525,47 @@ const finalizeSale = async () => {
     return;
   }
 
-  const saleData = {
-  customerId: selectedCustomer.value.documento,
-  paymentType: paymentType.value,
-  abono: paymentType.value === "ABONO" ? abonoAmount.value : 0,
-  items: cart.value.map((i) => ({
-    productId: i.id,
-    cantidad: i.cantidad,
-    precioUnitario: i.precioUnitario,
-    descuento: i.descuento,
-  })),
-};
+  // Activa el estado de carga
+  isFinalizing.value = true;
 
+  const saleData = {
+    customerId: selectedCustomer.value.documento,
+    paymentType: paymentType.value,
+    abonoAmount: paymentType.value === "ABONO" ? abonoAmount.value : 0,
+    items: cart.value.map((i) => ({
+      productId: i.id,
+      cantidad: i.cantidad,
+      precioUnitario: i.precioUnitario,
+      descuento: i.descuento,
+    })),
+  };
 
   try {
-    await axios.post("http://localhost:8080/Ventas/sales", saleData);
-    showFeedback("Venta registrada correctamente ✅", "success");
-    resetForm();
-  } catch (error) {
-    console.error("Error registering sale:", error);
-    showFeedback("Error al registrar la venta ❌", "danger");
+  const response = await axios.post("http://localhost:8080/Ventas/sales", saleData);
+  showFeedback(response.data.message || "Venta registrada correctamente ✅", "success");
+  resetForm();
+  await fetchDeudasPendientes(); // Actualiza el contador de deudas pendientes
+} catch (error) {
+  if (error.response) {
+    // El backend devolvió un error con JSON { message: "..." }
+    console.error("Backend error:", error.response.data);
+    showFeedback(
+      `Error al registrar la venta ❌: ${error.response.data.message || "Error interno"}`,
+      "danger"
+    );
+  } else if (error.request) {
+    // No hubo respuesta del backend
+    console.error("No response from backend:", error.request);
+    showFeedback("No hay conexión con el servidor ❌", "danger");
+  } else {
+    // Otro error (axios config, etc.)
+    console.error("Axios error:", error.message);
+    showFeedback("Error inesperado ❌", "danger");
   }
+} finally {
+  isFinalizing.value = false;
+}
+
 };
 
 const resetForm = () => {
@@ -411,8 +576,9 @@ const resetForm = () => {
   productSuggestions.value = [];
   cart.value = [];
   paymentType.value = "INMEDIATE";
-  abonoAmount.value = 0; // Aquí está el cambio. Usa .value
+  abonoAmount.value = 0;
 };
+
 // Métodos de Feedback
 const showFeedback = (msg, type) => {
   feedbackMessage.value = msg;
@@ -426,10 +592,6 @@ const showFeedback = (msg, type) => {
   z-index: 1000;
 }
 
-.animated-fade-in {
-  animation: fadeIn 0.5s ease-in-out;
-}
-
 @keyframes fadeIn {
   from {
     opacity: 0;
@@ -440,10 +602,6 @@ const showFeedback = (msg, type) => {
     opacity: 1;
     transform: translateY(0);
   }
-}
-
-.card-header {
-  border-bottom: none;
 }
 
 .list-group-item:hover {
@@ -466,21 +624,29 @@ const showFeedback = (msg, type) => {
 
 .cart-floating-panel {
   position: fixed;
-  top: 100px; /* Ajusta la posición vertical */
-  right: 20px; /* Ajusta la posición horizontal */
-  width: 350px;
-  background-color: #ffffff;
+  top: 100px;
+  right: 20px;
+  width: 360px;
+  background-color: #fff;
+  border-radius: 0.75rem;
   border: 1px solid #dee2e6;
-  border-radius: 0.5rem;
-  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
-  z-index: 1000;
+  box-shadow: 0 0.5rem 1rem rgba(0,0,0,0.15);
+  z-index: 2000;
 }
 
 .cart-items-container {
-  max-height: 250px;
+  max-height: 240px;
   overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
 }
+
+.cart-items-container::-webkit-scrollbar {
+  width: 6px;
+}
+.cart-items-container::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 3px;
+}
+
 
 /* Animación del panel flotante */
 .slide-fade-enter-active,
@@ -493,5 +659,126 @@ const showFeedback = (msg, type) => {
   transform: translateX(400px);
   opacity: 0;
 }
+.product-table-container {
+  max-height: 30vh;
+  overflow-y: auto;
+  border: 1px solid #dee2e6;
+  border-radius: 0.25rem;
+}
 
+.product-table-container thead.sticky-top {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+tr:hover {
+  background-color: #f8f9fa;
+}
+
+/* Estilo para el feedback fijo */
+.feedback-fixed-top {
+  position: fixed;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 2000;
+  width: 100%;
+  max-width: 20vw; /* Limita el ancho del mensaje */
+  text-align: center; /* Asegura que esté por encima de todos los demás elementos */
+  border-radius: 0.5rem;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  padding: 1rem;
+}
+
+/* Transparencia para los mensajes de alerta de Bootstrap */
+.alert-success {
+    background-color: rgba(209, 231, 221, 0.9); /* 90% de opacidad para el éxito */
+}
+.alert-warning {
+    background-color: rgba(255, 243, 205, 0.9); /* 90% de opacidad para la advertencia */
+}
+.alert-info {
+    background-color: rgba(206, 236, 248, 0.9); /* 90% de opacidad para la información */
+}
+.alert-danger {
+    background-color: rgba(248, 215, 218, 0.9); /* 90% de opacidad para el error */
+}
+
+.customer-search-container {
+  position: relative;
+}
+
+.customer-suggestions {
+  position: relative;
+  z-index: 1050;
+}
+
+.customer-suggestion-item {
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.customer-suggestion-item:hover {
+  background-color: #f8f9fa;
+  padding-left: 1.5rem;
+}
+
+.customer-avatar,
+.suggestion-avatar {
+  width: 40px;
+  height: 40px;
+  background: #f8f9fa;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid #e9ecef;
+}
+
+.selected-customer-card {
+  animation: slideInDown 0.3s ease-out;
+}
+
+.suggestions-container::-webkit-scrollbar {
+  width: 6px;
+}
+
+.suggestions-container::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+.suggestions-container::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 3px;
+}
+
+.suggestions-container::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
+
+@keyframes slideInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.input-group-text {
+  border-right: none !important;
+}
+
+.form-control:focus {
+  border-color: #0d6efd;
+  box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.15);
+}
+
+.dropdown-menu.show {
+  border: 1px solid #dee2e6;
+  border-radius: 0.5rem;
+}
 </style>

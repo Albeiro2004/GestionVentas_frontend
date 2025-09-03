@@ -1,5 +1,5 @@
 <template>
-  <div class="container py-5">
+  <div class="container">
     <div class="bg-white p-5 rounded-3 shadow-sm">
       <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap">
         <h2 class="text-primary fw-bold mb-3 mb-md-0">Gestión de Productos</h2>
