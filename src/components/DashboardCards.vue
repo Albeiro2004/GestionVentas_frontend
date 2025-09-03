@@ -19,7 +19,7 @@
       <div class="col-12">
         <div class="d-flex justify-content-between align-items-center mb-4">
           <div>
-            <h2 class="fw-bold text-dark mb-1">Dashboard Ejecutivo</h2>
+            <h2 class="fw-bold text-dark mb-1">Panel Ejecutivo</h2>
             <p class="text-muted mb-0">
               <i class="fas fa-calendar-alt me-2"></i>
               Último actualizado: {{ lastUpdated }}
@@ -244,6 +244,7 @@
 <script setup>
 import { ref, onMounted, computed, watch, nextTick } from 'vue'
 import { Chart, registerables } from "chart.js";
+import api from "@/api";
 
 Chart.register(...registerables);
 
@@ -482,10 +483,10 @@ const loadData = async () => {
 
     // Simular llamadas a API
     const [salesRes, purchasesRes, productsRes] = await Promise.all([
-      fetch("http://localhost:8080/Ventas/summary?type=sales").catch(() => ({ ok: false })),
-      fetch("http://localhost:8080/Ventas/summary?type=purchases").catch(() => ({ ok: false })),
-      fetch("http://localhost:8080/Ventas/summary?type=products").catch(() => ({ ok: false }))
-    ])
+      api.get("/summary?type=sales").catch(() => ({ data: null })),
+      api.get("/summary?type=purchases").catch(() => ({ data: null })),
+      api.get("/summary?type=products").catch(() => ({ data: null }))
+    ]);
 
     // Si las APIs fallan, usar datos simulados
     const salesData = salesRes.ok ? await salesRes.json() : { total_sales: 47850, change: 12.5 }
