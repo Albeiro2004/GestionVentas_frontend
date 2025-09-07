@@ -1,5 +1,5 @@
 <template>
-  <div class="debt-manager">
+  <div class="debt-manager my-0">
     <!-- Header con estadísticas -->
     <div class="header-section">
       <div class="container">
@@ -72,109 +72,12 @@
           <h3 class="mb-0 text-primary">
             <i class="fas fa-file-invoice-dollar me-2"></i> Gestión de Deudas
           </h3>
-          <button class="btn btn-outline-primary btn-sm d-flex align-items-center text-uppercase" data-bs-toggle="modal"
-            data-bs-target="#debtSummaryModal">
+          <button class="btn btn-outline-primary btn-sm d-flex align-items-center text-uppercase"
+            @click="toggleSummary">
             <i class="fas fa-eye me-2"></i> <b>Clientes</b>
           </button>
         </div>
       </div>
-
-
-      <!-- Modal -->
-      <div class="modal fade" id="debtSummaryModal" tabindex="-1" aria-labelledby="debtSummaryModalLabel"
-        aria-hidden="true">
-        <div class="modal-dialog modal-lg modal-dialog-scrollable">
-          <div class="modal-content">
-            <div class="modal-header">
-              <h5 class="modal-title">
-                <i class="fas fa-file-invoice-dollar me-2"></i> Resumen de Deudas por Cliente
-              </h5>
-              <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-
-            <div class="modal-body">
-              <!-- Filtros con Tabs -->
-              <ul class="nav nav-tabs mb-3">
-                <li class="nav-item">
-                  <button class="nav-link" :class="{ active: filterStatus === 'all' }" @click="filterStatus = 'all'">
-                    <i class="fas fa-list me-1"></i> Todos
-                  </button>
-                </li>
-                <li class="nav-item">
-                  <button class="nav-link" :class="{ active: filterStatus === 'pending' }"
-                    @click="filterStatus = 'pending'">
-                    <i class="fas fa-exclamation-circle me-1 text-danger"></i> Pendientes
-                  </button>
-                </li>
-                <li class="nav-item">
-                  <button class="nav-link" :class="{ active: filterStatus === 'paid' }" @click="filterStatus = 'paid'">
-                    <i class="fas fa-check-circle me-1 text-success"></i> Pagados
-                  </button>
-                </li>
-              </ul>
-
-              <!-- Loader y tabla -->
-              <div v-if="loadingSummary" class="text-center py-4">
-                <div class="spinner-border" role="status">
-                  <span class="visually-hidden">Cargando...</span>
-                </div>
-                <p class="mt-2 mb-0">Cargando resumen…</p>
-              </div>
-
-              <div v-else>
-                <!-- Tabla con altura máxima -->
-                <div class="table-responsive" style="max-height: 40vh; overflow-y: auto;">
-                  <table class="table debt-table">
-                    <thead>
-                      <tr>
-                        <th><i class="fas fa-user me-2"></i> Cliente</th>
-                        <th class="text-end"><i class="fas fa-clock me-2"></i> Total Pendiente</th>
-                        <th class="text-center"><i class="fas fa-list me-2"></i> Cantidad de Deudas</th>
-                        <th class="text-center"><i class="fas fa-tools me-2"></i> Acciones</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <tr v-for="customer in filteredCustomers" :key="customer.customerId" class="debt-row">
-                        <td>
-                          <div class="customer-info">
-                            <div class="customer-avatar">{{ customer.customerName.charAt(0).toUpperCase() }}</div>
-                            <div class="customer-details">
-                              <div class="customer-name">{{ customer.customerName }}</div>
-                              <small class="text-muted">ID: {{ customer.customerId }}</small>
-                            </div>
-                          </div>
-                        </td>
-                        <td class="text-end">
-                          <div class="amount-pending" :class="{ 'text-danger': customer.totalPending > 0 }">
-                            ${{ customer.totalPending.toFixed(2) }}
-                          </div>
-                        </td>
-                        <td class="text-center">
-                          <span class="status-badge bg-info text-dark">
-                            {{ customer.debts.length }} deudas
-                          </span>
-                        </td>
-                        <td class="text-center">
-                          <div class="action-buttons">
-                            <button class="btn btn-danger btn-sm action-btn"
-                              @click="cancelAllDebts(customer.customerId)" data-bs-toggle="tooltip"
-                              title="Cancelar todas las deudas">
-                              <i class="fas fa-ban"></i>
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-
-
 
       <!-- Tabla de deudas -->
       <div class="table-container">
@@ -281,9 +184,9 @@
         </div>
 
         <!-- Paginación -->
-        <div v-if="totalPages > 1" class="pagination-container">
+        <div v-if="totalPages > 1" class="pagination-container my-0">
           <nav>
-            <ul class="pagination justify-content-center">
+            <ul class="pagination justify-content-center my-0">
               <li class="page-item" :class="{ disabled: currentPage === 1 }">
                 <button class="page-link" @click="changePage(currentPage - 1)">
                   <i class="fas fa-chevron-left"></i>
@@ -439,6 +342,106 @@
       </div>
     </div>
 
+    <!-- Modal de Resumen de Cliente-->
+    <div v-if="showSummary" class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.7);"
+      @click.self="closeSummaryModal">
+      <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">
+              <i class="fas fa-file-invoice-dollar me-2"></i> Resumen de Deudas por Cliente
+            </h5>
+            <button type="button" class="btn-close" @click="closeSummaryModal"></button>
+          </div>
+
+          <div class="modal-body">
+            <!-- Filtros con Tabs -->
+            <ul class="nav nav-tabs mb-3">
+              <li class="nav-item">
+                <button class="nav-link" :class="{ active: filterStatus === 'all' }" @click="filterStatus = 'all'">
+                  <i class="fas fa-list me-1"></i> Todos
+                </button>
+              </li>
+              <li class="nav-item">
+                <button class="nav-link" :class="{ active: filterStatus === 'pending' }"
+                  @click="filterStatus = 'pending'">
+                  <i class="fas fa-exclamation-circle me-1 text-danger"></i> Pendientes
+                </button>
+              </li>
+              <li class="nav-item">
+                <button class="nav-link" :class="{ active: filterStatus === 'paid' }" @click="filterStatus = 'paid'">
+                  <i class="fas fa-check-circle me-1 text-success"></i> Pagados
+                </button>
+              </li>
+            </ul>
+
+            <!-- Loader y tabla -->
+            <div v-if="loadingSummary" class="text-center py-4">
+              <div class="spinner-border" role="status">
+                <span class="visually-hidden">Cargando...</span>
+              </div>
+              <p class="mt-2 mb-0">Cargando resumen…</p>
+            </div>
+
+            <div v-else>
+              <!-- Tabla con altura máxima -->
+              <div class="table-responsive" style="max-height: 40vh; overflow-y: auto;">
+                <table class="table debt-table">
+                  <thead>
+                    <tr>
+                      <th><i class="fas fa-user me-2"></i> Cliente</th>
+                      <th class="text-end"><i class="fas fa-clock me-2"></i> Total Pendiente</th>
+                      <th class="text-center"><i class="fas fa-list me-2"></i> Cantidad de Deudas</th>
+                      <th class="text-center"><i class="fas fa-tools me-2"></i> Acciones</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr v-for="customer in filteredCustomers" :key="customer.customerId" class="debt-row">
+                      <td>
+                        <div class="customer-info">
+                          <div class="customer-avatar">{{ customer.customerName.charAt(0).toUpperCase() }}</div>
+                          <div class="customer-details">
+                            <div class="customer-name">{{ customer.customerName }}</div>
+                            <small class="text-muted">ID: {{ customer.customerId }}</small>
+                          </div>
+                        </div>
+                      </td>
+                      <td class="text-end">
+                        <div class="amount-pending" :class="{ 'text-danger': customer.totalPending > 0 }">
+                          ${{ customer.totalPending.toFixed(0) }}
+                        </div>
+                      </td>
+                      <td class="text-center">
+                        <span class="status-badge bg-info text-dark">
+                          {{customer.debts.filter(d => d.pendingAmount > 0).length}} pendientes
+                        </span>
+                      </td>
+
+                      <td class="text-center">
+                        <div class="action-buttons">
+                          <button class="btn btn-danger btn-sm action-btn" @click="cancelAllDebts(customer.customerId)"
+                            data-bs-toggle="tooltip" title="Cancelar todas las deudas">
+                            <i class="fas fa-ban"></i>
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" @click="closeSummaryModal">
+              <i class="fas fa-times me-2"></i>
+              Cerrar
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- Toast de notificaciones -->
     <div class="toast-container position-fixed bottom-0 end-0 p-3">
       <div v-if="toast.show" class="toast show" :class="toast.type">
@@ -456,14 +459,12 @@
 </template>
 
 <script>
-import axios from "axios";
+import api from "@/api";
 import Swal from "sweetalert2";
-import * as bootstrap from 'bootstrap';
 import 'bootstrap/dist/js/bootstrap.bundle.min.js'
 import { useDeudas } from "@/composables/useDeudas";
 
 const { fetchDeudasPendientes } = useDeudas();
-
 
 export default {
   name: "ProfessionalDebtManager",
@@ -472,11 +473,11 @@ export default {
       customers: [],
       debts: [],
       filter: "pending",
-      filterStatus: 'pending',   // Filtro actual (all, pending, paid)
+      filterStatus: 'pending',
       selectedDebt: null,
       newPaymentAmount: null,
       searchTerm: "",
-      showSummary: false,
+      showSummary: false, // Controlador manual del modal de resumen
       loading: false,
       loadingSummary: false,
       processingPayment: false,
@@ -484,7 +485,7 @@ export default {
       sortField: "pendingAmount",
       sortDirection: "desc",
       currentPage: 1,
-      pageSize: 10,
+      pageSize: 5,
       toast: {
         show: false,
         type: "",
@@ -496,54 +497,50 @@ export default {
   },
   computed: {
     groupedDebts() {
-    return this.debts.reduce((groups, debt) => {
-      const customer = debt.customerName;
-      if (!groups[customer]) {
-        groups[customer] = [];
-      }
-      groups[customer].push(debt);
-      return groups;
-    }, {});
-  },
+      return this.debts.reduce((groups, debt) => {
+        const customer = debt.customerName;
+        if (!groups[customer]) {
+          groups[customer] = [];
+        }
+        groups[customer].push(debt);
+        return groups;
+      }, {});
+    },
     filteredDebts() {
-  let filtered = [...this.debts]; // COPIA para no mutar el original
+      let filtered = [...this.debts];
 
-  // Filtrar por estado
-  if (this.filter === "pending") {
-    filtered = filtered.filter(d => d.pendingAmount > 0);
-  } else if (this.filter === "paid") {
-    filtered = filtered.filter(d => d.pendingAmount <= 0);
-  }
+      if (this.filter === "pending") {
+        filtered = filtered.filter(d => d.pendingAmount > 0);
+      } else if (this.filter === "paid") {
+        filtered = filtered.filter(d => d.pendingAmount <= 0);
+      }
 
-  // Filtrar por búsqueda
-  if (this.searchTerm) {
-    const term = this.searchTerm.toLowerCase();
-    filtered = filtered.filter(d =>
-      d.customerName.toLowerCase().includes(term) ||
-      d.id.toString().includes(term)
-    );
-  }
+      if (this.searchTerm) {
+        const term = this.searchTerm.toLowerCase();
+        filtered = filtered.filter(d =>
+          d.customerName.toLowerCase().includes(term) ||
+          d.id.toString().includes(term)
+        );
+      }
 
-  // Ordenar (sobre la copia)
-  filtered.sort((a, b) => {
-    let aVal = a[this.sortField];
-    let bVal = b[this.sortField];
+      filtered.sort((a, b) => {
+        let aVal = a[this.sortField];
+        let bVal = b[this.sortField];
 
-    if (typeof aVal === "string") {
-      aVal = aVal.toLowerCase();
-      bVal = bVal.toLowerCase();
-    }
+        if (typeof aVal === "string") {
+          aVal = aVal.toLowerCase();
+          bVal = bVal.toLowerCase();
+        }
 
-    if (this.sortDirection === "asc") {
-      return aVal > bVal ? 1 : -1;
-    } else {
-      return aVal < bVal ? 1 : -1;
-    }
-  });
+        if (this.sortDirection === "asc") {
+          return aVal > bVal ? 1 : -1;
+        } else {
+          return aVal < bVal ? 1 : -1;
+        }
+      });
 
-  return filtered;
-},
-
+      return filtered;
+    },
     paginatedDebts() {
       const start = (this.currentPage - 1) * this.pageSize;
       const end = start + this.pageSize;
@@ -577,94 +574,85 @@ export default {
              this.newPaymentAmount <= this.selectedDebt?.pendingAmount;
     },
     filteredCustomers() {
-    if (this.filterStatus === 'pending') {
-      return this.customers.filter(c => c.totalPending > 0);
-    } else if (this.filterStatus === 'paid') {
-      return this.customers.filter(c => c.totalPending === 0);
+      if (this.filterStatus === 'pending') {
+        return this.customers.filter(c => c.totalPending > 0);
+      } else if (this.filterStatus === 'paid') {
+        return this.customers.filter(c => c.totalPending <= 0);
+      }
+      return this.customers;
     }
-    return this.customers; // all
-  }
   },
   methods: {
     async fetchData() {
       try {
         this.loading = true;
         const [debtsRes, groupedRes] = await Promise.all([
-          axios.get('http://localhost:8080/Ventas/debts/all'),
-          axios.get('http://localhost:8080/Ventas/debts/grouped'),
+          api.get('/debts/all'),
+          api.get('/debts/grouped'),
         ]);
         this.debts = debtsRes.data || [];
         this.customers = (groupedRes.data || [])
-          // si quieres mostrar solo clientes con saldo > 0 en el modal por defecto:
-          .filter(c => (c.totalPending ?? 0) > 0)
-          ;
+          .filter(c => (c.totalPending ?? 0) > 0);
       } catch (err) {
         console.error('Error al cargar datos:', err);
-        // aquí tu toast/alert si lo usas
+        this.showToast("error", "Error", "No se pudieron cargar las deudas", "fas fa-exclamation-triangle");
       } finally {
         this.loading = false;
       }
     },
-   async fetchDebts() {
-    try {
-      this.loading = true;
-      const res = await axios.get("http://localhost:8080/Ventas/debts/grouped");
-      this.customers = res.data;
-      this.debts = res.data.flatMap(customer =>
-        customer.debts.map(debt => ({
-          ...debt,
-          customerName: customer.customerName
-        }))
-      );
-    } catch (error) {
-      this.showToast("error", "Error", "No se pudieron cargar las deudas", "fas fa-exclamation-triangle");
-    } finally {
-      this.loading = false;
-    }
-  },
+    
+    async fetchDebts() {
+      try {
+        this.loading = true;
+        const res = await api.get("/debts/grouped");
+        this.customers = res.data;
+        this.debts = res.data.flatMap(customer =>
+          customer.debts.map(debt => ({
+            ...debt,
+            customerName: customer.customerName
+          }))
+        );
+      } catch (error) {
+        this.showToast("error", "Error", "No se pudieron cargar las deudas", "fas fa-exclamation-triangle");
+      } finally {
+        this.loading = false;
+      }
+    },
 
-  /*toggleSummary() {
-    this.showSummary = !this.showSummary;
-  },*/
+    // MÉTODO CORREGIDO PARA EL MODAL DE RESUMEN
     async toggleSummary() {
-    // si ya está visible, simplemente ciérralo
-    const modalEl = document.getElementById('debtSummaryModal');
-    const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+      if (this.showSummary) {
+        this.closeSummaryModal();
+        return;
+      }
 
-    if (modalEl.classList.contains('show')) {
-      modal.hide();
-      return;
-    }
+      try {
+        this.loadingSummary = true;
+        this.showSummary = true; // Mostrar modal
+        
+        // Refresca solo el resumen
+        const groupedRes = await api.get('/debts/grouped');
+        this.customers = groupedRes.data || [];
+        this.filterStatus = 'pending';
+      } catch (e) {
+        console.error('Error cargando resumen:', e);
+        this.showToast("error", "Error", "No se pudo cargar el resumen", "fas fa-exclamation-triangle");
+        this.showSummary = false;
+      } finally {
+        this.loadingSummary = false;
+      }
+    },
 
-    try {
-      this.loadingSummary = true;
-      // refresca SOLO el resumen (o todo, si prefieres)
-      const groupedRes = await axios.get('http://localhost:8080/Ventas/debts/grouped');
-      this.customers = groupedRes.data || [];
-      this.filterStatus = 'all'; // reinicia filtro si quieres
-      modal.show();
-    } catch (e) {
-      console.error('Error cargando resumen:', e);
-    } finally {
+    // MÉTODO PARA CERRAR EL MODAL DE RESUMEN
+    closeSummaryModal() {
+      this.showSummary = false;
       this.loadingSummary = false;
-    }
-  },
+    },
 
-  /*async cancelAllDebts(customerId) {
-    try {
-      await axios.put(`http://localhost:8080/Ventas/debts/cancel/${customerId}`);
-      this.showToast("success", "Éxito", "Deudas canceladas correctamente", "fas fa-check");
-      this.fetchDebts(); // refrescar datos
-    } catch (error) {
-      this.showToast("error", "Error", "No se pudieron cancelar las deudas", "fas fa-exclamation-triangle");
-    }
-  },*/
-
-      async cancelAllDebts(customerId) {
+    async cancelAllDebts(customerId) {
       const customer = this.customers.find(c => c.customerId === customerId);
       if (!customer) return;
 
-      // Validar si no tiene deudas
       if (!customer || customer.totalPending === 0) {
         Swal.fire({
           icon: "info",
@@ -676,7 +664,6 @@ export default {
         return;
       }
 
-      // Confirmación antes de cancelar
       const result = await Swal.fire({
         title: "¿Cancelar todas las deudas?",
         html: `<b>${customer.customerName}</b> tiene un total pendiente de 
@@ -690,46 +677,42 @@ export default {
         cancelButtonColor: "#3085d6"
       });
 
-      if (!result) return;
+      if (!result.isConfirmed) return;
 
-      if (result.isConfirmed) {
-        try {
-          // Mostrar loading mientras cancela deudas
-          Swal.fire({
-            title: 'Procesando...',
-            text: 'Cancelando deudas, por favor espere',
-            allowOutsideClick: false,
-            didOpen: () => {
-              Swal.showLoading();
-            }
-          });
-          // Aquí llamas a tu API/backend para cancelar las deudas
-          await axios.put(`http://localhost:8080/Ventas/debts/cancel/${customerId}`);
+      try {
+        Swal.fire({
+          title: 'Procesando...',
+          text: 'Cancelando deudas, por favor espere',
+          allowOutsideClick: false,
+          didOpen: () => {
+            Swal.showLoading();
+          }
+        });
+        
+        await api.put(`/debts/cancel/${customerId}`);
+        await fetchDeudasPendientes();
 
-          await fetchDeudasPendientes();
+        Swal.fire({
+          icon: "success",
+          title: "Deudas canceladas",
+          text: `Se han cancelado todas las deudas de ${customer.customerName}.`,
+          confirmButtonColor: "#3085d6"
+        });
 
-          Swal.fire({
-            icon: "success",
-            title: "Deudas canceladas",
-            text: `Se han cancelado todas las deudas de ${customer.customerName}.`,
-            confirmButtonColor: "#3085d6"
-          });
+        await this.fetchData();
+        await this.fetchDebts();
 
-          await this.fetchData(); // refrescar datos
-          await this.fetchDebts();
+        // Refrescar solo los datos del modal
+        const groupedRes = await api.get('/debts/grouped');
+        this.customers = groupedRes.data || [];
 
-          // Si el modal está abierto, puedes volver a cargar SOLO el resumen:
-         const groupedRes = await axios.get('http://localhost:8080/Ventas/debts/grouped');
-         this.customers = groupedRes.data || [];
-
-        } catch (error) {
-          Swal.fire({
-            icon: "error",
-            title: "Error",
-            text: "Ocurrió un problema al cancelar las deudas.",
-            confirmButtonColor: "#d33"
-          });
-        }
+      } catch (error) {
+        Swal.fire({
+          icon: "error",
+          title: "Error",
+          text: "Ocurrió un problema al cancelar las deudas.",
+          confirmButtonColor: "#d33"
+        });
       }
     },
 
@@ -797,22 +780,22 @@ export default {
 
       try {
         this.processingPayment = true;
-        await axios.post(
-          `http://localhost:8080/Ventas/debts/${this.selectedDebt.id}/payments`,
+        await api.post(
+          `/debts/${this.selectedDebt.id}/payments`,
           { amount: parseFloat(this.newPaymentAmount) }
         );
 
         this.showToast(
           "success",
           "Pago Registrado",
-          `Se registró un abono de $${this.newPaymentAmount}`,
+          `Se registró un abono de ${this.newPaymentAmount}`,
           "fas fa-check-circle"
         );
 
         this.newPaymentAmount = null;
         await this.fetchData();
         await this.fetchDebts();
-        this.selectedDebt = this.debts.find(d => d.id === this.selectedDebt.id || null);
+        this.selectedDebt = this.debts.find(d => d.id === this.selectedDebt.id) || null;
 
       } catch (error) {
         this.showToast("error", "Error", "No se pudo registrar el pago", "fas fa-exclamation-triangle");
@@ -871,14 +854,13 @@ export default {
     },
 
     isOverdue(debt) {
-      if (!debt.dueDate) return false; // si no hay fecha, no se considera vencida
+      if (!debt.dueDate) return false;
 
       const today = new Date();
       const dueDate = new Date(debt.dueDate);
 
       return dueDate < today && debt.pendingAmount > 0;
     },
-
 
     isRecentPayment(payment) {
       const paymentDate = new Date(payment.paymentDate);
@@ -913,8 +895,9 @@ export default {
 </script>
 
 <style scoped>
+ 
 .debt-manager {
-  min-height: 100vh;
+  height: 100%;
   background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
 }
 
@@ -1015,7 +998,7 @@ export default {
 }
 
 .table-container {
-  background: white;
+  background: rgb(233, 233, 233);
   border-radius: 15px;
   overflow: hidden;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
@@ -1159,7 +1142,7 @@ export default {
 }
 
 .pagination-container {
-  padding: 1.5rem;
+  padding: 0.5rem;
   background: #f8f9fa;
 }
 

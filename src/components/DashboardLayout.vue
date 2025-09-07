@@ -1,5 +1,5 @@
 <template>
-  <div class="d-flex bg-gradient-light min-vh-100 m-0" id="app">
+  <div class="d-flex  min-vh-100 m-0" id="app">
     <!-- Overlay para móviles -->
     <div v-if="isSidebarOpen" class="sidebar-overlay show d-lg-none" @click="toggleSidebar"></div>
 
@@ -34,7 +34,8 @@
                   </small>
                 </div>
                 <!-- Badge con animación pulsante -->
-                <div v-if="link.name === 'deudas' && deudasPendientes > 0" class="badge bg-danger rounded-pill pulse-badge">
+                <div v-if="link.name === 'deudas' && deudasPendientes > 0"
+                  class="badge bg-danger rounded-pill pulse-badge">
                   {{ deudasPendientes }}
                 </div>
               </div>
@@ -63,7 +64,8 @@
     <!-- Main content con margen para el sidebar fijo -->
     <div class="flex-fill d-flex flex-column main-content my-0 p-0">
       <!-- Navbar profesional con glassmorphism -->
-      <nav class="navbar navbar-expand-lg bg-gradient-dark shadow-sm w-100 flex-shrink-0 border-bottom navHorizontal my-0"
+      <nav
+        class="navbar navbar-expand-lg bg-gradient-dark shadow-sm w-100 flex-shrink-0 border-bottom navHorizontal my-0"
         style="z-index: 1040 !important;">
         <div class="container-fluid d-flex justify-content-between align-items-center px-4 py-2">
           <!-- Botón hamburguesa y breadcrumb -->
@@ -101,19 +103,23 @@
           <div class="d-flex align-items-center">
             <!-- Notificaciones mejoradas -->
             <div class="dropdown me-3" style="z-index: 2000;">
-              <button class="btn btn-outline-secondary border-0 position-relative me-1 notification-btn" 
-                      data-bs-toggle="dropdown" aria-expanded="false">
+              <button class="btn btn-outline-secondary border-0 position-relative me-1 notification-btn"
+                data-bs-toggle="dropdown" aria-expanded="false">
                 <i class="fas fa-bell fs-5 text-white"></i>
-                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger pulse-badge">
+                <span
+                  class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger pulse-badge">
                   {{ notificationCount }}
                 </span>
               </button>
-              <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0 mt-2 enhanced-dropdown" style="width: 320px;">
+              <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0 mt-2 enhanced-dropdown"
+                style="width: 320px;">
                 <li class="dropdown-header d-flex justify-content-between align-items-center py-3">
                   <span class="fw-bold">Notificaciones</span>
                   <small class="text-primary">{{ notificationCount }} nuevas</small>
                 </li>
-                <li><hr class="dropdown-divider"></li>
+                <li>
+                  <hr class="dropdown-divider">
+                </li>
                 <li v-for="notification in notifications" :key="notification.id">
                   <a class="dropdown-item py-3 notification-item" href="#">
                     <div class="d-flex align-items-start">
@@ -128,7 +134,9 @@
                     </div>
                   </a>
                 </li>
-                <li><hr class="dropdown-divider"></li>
+                <li>
+                  <hr class="dropdown-divider">
+                </li>
                 <li>
                   <a class="dropdown-item text-center py-2 text-primary" href="#">
                     <small>Ver todas las notificaciones</small>
@@ -139,29 +147,37 @@
 
             <!-- Usuario mejorado -->
             <div class="dropdown">
-              <a class="nav-link dropdown-toggle d-flex align-items-center text-decoration-none p-1 user-dropdown" 
-                 href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+              <a class="nav-link dropdown-toggle d-flex align-items-center text-decoration-none p-1 user-dropdown"
+                href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                 <div class="position-relative me-3">
-                  <img src="https://imgs.search.brave.com/41T2ZiW65TNJLqsqvfpph6-mImFuGDE8uI221O7FiD4/rs:fit:860:0:0:0/g:ce/aHR0cHM6Ly9jZG4t/aWNvbnMtcG5nLmZs/YXRpY29uLmNvbS8x/MjgvNjA3My82MDcz/ODczLnBuZw"
+                  <img
+                    src="https://imgs.search.brave.com/41T2ZiW65TNJLqsqvfpph6-mImFuGDE8uI221O7FiD4/rs:fit:860:0:0:0/g:ce/aHR0cHM6Ly9jZG4t/aWNvbnMtcG5nLmZs/YXRpY29uLmNvbS8x/MjgvNjA3My82MDcz/ODczLnBuZw"
                     alt="Avatar" class="rounded-circle shadow-sm user-avatar" width="45" height="45" />
-                  <span class="position-absolute bottom-0 end-0 border border-white rounded-circle status-indicator"></span>
+                  <span
+                    class="position-absolute bottom-0 end-0 border border-white rounded-circle status-indicator"></span>
                 </div>
                 <div class="text-start d-none d-sm-block">
                   <div class="fw-semibold text-white"><b>{{ fullName }}</b></div>
                   <small class="text-muted">{{ role }}</small>
                 </div>
               </a>
-              <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0 mt-2 enhanced-dropdown" style="width: 250px;">
-                <li><a class="dropdown-item py-2 user-menu-item" href="#" data-bs-toggle="modal" data-bs-target="#perfilModal">
+              <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0 mt-2 enhanced-dropdown"
+                style="width: 250px;">
+                <li><a class="dropdown-item py-2 user-menu-item" href="#" data-bs-toggle="modal"
+                    data-bs-target="#perfilModal">
                     <i class="fas fa-user me-3 text-primary"></i> Mi Perfil
                   </a></li>
-                <li><a class="dropdown-item py-2 user-menu-item" href="#" data-bs-toggle="modal" data-bs-target="#configModal">
+                <li><a class="dropdown-item py-2 user-menu-item" href="#" data-bs-toggle="modal"
+                    data-bs-target="#configModal">
                     <i class="fas fa-cog me-3 text-secondary"></i> Configuración
                   </a></li>
-                <li><a class="dropdown-item py-2 user-menu-item" href="#" data-bs-toggle="modal" data-bs-target="#ayudaModal">
+                <li><a class="dropdown-item py-2 user-menu-item" href="#" data-bs-toggle="modal"
+                    data-bs-target="#ayudaModal">
                     <i class="fas fa-question-circle me-3 text-info"></i> Ayuda y Soporte
                   </a></li>
-                <li><hr class="dropdown-divider"></li>
+                <li>
+                  <hr class="dropdown-divider">
+                </li>
                 <li>
                   <a class="dropdown-item py-2 text-danger user-menu-item" @click="logout" href="#">
                     <i class="fas fa-sign-out-alt me-3"></i> Cerrar Sesión
@@ -174,102 +190,105 @@
       </nav>
 
       <!-- Dynamic content con transiciones mejoradas -->
-      <div class="flex-fill content-scrollable bg-gradient-light my-0 py-0">
-        <div class="container-fluid p-0 m-0">
+      <div class="flex-fill content-scrollable bg-gradient-light my-0 py-0 position-relative child-scope">
+        <div class="container-fluid p-0 m-0 h-100 w-100">
           <transition name="slide-fade" mode="out-in">
-            <component :is="currentComponent" :key="activeTab" :search-query="searchQuery" />
+            <div class="isolated-root h-100 w-100">
+              <component :is="currentComponent" :key="activeTab" :search-query="searchQuery" />
+            </div>
           </transition>
         </div>
       </div>
-    </div>
 
-    <!-- Modales mejorados -->
-    <!-- Modal Perfil -->
-    <div class="modal fade" id="perfilModal" tabindex="-1" aria-hidden="true">
-      <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content enhanced-modal">
-          <div class="modal-header">
-            <h5 class="modal-title gradient-text">
-              <i class="fas fa-user me-2"></i>Mi Perfil
-            </h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-          </div>
-          <div class="modal-body">
-            <div class="text-center mb-4">
-              <img :src="userAvatar" alt="Avatar" class="rounded-circle mb-3 user-avatar-large" width="80" height="80">
-              <h6 class="fw-bold">{{ fullName }}</h6>
+      <!-- Modales mejorados -->
+      <!-- Modal Perfil -->
+      <div class="modal fade" id="perfilModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+          <div class="modal-content enhanced-modal">
+            <div class="modal-header">
+              <h5 class="modal-title gradient-text">
+                <i class="fas fa-user me-2"></i>Mi Perfil
+              </h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-            <div class="profile-info">
-              <p><strong>Usuario:</strong> {{ usuario }}</p>
-              <p><strong>Rol:</strong> <span class="badge bg-primary">{{ role }}</span></p>
-              <p><strong>Última sesión:</strong> {{ lastLogin }}</p>
+            <div class="modal-body">
+              <div class="text-center mb-4">
+                <img :src="userAvatar" alt="Avatar" class="rounded-circle mb-3 user-avatar-large" width="80"
+                  height="80">
+                <h6 class="fw-bold">{{ fullName }}</h6>
+              </div>
+              <div class="profile-info">
+                <p><strong>Usuario:</strong> {{ usuario }}</p>
+                <p><strong>Rol:</strong> <span class="badge bg-primary">{{ role }}</span></p>
+                <p><strong>Última sesión:</strong> {{ lastLogin }}</p>
+              </div>
             </div>
           </div>
         </div>
       </div>
-    </div>
 
-    <!-- Modal Configuración -->
-    <div class="modal fade" id="configModal" tabindex="-1" aria-hidden="true">
-      <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content enhanced-modal">
-          <div class="modal-header">
-            <h5 class="modal-title gradient-text">
-              <i class="fas fa-cog me-2"></i>Configuración
-            </h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-          </div>
-          <div class="modal-body">
-            <form @submit.prevent="guardarConfig">
-              <div class="mb-3">
-                <label class="form-label fw-semibold">Nombre Completo</label>
-                <input type="text" v-model="fullName" class="form-control enhanced-input" />
-              </div>
-              <div class="mb-3">
-                <label class="form-label fw-semibold">Usuario de Acceso</label>
-                <input type="email" v-model="usuario" class="form-control enhanced-input" />
-              </div>
-              <div class="mb-3">
-                <label class="form-label fw-semibold">Nueva Contraseña</label>
-                <input type="password" v-model="password" class="form-control enhanced-input" />
-                <small class="form-text text-muted">Deja en blanco para mantener la actual</small>
-              </div>
-              <div class="d-grid">
-                <button type="submit" class="btn btn-primary enhanced-btn">
-                  <i class="fas fa-save me-2"></i>Guardar Cambios
-                </button>
-              </div>
-            </form>
+      <!-- Modal Configuración -->
+      <div class="modal fade" id="configModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+          <div class="modal-content enhanced-modal">
+            <div class="modal-header">
+              <h5 class="modal-title gradient-text">
+                <i class="fas fa-cog me-2"></i>Configuración
+              </h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+              <form @submit.prevent="guardarConfig">
+                <div class="mb-3">
+                  <label class="form-label fw-semibold">Nombre Completo</label>
+                  <input type="text" v-model="fullName" class="form-control enhanced-input" />
+                </div>
+                <div class="mb-3">
+                  <label class="form-label fw-semibold">Usuario de Acceso</label>
+                  <input type="email" v-model="usuario" class="form-control enhanced-input" />
+                </div>
+                <div class="mb-3">
+                  <label class="form-label fw-semibold">Nueva Contraseña</label>
+                  <input type="password" v-model="password" class="form-control enhanced-input" />
+                  <small class="form-text text-muted">Deja en blanco para mantener la actual</small>
+                </div>
+                <div class="d-grid">
+                  <button type="submit" class="btn btn-primary enhanced-btn">
+                    <i class="fas fa-save me-2"></i>Guardar Cambios
+                  </button>
+                </div>
+              </form>
+            </div>
           </div>
         </div>
       </div>
-    </div>
 
-    <!-- Modal Ayuda -->
-    <div class="modal fade" id="ayudaModal" tabindex="-1" aria-hidden="true">
-      <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content enhanced-modal">
-          <div class="modal-header">
-            <h5 class="modal-title gradient-text">
-              <i class="fas fa-question-circle me-2"></i>Ayuda y Soporte
-            </h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-          </div>
-          <div class="modal-body">
-            <div class="help-section">
-              <h6 class="fw-bold mb-3">¿Necesitas asistencia?</h6>
-              <div class="contact-info">
-                <div class="d-flex align-items-center mb-2">
-                  <i class="fas fa-envelope text-primary me-3"></i>
-                  <span>soporte@sobreruedas.com</span>
-                </div>
-                <div class="d-flex align-items-center mb-2">
-                  <i class="fas fa-phone text-success me-3"></i>
-                  <span>+57 320 000 0000</span>
-                </div>
-                <div class="d-flex align-items-center">
-                  <i class="fas fa-clock text-info me-3"></i>
-                  <span>Lun - Vie: 8:00 AM - 6:00 PM</span>
+      <!-- Modal Ayuda -->
+      <div class="modal fade" id="ayudaModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+          <div class="modal-content enhanced-modal">
+            <div class="modal-header">
+              <h5 class="modal-title gradient-text">
+                <i class="fas fa-question-circle me-2"></i>Ayuda y Soporte
+              </h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+              <div class="help-section">
+                <h6 class="fw-bold mb-3">¿Necesitas asistencia?</h6>
+                <div class="contact-info">
+                  <div class="d-flex align-items-center mb-2">
+                    <i class="fas fa-envelope text-primary me-3"></i>
+                    <span>soporte@sobreruedas.com</span>
+                  </div>
+                  <div class="d-flex align-items-center mb-2">
+                    <i class="fas fa-phone text-success me-3"></i>
+                    <span>+57 320 000 0000</span>
+                  </div>
+                  <div class="d-flex align-items-center">
+                    <i class="fas fa-clock text-info me-3"></i>
+                    <span>Lun - Vie: 8:00 AM - 6:00 PM</span>
+                  </div>
                 </div>
               </div>
             </div>
@@ -392,7 +411,7 @@ const navLinks = [
     label: "Productos", 
     icon: "fas fa-boxes",
     description: "Inventario",
-    roles: ["ADMIN"]
+    roles: ["ADMIN","USER"]
   },
   { 
     name: "deudas", 
@@ -503,6 +522,29 @@ onMounted(async () => {
 </script>
 
 <style>
+
+/* Limita todo lo que está dentro de los hijos */
+.child-scope {
+  position: relative;    /* establece un contexto de posicionamiento */
+  overflow: hidden;      /* evita que nada se “desborde” */
+  isolation: isolate;    /* crea un nuevo contexto de stacking (para z-index) */
+}
+
+/* Fuerza que los hijos no puedan usar fixed */
+.child-scope :deep(*) {
+  position: relative; /* valor seguro por defecto */
+}
+
+.child-scope :deep(.force-absolute) {
+  position: absolute !important; /* si necesitas un flotante */
+}
+
+
+.isolated-root {
+  all: initial;
+  display: block;
+  font-family: sans-serif; /* o lo que quieras como base */
+}
 :root {
   --sidebar-width: 280px;
   --navbar-height: 80px;
@@ -518,7 +560,7 @@ onMounted(async () => {
 
 /* Layout principal mejorado */
 #app {
-  position: fixed;
+  position: relative;
   top: 0;
   left: 0;
   width: 100%;

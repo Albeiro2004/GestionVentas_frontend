@@ -195,165 +195,209 @@
         </div>
 
         <!-- Modal Usuario -->
-        <div class="modal fade" id="usuarioModal" tabindex="-1" aria-hidden="true" ref="usuarioModal">
-            <div class="modal-dialog modal-dialog-centered">
-                <div class="modal-content border-0 shadow">
-                    <form @submit.prevent="guardarUsuario">
-                        <div class="modal-header bg-primary text-white">
-                            <h5 class="modal-title fw-bold">
-                                <i class="fas fa-user-plus me-2"></i>
-                                {{ usuarioSeleccionado.id ? "Editar Usuario" : "Nuevo Usuario" }}
+        <Teleport to="body">
+            <div 
+                class="modal fade" 
+                id="usuarioModal" 
+                tabindex="-1" 
+                aria-labelledby="usuarioModalLabel"
+                aria-hidden="true" 
+                ref="usuarioModalRef">
+                <div class="modal-dialog modal-dialog-centered modal-lg">
+                    <div class="modal-content border-0 shadow-lg">
+                        <form @submit.prevent="guardarUsuario">
+                            <div class="modal-header bg-primary text-white">
+                                <h5 class="modal-title fw-bold" id="usuarioModalLabel">
+                                    <i class="fas fa-user-plus me-2"></i>
+                                    {{ usuarioSeleccionado.id ? "Editar Usuario" : "Nuevo Usuario" }}
+                                </h5>
+                                <button type="button" class="btn-close btn-close-white" @click="cerrarModal" aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body p-4">
+                                <div class="mb-4">
+                                    <label class="form-label fw-semibold">
+                                        <i class="fas fa-user me-1"></i>
+                                        Nombre completo
+                                    </label>
+                                    <input 
+                                        type="text" 
+                                        v-model="usuarioSeleccionado.name" 
+                                        class="form-control form-control-lg"
+                                        placeholder="Ingresa el nombre completo"
+                                        required />
+                                </div>
+                                <div class="mb-4">
+                                    <label class="form-label fw-semibold">
+                                        <i class="fas fa-at me-1"></i>
+                                        Usuario
+                                    </label>
+                                    <input 
+                                        type="text" 
+                                        v-model="usuarioSeleccionado.username" 
+                                        class="form-control form-control-lg"
+                                        placeholder="Nombre de usuario"
+                                        required/>
+                                </div>
+                                <div class="mb-4">
+                                    <label class="form-label fw-semibold">
+                                        <i class="fas fa-shield-alt me-1"></i>
+                                        Rol del sistema
+                                    </label>
+                                    <select v-model="usuarioSeleccionado.role" class="form-select form-select-lg" required>
+                                        <option value="" disabled>Seleccionar rol</option>
+                                        <option value="ADMIN">👑 Administrador</option>
+                                        <option value="USER">👤 Usuario estándar</option>
+                                    </select>
+                                </div>
+                                <div class="mb-4" v-if="!usuarioSeleccionado.id">
+                                    <label class="form-label fw-semibold">
+                                        <i class="fas fa-lock me-1"></i>
+                                        Contraseña
+                                    </label>
+                                    <input 
+                                        type="password" 
+                                        v-model="usuarioSeleccionado.password" 
+                                        class="form-control form-control-lg"
+                                        placeholder="Contraseña segura"
+                                        required />
+                                    <div class="form-text">
+                                        <i class="fas fa-info-circle me-1"></i>
+                                        La contraseña debe tener al menos 8 caracteres
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="modal-footer bg-light">
+                                <button type="button" class="btn btn-secondary" @click="cerrarModal">
+                                    <i class="fas fa-times me-1"></i>
+                                    Cancelar
+                                </button>
+                                <button type="submit" class="btn btn-success btn-lg">
+                                    <i class="fas fa-save me-1"></i>
+                                    Guardar Usuario
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </Teleport>
+
+        <!-- Modal Historial -->
+        <Teleport to="body">
+            <div 
+                class="modal fade" 
+                id="historialModal" 
+                tabindex="-1" 
+                aria-labelledby="historialModalLabel"
+                aria-hidden="true" 
+                ref="historialModalRef">
+                <div class="modal-dialog modal-xl modal-dialog-centered">
+                    <div class="modal-content border-0 shadow-lg">
+                        <div class="modal-header bg-info text-white">
+                            <h5 class="modal-title fw-bold" id="historialModalLabel">
+                                <i class="fas fa-history me-2"></i>
+                                Historial de Accesos
                             </h5>
-                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                            <button type="button" class="btn-close btn-close-white" @click="cerrarModalHistorial" aria-label="Close"></button>
                         </div>
-                        <div class="modal-body p-4">
-                            <div class="mb-4">
-                                <label class="form-label fw-semibold">
-                                    <i class="fas fa-user me-1"></i>
-                                    Nombre completo
-                                </label>
-                                <input 
-                                    type="text" 
-                                    v-model="usuarioSeleccionado.name" 
-                                    class="form-control form-control-lg"
-                                    placeholder="Ingresa el nombre completo"
-                                    required />
+                        <div class="modal-body p-0">
+                            <div class="table-responsive">
+                                <table class="table table-hover mb-0">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th class="px-4 py-3">
+                                                <i class="fas fa-calendar me-2"></i>
+                                                Fecha y Hora
+                                            </th>
+                                            <th class="py-3">
+                                                <i class="fas fa-globe me-2"></i>
+                                                Dirección IP
+                                            </th>
+                                            <th class="py-3">
+                                                <i class="fas fa-check-circle me-2"></i>
+                                                Estado
+                                            </th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr v-for="h in historial" :key="h.id" class="history-row">
+                                            <td class="px-4 py-3">
+                                                <div class="d-flex align-items-center">
+                                                    <i class="fas fa-clock text-muted me-2"></i>
+                                                    {{ h.fecha }}
+                                                </div>
+                                            </td>
+                                            <td class="py-3">
+                                                <span class="badge bg-light text-dark font-monospace">{{ h.ip }}</span>
+                                            </td>
+                                            <td class="py-3">
+                                                <span :class="getStatusBadgeClass(h.estado)" class="badge">
+                                                    <i :class="getStatusIcon(h.estado)" class="me-1"></i>
+                                                    {{ h.estado }}
+                                                </span>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
                             </div>
-                            <div class="mb-4">
-                                <label class="form-label fw-semibold">
-                                    <i class="fas fa-at me-1"></i>
-                                    Usuario
-                                </label>
-                                <input 
-                                    type="text" 
-                                    v-model="usuarioSeleccionado.username" 
-                                    class="form-control form-control-lg"
-                                    placeholder="Nombre de usuario"
-                                    required/>
-                            </div>
-                            <div class="mb-4">
-                                <label class="form-label fw-semibold">
-                                    <i class="fas fa-shield-alt me-1"></i>
-                                    Rol del sistema
-                                </label>
-                                <select v-model="usuarioSeleccionado.role" class="form-select form-select-lg" required>
-                                    <option value="" disabled>Seleccionar rol</option>
-                                    <option value="ADMIN">👑 Administrador</option>
-                                    <option value="USER">👤 Usuario estándar</option>
-                                </select>
-                            </div>
-                            <div class="mb-4" v-if="!usuarioSeleccionado.id">
-                                <label class="form-label fw-semibold">
-                                    <i class="fas fa-lock me-1"></i>
-                                    Contraseña
-                                </label>
-                                <input 
-                                    type="password" 
-                                    v-model="usuarioSeleccionado.password" 
-                                    class="form-control form-control-lg"
-                                    placeholder="Contraseña segura"
-                                    required />
-                                <div class="form-text">
-                                    <i class="fas fa-info-circle me-1"></i>
-                                    La contraseña debe tener al menos 8 caracteres
+                            
+                            <!-- Empty State for History -->
+                            <div v-if="historial.length === 0" class="text-center py-5">
+                                <div class="empty-state">
+                                    <i class="fas fa-history fa-3x text-muted mb-3"></i>
+                                    <h5 class="text-muted">Sin historial de accesos</h5>
+                                    <p class="text-muted">Este usuario no ha iniciado sesión aún</p>
                                 </div>
                             </div>
                         </div>
                         <div class="modal-footer bg-light">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                            <button type="button" class="btn btn-secondary" @click="cerrarModalHistorial">
                                 <i class="fas fa-times me-1"></i>
-                                Cancelar
+                                Cerrar
                             </button>
-                            <button type="submit" class="btn btn-success btn-lg">
-                                <i class="fas fa-save me-1"></i>
-                                Guardar Usuario
-                            </button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
-
-        <!-- Modal Historial -->
-        <div class="modal fade" id="historialModal" tabindex="-1" aria-hidden="true" ref="historialModal">
-            <div class="modal-dialog modal-xl modal-dialog-centered">
-                <div class="modal-content border-0 shadow">
-                    <div class="modal-header bg-info text-white">
-                        <h5 class="modal-title fw-bold">
-                            <i class="fas fa-history me-2"></i>
-                            Historial de Accesos
-                        </h5>
-                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                    </div>
-                    <div class="modal-body p-0">
-                        <div class="table-responsive">
-                            <table class="table table-hover mb-0">
-                                <thead class="table-light">
-                                    <tr>
-                                        <th class="px-4 py-3">
-                                            <i class="fas fa-calendar me-2"></i>
-                                            Fecha y Hora
-                                        </th>
-                                        <th class="py-3">
-                                            <i class="fas fa-globe me-2"></i>
-                                            Dirección IP
-                                        </th>
-                                        <th class="py-3">
-                                            <i class="fas fa-check-circle me-2"></i>
-                                            Estado
-                                        </th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr v-for="h in historial" :key="h.id" class="history-row">
-                                        <td class="px-4 py-3">
-                                            <div class="d-flex align-items-center">
-                                                <i class="fas fa-clock text-muted me-2"></i>
-                                                {{ h.fecha }}
-                                            </div>
-                                        </td>
-                                        <td class="py-3">
-                                            <span class="badge bg-light text-dark font-monospace">{{ h.ip }}</span>
-                                        </td>
-                                        <td class="py-3">
-                                            <span :class="getStatusBadgeClass(h.estado)" class="badge">
-                                                <i :class="getStatusIcon(h.estado)" class="me-1"></i>
-                                                {{ h.estado }}
-                                            </span>
-                                        </td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-                        
-                        <!-- Empty State for History -->
-                        <div v-if="historial.length === 0" class="text-center py-5">
-                            <div class="empty-state">
-                                <i class="fas fa-history fa-3x text-muted mb-3"></i>
-                                <h5 class="text-muted">Sin historial de accesos</h5>
-                                <p class="text-muted">Este usuario no ha iniciado sesión aún</p>
-                            </div>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
+        </Teleport>
     </div>
 </template>
 
 <script>
 import api from "@/api";
-import { Modal } from "bootstrap";
+import Swal from "sweetalert2";
+import { useModal } from '@/composables/useModal';
 
 export default {
     name: "UsuariosGestion",
+      setup() {
+        // Usando el composable
+        const {
+            modalRef: usuarioModalRef,
+            show: showUsuarioModal,
+            hide: hideUsuarioModal
+        } = useModal('usuarioModal');
+
+        const {
+            modalRef: historialModalRef,
+            show: showHistorialModal,
+            hide: hideHistorialModal
+        } = useModal('historialModal');
+
+        return {
+            usuarioModalRef,
+            showUsuarioModal,
+            hideUsuarioModal,
+            historialModalRef,
+            showHistorialModal,
+            hideHistorialModal
+        };
+    },
     data() {
         return {
             usuarios: [],
             usuarioSeleccionado: {},
             historial: [],
-            modalUsuario: null,
-            modalHistorial: null,
             filtroRol: '',
             cargando: false,
             usuariosFiltrados: []
@@ -361,8 +405,6 @@ export default {
     },
     mounted() {
         this.cargarUsuarios();
-        this.modalUsuario = new Modal(this.$refs.usuarioModal);
-        this.modalHistorial = new Modal(this.$refs.historialModal);
     },
     watch: {
         usuarios: {
@@ -372,7 +414,34 @@ export default {
             immediate: true
         }
     },
-    methods: {
+    methods: { 
+        // Métodos simplificados usando el servicio
+        abrirModal(usuario = {}) {
+            this.usuarioSeleccionado = { ...usuario };
+            this.showUsuarioModal();
+        },
+        
+        cerrarModal() {
+            this.hideUsuarioModal();
+            this.usuarioSeleccionado = {};
+        },
+        
+        async verHistorial(id) {
+            try {
+                const res = await api.get(`/users/${id}/historial`);
+                this.historial = res.data;
+                this.showHistorialModal();
+            } catch (err) {
+                console.error("Error cargando historial:", err);
+                this.mostrarError("Error al cargar historial");
+            }
+        },
+        
+        cerrarModalHistorial() {
+            this.hideHistorialModal();
+            this.historial = [];
+        },
+        
         async cargarUsuarios() {
             this.cargando = true;
             try {
@@ -388,40 +457,46 @@ export default {
                 this.cargando = false;
             }
         },
-        abrirModal(usuario = {}) {
-            this.usuarioSeleccionado = { ...usuario };
-            this.modalUsuario.show();
-        },
+        
         async guardarUsuario() {
             try {
                 if (this.usuarioSeleccionado.id) {
                     await api.put(`/users/${this.usuarioSeleccionado.id}`, this.usuarioSeleccionado);
+                    this.mostrarExito("Usuario actualizado correctamente");
                 } else {
                     await api.post("/users/register", this.usuarioSeleccionado);
+                    this.mostrarExito("Usuario creado correctamente");
                 }
-                this.modalUsuario.hide();
+                this.cerrarModal();
                 this.cargarUsuarios();
             } catch (err) {
                 console.error("Error guardando usuario:", err);
+                this.mostrarError("Error al guardar usuario");
             }
         },
+        
         async eliminarUsuario(id) {
-            if (confirm("¿Seguro de eliminar este usuario?")) {
-                try {
-                    await api.delete(`users/${id}`);
-                    this.cargarUsuarios();
-                } catch (err) {
-                    console.error("Error eliminando usuario:", err);
-                }
-            }
-        },
-        async verHistorial(id) {
             try {
-                const res = await api.get(`/users/${id}/historial`);
-                this.historial = res.data;
-                this.modalHistorial.show();
+                const result = await Swal.fire({
+                    title: '¿Estás seguro?',
+                    text: 'Esta acción no se puede deshacer',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#d33',
+                    cancelButtonColor: '#3085d6',
+                    confirmButtonText: 'Sí, eliminar',
+                    cancelButtonText: 'Cancelar',
+                    zIndex: 3000
+                });
+                
+                if (result.isConfirmed) {
+                    await api.delete(`/users/${id}`);
+                    this.mostrarExito("Usuario eliminado correctamente");
+                    this.cargarUsuarios();
+                }
             } catch (err) {
-                console.error("Error cargando historial:", err);
+                console.error("Error eliminando usuario:", err);
+                this.mostrarError("Error al eliminar usuario");
             }
         },
         
@@ -504,11 +579,25 @@ export default {
         },
         
         mostrarExito(mensaje) {
-            alert(`✅ ${mensaje}`);
+            Swal.fire({
+                icon: "success",
+                title: "Éxito en el Proceso",
+                text: `${mensaje}`,
+                confirmButtonColor: "#3085d6",
+                timer: 3000,
+                timerProgressBar: true,
+                zIndex: 3000
+            });
         },
         
         mostrarError(mensaje) {
-            alert(`❌ ${mensaje}`);
+            Swal.fire({
+                icon: "error",
+                title: "Error",
+                text: mensaje,
+                confirmButtonColor: "#d33",
+                zIndex: 3000
+            });
         },
 
         // Utility methods
@@ -549,6 +638,46 @@ export default {
 </script>
 
 <style scoped>
+/* CRITICAL MODAL FIXES */
+.modal {
+    z-index: 1055 !important;
+    background: rgba(0, 0, 0, 0.5) !important;
+}
+
+.modal-backdrop {
+    z-index: 1050 !important;
+    background-color: rgba(0, 0, 0, 0.5) !important;
+    opacity: 1 !important;
+}
+
+.modal-dialog {
+    z-index: 1060 !important;
+    position: relative;
+}
+
+.modal-content {
+    background: white !important;
+    z-index: 1065 !important;
+    position: relative;
+}
+
+/* Asegurar que el modal no tenga fondo negro */
+.modal.show {
+    display: block !important;
+    background: rgba(0, 0, 0, 0.5) !important;
+}
+
+/* Fix para SweetAlert2 */
+.swal2-container {
+    z-index: 3000 !important;
+}
+
+/* Prevenir scroll del body cuando modal está abierto */
+body.modal-open {
+    overflow: hidden !important;
+    padding-right: 0 !important;
+}
+
 /* Custom Gradient Background */
 .bg-gradient-primary {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -630,13 +759,15 @@ export default {
 /* Enhanced Cards */
 .card {
     transition: all 0.2s ease;
-    border-radius: 0;
+    border-radius: 12px;
 }
 
 /* Modal Enhancements */
 .modal-content {
     border-radius: 15px;
     overflow: hidden;
+    border: none !important;
+    background: white !important;
 }
 
 .modal-header {
@@ -646,11 +777,13 @@ export default {
 
 .modal-body {
     padding: 2rem;
+    background: white !important;
 }
 
 .modal-footer {
     border-top: none;
     padding: 1.5rem;
+    background: #f8f9fa !important;
 }
 
 /* Form Controls */
@@ -689,6 +822,39 @@ export default {
     opacity: 0.6;
 }
 
+/* Button Hover Effects */
+.btn {
+    transition: all 0.2s ease;
+}
+
+.btn:hover {
+    transform: translateY(-1px);
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border: none;
+}
+
+.btn-primary:hover {
+    background: linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%);
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+}
+
+/* Close button fixes */
+.btn-close {
+    background: none !important;
+    opacity: 1;
+}
+
+.btn-close:hover {
+    opacity: 0.75;
+}
+
+.btn-close-white {
+    filter: invert(1) grayscale(100%) brightness(200%);
+}
+
 /* Responsive Improvements */
 @media (max-width: 768px) {
     .container-fluid {
@@ -713,6 +879,10 @@ export default {
         width: 32px;
         height: 32px;
         font-size: 12px;
+    }
+    
+    .modal-dialog {
+        margin: 1rem;
     }
 }
 
@@ -764,5 +934,14 @@ export default {
 
 .table-responsive::-webkit-scrollbar-thumb:hover {
     background: #a1a1a1;
+}
+
+/* Shadow improvements */
+.shadow-sm {
+    box-shadow: 0 0.125rem 0.5rem rgba(0, 0, 0, 0.075) !important;
+}
+
+.shadow-lg {
+    box-shadow: 0 1rem 3rem rgba(0, 0, 0, 0.175) !important;
 }
 </style>

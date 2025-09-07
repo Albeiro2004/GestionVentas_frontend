@@ -7,12 +7,7 @@ import 'bootstrap/dist/js/bootstrap.bundle.min.js'
 import 'bootstrap-icons/font/bootstrap-icons.css'
 import './assets/global.css'
 import router from './router' // Importa el router
-import axios from 'axios'
-
-const token = localStorage.getItem('token')
-if (token) {
-  axios.defaults.headers.common['Authorization'] = `Bearer ${token}`
-}
+import modalPlugin from './plugins/modalPlugin'
 
 // 1. Crea la instancia de Pinia
 const pinia = createPinia()
@@ -21,8 +16,9 @@ const pinia = createPinia()
 const app = createApp(App)
 
 // 3. Usa los plugins
+app.use(modalPlugin)
 app.use(pinia)
-app.use(router)   // 👈 Esto faltaba
+app.use(router)  
 
 // 4. Monta la app
 app.mount('#app')

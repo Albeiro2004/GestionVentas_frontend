@@ -1,16 +1,10 @@
 <template>
   <div class="container">
-    <transition name="fade">
-      <div v-if="showMessage" :class="alertClasses" class="alert d-flex align-items-center mb-4 feedback-fixed-top"
-        role="alert">
-        <i :class="alertIconClasses" class="me-2"></i>
-        <div>{{ messageText }}</div>
-      </div>
-    </transition>
 
     <div class="bg-white p-5 rounded-3 shadow-sm">
       <h2 class="mb-4 text-primary fw-bold">🛒 Registrar Nueva Compra</h2>
-      <p class="text-muted mb-4">Añade los productos que deseas registrar en la compra, busca por nombre, código o ID.</p>
+      <p class="text-muted mb-4">Añade los productos que deseas registrar en la compra, busca por nombre, código o ID.
+      </p>
 
       <form @submit.prevent="submitPurchase">
         <div class="purchase-items-container">
@@ -22,11 +16,10 @@
               <div class="input-group">
                 <input type="text" class="form-control" v-model="item.searchQuery"
                   :class="{ 'is-invalid': item.searchQuery && !item.productId }"
-                  placeholder="Buscar por nombre, código o ID..." 
-                  @input="filterProducts(index)"
-                  @focus="item.showSuggestions = true"
-                  @blur="hideSuggestions(index)" />
-                <button v-if="item.searchQuery" class="btn btn-outline-secondary" type="button" @click="clearSearch(index)">
+                  placeholder="Buscar por nombre, código o ID..." @input="filterProducts(index)"
+                  @focus="item.showSuggestions = true" @blur="hideSuggestions(index)" />
+                <button v-if="item.searchQuery" class="btn btn-outline-secondary" type="button"
+                  @click="clearSearch(index)">
                   <i class="fas fa-times"></i>
                 </button>
               </div>
@@ -68,8 +61,8 @@
 
             <div class="col-md-2 d-flex justify-content-end align-items-center gap-2">
               <span class="fw-bold fs-5 text-success d-none d-md-block">${{ itemSubtotal(item).toFixed(2) }}</span>
-              <button type="button" class="btn btn-danger" @click="removeItem(index)" :disabled="purchaseItems.length === 1"
-                data-bs-toggle="tooltip" data-bs-placement="top" title="Eliminar producto">
+              <button type="button" class="btn btn-danger" @click="removeItem(index)"
+                :disabled="purchaseItems.length === 1" data-bs-toggle="tooltip" data-bs-placement="top">
                 <i class="fas fa-trash-alt"></i>
               </button>
             </div>
@@ -93,16 +86,17 @@
       </form>
     </div>
 
-    <div class="modal fade" id="quickProductModal" tabindex="-1" aria-hidden="true" ref="quickProductModal">
-      <div class="modal-dialog modal-static">
-        <div class="modal-content">
-          <div class="modal-header bg-primary text-white">
-            <h5 class="modal-title">📦 Nuevo Producto</h5>
-            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
-              aria-label="Cerrar"></button>
-          </div>
-          <div class="modal-body">
-            <form @submit.prevent="registerQuickProduct">
+    <Teleport to="body">
+      <div class="modal fade" id="quickProductModal" tabindex="-1" aria-hidden="true" ref="quickProductModalRef">
+        <div class="modal-dialog modal-static">
+          <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+              <h5 class="modal-title">📦 Nuevo Producto</h5>
+              <button type="button" class="btn-close btn-close-white" @click="closeQuickProductModal"
+                aria-label="Cerrar"></button>
+            </div>
+            <div class="modal-body">
+              <form @submit.prevent="registerQuickProduct">
                 <div class="mb-3">
                   <label for="newProductId" class="form-label">Código</label>
                   <input type="text" id="newProductId" class="form-control" v-model="newProduct.id" required>
@@ -136,210 +130,231 @@
                     </div>
                   </div>
                 </div>
-            </form>
-          </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-            <button type="button" class="btn btn-success" @click="registerQuickProduct"
-              :disabled="hasPriceError || !isFormValid">
-              <i class="fas fa-save me-2"></i> Guardar Producto
-            </button>
+              </form>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" @click="closeQuickProductModal">Cancelar</button>
+              <button type="button" class="btn btn-success" @click="registerQuickProduct"
+                :disabled="hasPriceError || !isFormValid">
+                <i class="fas fa-save me-2"></i> Guardar Producto
+              </button>
+            </div>
           </div>
         </div>
       </div>
-    </div>
+    </Teleport>
+
   </div>
 </template>
 
 <script>
-import axios from 'axios';
-import { Modal, Tooltip } from 'bootstrap';
+import api from '@/api';
+import Swal from "sweetalert2";
 import { usePurchaseStore } from '@/stores/purchaseStore';
 import { storeToRefs } from 'pinia';
-import { ref, watch, computed } from 'vue'; // Importaciones necesarias de Vue
+import { ref, watch, computed, onMounted } from 'vue';
+import { useModal } from '@/composables/useModal';
 
 export default {
-  // Los datos locales que no necesitan estar en el store de Pinia
-  data() {
-    return {
-      allProducts: [],
-      showMessage: false,
-      messageText: '',
-      messageType: '',
-      quickProductModal: null,
-      newProduct: { id: '', nombre: '', precioCompra: 0, precioVenta: 0, stock: 0 },
-      editingItemIndex: null,
-    };
-  },
   setup() {
     const purchaseStore = usePurchaseStore();
     const { items: purchaseItems } = storeToRefs(purchaseStore);
 
-    // Estado local reactivo para las sugerencias de búsqueda
+    // 🔹 Estado local
+    const allProducts = ref([]);
     const filteredSuggestions = ref([]);
+    const newProduct = ref({ id: '', nombre: '', precioCompra: 0, precioVenta: 0, stock: 0 });
+    const editingItemIndex = ref(null);
 
-    // Sincroniza la longitud de las sugerencias con los ítems del store
-    watch(purchaseItems, (newItems) => {
-      filteredSuggestions.value = newItems.map((_, index) => {
-        return filteredSuggestions.value[index] || [];
-      });
-    }, { deep: true, immediate: true });
+    // 🔹 Modal
+    const quickProductModal = useModal('quickProductModal');
 
-    // Propiedades calculadas usando la Composition API
-    const total = computed(() => {
-      return purchaseItems.value.reduce((sum, item) => sum + (item.costoUnitario || 0) * (item.cantidad || 0), 0);
-    });
-
-    const hasValidItems = computed(() => {
-      return purchaseItems.value.some(item => item.productId && item.cantidad > 0);
-    });
-    
-    return {
+    // 🔹 Watch para mantener sugerencias sincronizadas
+    watch(
       purchaseItems,
-      filteredSuggestions,
-      total,
-      hasValidItems,
-      addItem: purchaseStore.addItem,
-      removeItem: purchaseStore.removeItem,
-      updateItem: purchaseStore.updateItem,
-      resetItems: purchaseStore.resetItems
+      (newItems) => {
+        filteredSuggestions.value = newItems.map((_, index) => {
+          return filteredSuggestions.value[index] || [];
+        });
+      },
+      { deep: true, immediate: true }
+    );
+
+    // 🔹 Computed
+    const total = computed(() =>
+      purchaseItems.value.reduce((sum, item) => sum + (item.costoUnitario || 0) * (item.cantidad || 0), 0)
+    );
+
+    const hasValidItems = computed(() =>
+      purchaseItems.value.some((item) => item.productId && item.cantidad > 0)
+    );
+
+    const hasPriceError = computed(() => newProduct.value.precioVenta < newProduct.value.precioCompra);
+
+    const isFormValid = computed(() => {
+      const product = newProduct.value;
+      return (
+        product.id &&
+        product.nombre &&
+        product.precioCompra !== null &&
+        product.precioVenta !== null &&
+        product.stock !== null
+      );
+    });
+
+    // 🔹 Funciones de producto rápido
+    const openQuickProductModal = (index) => {
+      editingItemIndex.value = index;
+      newProduct.value = { id: '', nombre: '', precioCompra: 0, precioVenta: 0, stock: 0 };
+      quickProductModal.show();
     };
-  },
-  computed: {
-    // Propiedades calculadas del modal, ya que no dependen del store
-    hasPriceError() {
-      return this.newProduct.precioVenta < this.newProduct.precioCompra;
-    },
-    isFormValid() {
-      const product = this.newProduct;
-      return product.id && product.nombre && product.precioCompra !== null && product.precioVenta !== null && product.stock !== null;
-    }
-  },
-  mounted() {
-    this.fetchProducts();
-    this.quickProductModal = new Modal(this.$refs.quickProductModal);
-    this.initTooltips();
-  },
-  updated() {
-    this.initTooltips();
-  },
-  methods: {
-    initTooltips() {
-      const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
-      tooltipTriggerList.map(function (tooltipTriggerEl) {
-        return new Tooltip(tooltipTriggerEl);
-      });
-    },
-    async fetchProducts() {
-      try {
-        const { data } = await axios.get('http://localhost:8080/Ventas/products');
-        this.allProducts = data;
-      } catch {
-        this.showFeedback('❌ Error al cargar productos.', 'error');
+
+    const closeQuickProductModal = () => {
+      quickProductModal.hide();
+    };
+
+    const registerQuickProduct = async () => {
+      if (hasPriceError.value) {
+        return Swal.fire("Error", "❌ El precio de venta no puede ser menor al de compra.", "error");
       }
-    },
-    filterProducts(index) {
-      const query = this.purchaseItems[index].searchQuery.toLowerCase().trim();
+      if (!isFormValid.value) {
+        return Swal.fire("Error", "❌ Por favor, complete todos los campos requeridos.", "warning");
+      }
+      try {
+        const { data } = await api.post('/products', newProduct.value);
+        allProducts.value.push(data);
+        selectProduct(editingItemIndex.value, data);
+        quickProductModal.hide();
+        Swal.fire("Éxito", "✅ Producto creado exitosamente.", "success");
+      } catch (error) {
+        Swal.fire("Error", "❌ Error al crear el producto.", "error");
+      }
+    };
+
+    // 🔹 Acciones sobre productos en la compra
+    const fetchProducts = async () => {
+      try {
+        const { data } = await api.get('/products');
+        allProducts.value = data;
+      } catch {
+        Swal.fire("Error", "❌ Error al cargar productos.", "error");
+      }
+    };
+
+    const filterProducts = (index) => {
+      const query = purchaseItems.value[index].searchQuery.toLowerCase().trim();
       if (!query) {
-        this.filteredSuggestions[index] = [];
+        filteredSuggestions.value[index] = [];
         return;
       }
-      this.filteredSuggestions[index] = this.allProducts.filter(product =>
-        product.nombre.toLowerCase().includes(query) ||
-        (product.codigo && product.codigo.toLowerCase().includes(query)) ||
-        (product.id && product.id.toString().includes(query))
+      filteredSuggestions.value[index] = allProducts.value.filter(
+        (product) =>
+          product.nombre.toLowerCase().includes(query) ||
+          (product.codigo && product.codigo.toLowerCase().includes(query)) ||
+          (product.id && product.id.toString().includes(query))
       );
-    },
-    selectProduct(index, product) {
-      // Usa la acción del store para actualizar el ítem
-      this.updateItem(index, {
+    };
+
+    const selectProduct = (index, product) => {
+      purchaseStore.updateItem(index, {
         productId: product.id,
         searchQuery: product.nombre,
         costoUnitario: product.precioCompra,
         cantidad: 1,
         showSuggestions: false
       });
-    },
-    hideSuggestions(index) {
+    };
+
+    const hideSuggestions = (index) => {
       setTimeout(() => {
-        // Usa la propiedad del store para acceder a showSuggestions
-        this.purchaseItems[index].showSuggestions = false;
-        if (!this.purchaseItems[index].productId) {
-          this.purchaseItems[index].searchQuery = '';
+        purchaseItems.value[index].showSuggestions = false;
+        if (!purchaseItems.value[index].productId) {
+          purchaseItems.value[index].searchQuery = '';
         }
       }, 200);
-    },
-    clearSearch(index) {
-      this.updateItem(index, {
+    };
+
+    const clearSearch = (index) => {
+      purchaseStore.updateItem(index, {
         productId: null,
         searchQuery: '',
         cantidad: 1,
         costoUnitario: 0
       });
-      if (this.filteredSuggestions[index]) {
-        this.filteredSuggestions[index] = [];
+      if (filteredSuggestions.value[index]) {
+        filteredSuggestions.value[index] = [];
       }
-    },
-    itemSubtotal(item) {
-      return (item.costoUnitario || 0) * (item.cantidad || 0);
-    },
-    showFeedback(message, type) {
-      this.showMessage = true;
-      this.messageText = message;
-      this.messageType = type;
-      setTimeout(() => (this.showMessage = false), 5000);
-    },
-    openQuickProductModal(index) {
-      this.editingItemIndex = index;
-      this.newProduct = { id: '', nombre: '', precioCompra: 0, precioVenta: 0, stock: 0 };
-      this.quickProductModal.show();
-    },
-    async registerQuickProduct() {
-      if (this.hasPriceError) {
-        this.showFeedback('❌ El precio de venta no puede ser menor al de compra.', 'error');
-        return;
-      }
-      if (!this.isFormValid) {
-        this.showFeedback('❌ Por favor, complete todos los campos requeridos.', 'error');
-        return;
-      }
-      try {
-        const { data } = await axios.post('http://localhost:8080/Ventas/products', this.newProduct);
-        this.allProducts.push(data);
-        this.selectProduct(this.editingItemIndex, data);
-        this.quickProductModal.hide();
-        this.showFeedback('✅ Producto creado exitosamente.', 'success');
-      } catch (error) {
-        this.showFeedback('❌ Error al crear el producto.', 'error');
-      }
-    },
-    async submitPurchase() {
-      if (!this.hasValidItems) {
-        this.showFeedback('Agregue al menos un producto válido.', 'error');
-        return;
+    };
+
+    const itemSubtotal = (item) => (item.costoUnitario || 0) * (item.cantidad || 0);
+
+    // 🔹 Enviar compra
+    const submitPurchase = async () => {
+      if (!hasValidItems.value) {
+        return Swal.fire("Atención", "Agregue al menos un producto válido.", "warning");
       }
       try {
         const purchaseData = {
-          items: this.purchaseItems.filter(item => item.productId).map(item => ({
-            productId: item.productId,
-            cantidad: item.cantidad,
-            costoUnitario: item.costoUnitario,
-          })),
+          items: purchaseItems.value
+            .filter((item) => item.productId)
+            .map((item) => ({
+              productId: item.productId,
+              cantidad: item.cantidad,
+              costoUnitario: item.costoUnitario
+            }))
         };
-        await axios.post('http://localhost:8080/Ventas/purchases', purchaseData);
-        this.showFeedback('✅ Compra registrada correctamente.', 'success');
-        this.resetForm();
+        await api.post('/purchases', purchaseData);
+        Swal.fire("Éxito", "✅ Compra registrada correctamente.", "success");
+        purchaseStore.resetItems();
       } catch (error) {
-        this.showFeedback('❌ Error al registrar la compra.', 'error');
+        Swal.fire("Error", "❌ Error al registrar la compra.", "error");
       }
-    },
-    resetForm() {
-      this.resetItems();
-    },
-  },
+    };
+
+    // 🔹 Ciclo de vida
+    onMounted(() => {
+      fetchProducts();
+    });
+
+    return {
+      // store
+      purchaseItems,
+      addItem: purchaseStore.addItem,
+      removeItem: purchaseStore.removeItem,
+      updateItem: purchaseStore.updateItem,
+      resetItems: purchaseStore.resetItems,
+
+      // locales
+      allProducts,
+      filteredSuggestions,
+      newProduct,
+      editingItemIndex,
+
+      // modal
+      quickProductModalRef: quickProductModal.modalRef,
+      openQuickProductModal,
+      closeQuickProductModal,
+      registerQuickProduct,
+
+      // computed
+      total,
+      hasValidItems,
+      hasPriceError,
+      isFormValid,
+
+      // utils
+      filterProducts,
+      selectProduct,
+      hideSuggestions,
+      clearSearch,
+      itemSubtotal,
+
+      // compra
+      submitPurchase
+    };
+  }
 };
 </script>
-
 
 <style scoped>
 

@@ -75,7 +75,8 @@
 
                 <div v-if="allowNoCustomer && !selectedCustomer" class="dropdown-divider bg-success-subtle mb-0"></div>
                 <button v-if="allowNoCustomer && !selectedCustomer"
-                  class="dropdown-item text-center py-3 text-muted fw-medium bg-success-subtle mb-0" @click="selectNoCustomer">
+                  class="dropdown-item text-center py-3 text-muted fw-medium bg-success-subtle mb-0"
+                  @click="selectNoCustomer">
                   <i class="fas fa-user-slash me-2"></i>
                   Continuar sin seleccionar cliente
                 </button>
@@ -183,7 +184,8 @@
 
           <div v-if="showFinalizeButton" class="d-grid gap-2 animated-fade-in">
             <button class="btn btn-success btn-lg" @click="finalizeSale" :disabled="isFinalizing">
-              <span v-if="isFinalizing" class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+              <span v-if="isFinalizing" class="spinner-border spinner-border-sm me-2" role="status"
+                aria-hidden="true"></span>
               <span v-if="isFinalizing">Finalizando...</span>
               <span v-else>
                 <i class="fas fa-check-circle me-2"></i> Finalizar Venta
@@ -208,15 +210,15 @@
               <form @submit.prevent="registerAndSelectCustomer">
                 <div class="mb-3">
                   <label for="newDocumento" class="form-label">Documento</label>
-                  <input type="text" class="form-control" id="newDocumento" v-model="newCustomer.documento" required />
+                  <input type="number" class="form-control" id="newDocumento" v-model="newCustomer.documento" required />
                 </div>
                 <div class="mb-3">
                   <label for="newNombre" class="form-label">Nombre</label>
                   <input type="text" class="form-control" id="newNombre" v-model="newCustomer.nombre" required />
                 </div>
                 <div class="mb-3">
-                  <label for="newEmail" class="form-label">Email (opcional)</label>
-                  <input type="email" class="form-control" id="newEmail" v-model="newCustomer.email" />
+                  <label for="newEmail" class="form-label">Contacto</label>
+                  <input type="email" class="form-control" id="newEmail" v-model="newCustomer.contacto" />
                 </div>
               </form>
             </div>
@@ -232,13 +234,33 @@
       <div class="modal-backdrop fade show"></div>
     </div>
 
-    <transition name="slide-fade">
-      <div v-if="showCartSection" class="cart-floating-panel p-3">
+    <!-- Botón flotante de carrito (cuando el panel está cerrado) -->
+    <button v-if="!showCartPanel" class="btn btn-primary position-fixed top-50 end-0 m-3" @click="showCartPanel = true"
+      style="z-index:1100; position: relative; width:60px; height:60px; border-radius:50%; display:flex; align-items:center; justify-content:center;">
+      <!-- Ícono -->
+      <i class="bi bi-cart fs-3"></i>
 
-        <h5 class="fw-bold mb-3 border-bottom pb-2">
-          <i class="fas fa-shopping-cart me-2 text-primary"></i> Resumen de Venta
+      <!-- Badge -->
+      <span v-if="totalItems > 0" class="badge rounded-pill bg-danger"
+        style="position:absolute; top:5px; right:5px; z-index:1201;">
+        {{ totalItems }}
+      </span>
+    </button>
+
+    <!-- Panel flotante del carrito -->
+    <transition name="slide-fade">
+      <div v-if="showCartPanel" class="cart-floating-panel p-3">
+        <!-- Header con botón cerrar -->
+        <h5 class="fw-bold mb-3 border-bottom pb-2 d-flex justify-content-between align-items-center">
+          <span>
+            <i class="fas fa-shopping-cart me-2 text-primary"></i> Resumen de Venta
+          </span>
+          <button class="btn btn-sm btn-outline-secondary" @click="showCartPanel = false">
+            Ocultar <i class="bi bi-eye-slash"></i>
+          </button>
         </h5>
 
+        <!-- Lista de productos -->
         <div class="cart-items-container">
           <table class="table table-sm align-middle">
             <tbody>
@@ -248,6 +270,7 @@
                   <small class="text-muted">Stock: {{ item.stock }}</small>
                 </td>
 
+                <!-- Cantidad -->
                 <td class="text-center" style="width: 110px;">
                   <div class="input-group input-group-sm">
                     <button class="btn btn-outline-secondary" type="button"
@@ -263,10 +286,20 @@
                   </div>
                 </td>
 
-                <td class="text-end fw-bold text-success" style="width: 90px;">
-                  ${{ (item.cantidad * item.precioUnitario - item.descuento).toFixed(2) }}
+                <!-- Descuento -->
+                <td class="text-center" style="min-width: 100px;">
+                  <input type="number" class="form-control form-control-sm text-end"
+                    :value="item.descuento === 0 ? '' : item.descuento" placeholder="Descuento" min="0"
+                    :max="item.cantidad * item.precioUnitario - item.precioCompra"
+                    @input="e => { item.descuento = Number(e.target.value) || 0; validateDiscount(item) }" />
                 </td>
 
+                <!-- Precio final -->
+                <td class="text-end fw-bold text-success" style="width: 90px;">
+                  ${{ finalPrice(item).toFixed(2) }}
+                </td>
+
+                <!-- Eliminar -->
                 <td class="text-center" style="width: 40px;">
                   <button class="btn btn-outline-danger btn-sm" title="Eliminar" @click="removeFromCart(item)">
                     <i class="fas fa-trash"></i>
@@ -277,17 +310,21 @@
           </table>
         </div>
 
+        <!-- Total -->
         <div class="mt-3 pt-2 border-top">
           <h5 class="text-end fw-bold mb-3">
             Total: <span class="badge bg-success fs-6">${{ cartTotal.toFixed(2) }}</span>
           </h5>
-          <div class="d-grid gap-2">
-            <button class="btn btn-outline-secondary btn-sm" @click="resetForm">
-              Cancelar
+          <div class="d-flex justify-content-between gap-2">
+            <button class="btn btn-outline-danger btn-sm d-flex align-items-center" @click="clearCart">
+              <i class="bi bi-trash me-1"></i> Vaciar
+            </button>
+
+            <button class="btn btn-outline-secondary btn-sm d-flex align-items-center" @click="resetForm">
+              <i class="bi bi-x-circle me-1"></i> Cancelar
             </button>
           </div>
         </div>
-
       </div>
     </transition>
 
@@ -301,8 +338,8 @@
 
 <script setup>
 import { ref, computed, watch } from "vue";
-import axios from "axios";
 import { useDeudas } from "@/composables/useDeudas";
+import api from "@/api";
 
 const { fetchDeudasPendientes } = useDeudas();
 
@@ -318,29 +355,33 @@ const paymentType = ref("INMEDIATE");
 const abonoAmount = ref(0);
 const feedbackMessage = ref("");
 const feedbackClass = ref("alert-info");
-const isFinalizing = ref(false); // <--- Variable reactiva para el estado de carga
+const isFinalizing = ref(false);
 
-// Propiedades del Modal
+// Modal
 const showRegisterModal = ref(false);
 const newCustomer = ref({
   documento: "",
   nombre: "",
-  email: "",
+  contacto: "",
 });
 
-// Propiedades Computadas para lógica de la interfaz
+// Computadas
 const showCustomerSuggestions = computed(() => customerSuggestions.value.length > 0 || allowNoCustomer.value);
 const showCartSection = computed(() => cart.value.length > 0);
 const showFinalizeButton = computed(() => cart.value.length > 0 && selectedCustomer.value);
+// Estado de visibilidad del carrito
+const showCartPanel = ref(false);
 
-const cartTotal = computed(() => {
-  return cart.value.reduce(
-    (sum, item) => sum + item.cantidad * item.precioUnitario - item.descuento,
-    0
-  );
+// Total de ítems en el carrito (sumando cantidades)
+const totalItems = computed(() => {
+  return cart.value.reduce((acc, item) => acc + item.cantidad, 0);
 });
 
-// Watcher para cargar productos al seleccionar cliente
+const cartTotal = computed(() => {
+  return cart.value.reduce((sum, item) => sum + finalPrice(item), 0);
+});
+
+// -------------------- Clientes --------------------
 watch(selectedCustomer, (newVal) => {
   if (newVal) {
     fetchInitialProducts();
@@ -349,15 +390,14 @@ watch(selectedCustomer, (newVal) => {
   }
 });
 
-// Métodos de Clientes
 const fetchCustomerSuggestions = async () => {
   if (customerSearchQuery.value.length < 1) {
     customerSuggestions.value = [];
     return;
   }
   try {
-    const { data } = await axios.get(
-      `http://localhost:8080/Ventas/customers/suggestions?query=${customerSearchQuery.value}`
+    const { data } = await api.get(
+      `/customers/suggestions?query=${customerSearchQuery.value}`
     );
     customerSuggestions.value = data;
   } catch (error) {
@@ -383,24 +423,26 @@ const searchCustomer = async () => {
     showFeedback("Ingrese un valor para buscar", "warning");
     return;
   }
+
   try {
-    const { data } = await axios.get(
-      `http://localhost:8080/Ventas/customers/${customerSearchQuery.value}`
+    const { data } = await api.get(
+      `/customers/search?query=${customerSearchQuery.value}`
     );
+
     if (data && data.documento) {
       selectedCustomer.value = data;
-      showFeedback("Cliente encontrado ✅", "success");
+      showFeedback("Cliente encontrado correctamente", "success");
     } else {
       newCustomer.value.documento = customerSearchQuery.value;
       showRegisterModal.value = true;
-      showFeedback("Cliente no encontrado. Por favor, regístrelo.", "info");
+      showFeedback("Cliente no encontrado. Proceda con el registro.", "info");
     }
   } catch (error) {
     console.error("Error searching customer:", error);
     if (error.response && error.response.status === 404) {
       newCustomer.value.documento = customerSearchQuery.value;
       showRegisterModal.value = true;
-      showFeedback("Cliente no encontrado. Por favor, regístrelo.", "info");
+      showFeedback("Cliente no encontrado. Proceda con el registro.", "info");
     } else {
       showFeedback("Error al buscar cliente. Verifique la conexión.", "danger");
     }
@@ -409,7 +451,8 @@ const searchCustomer = async () => {
 
 const selectNoCustomer = async () => {
   try {
-    const { data } = await axios.get(`http://localhost:8080/Ventas/customers/generic`);
+    const { data } = await api.get("/customers/generic");
+
     selectedCustomer.value = data;
     customerSearchQuery.value = data.nombre;
     customerSuggestions.value = [];
@@ -420,29 +463,29 @@ const selectNoCustomer = async () => {
   }
 };
 
+
 const registerAndSelectCustomer = async () => {
   if (!newCustomer.value.documento || !newCustomer.value.nombre) {
     showFeedback("Documento y Nombre son campos obligatorios.", "warning");
     return;
   }
   try {
-    const { data } = await axios.post("http://localhost:8080/Ventas/customers", newCustomer.value);
+    const { data } = await api.post("/Ventas/customers", newCustomer.value);
+
     showFeedback("Cliente registrado correctamente ✅", "success");
     showRegisterModal.value = false;
     selectCustomer(data);
-    newCustomer.value = { documento: "", nombre: "", email: "" };
+    newCustomer.value = { documento: "", nombre: "", contacto: "" };
   } catch (error) {
     console.error("Error registering customer:", error);
     showFeedback("Error al registrar cliente ❌", "danger");
   }
 };
 
-// Métodos de Productos
+// -------------------- Productos --------------------
 const fetchInitialProducts = async () => {
   try {
-    const { data } = await axios.get(
-      `http://localhost:8080/Ventas/products`
-    );
+    const { data } = await api.get("/products");
     productSuggestions.value = data;
   } catch (error) {
     console.error("Error fetching initial products:", error);
@@ -460,8 +503,8 @@ const fetchProductSuggestions = async () => {
     return;
   }
   try {
-    const { data } = await axios.get(
-      `http://localhost:8080/Ventas/products/suggestions?query=${productSearchQuery.value}`
+    const { data } = await api.get(
+      `/products/suggestions?query=${productSearchQuery.value}`
     );
     productSuggestions.value = data;
   } catch (error) {
@@ -470,16 +513,16 @@ const fetchProductSuggestions = async () => {
   }
 };
 
+
 const selectProduct = (prod) => {
   addToCart(prod);
 };
 
-// Métodos del Carrito
+// -------------------- Carrito --------------------
 const addToCart = (prod) => {
-
   if (prod.stock <= 0) {
     showFeedback("Este producto no tiene stock disponible", "danger");
-    return; // Detiene la ejecución si no hay stock
+    return;
   }
   const existing = cart.value.find((i) => i.id === prod.id);
   if (existing) {
@@ -494,6 +537,7 @@ const addToCart = (prod) => {
       ...prod,
       cantidad: 1,
       precioUnitario: prod.precioVenta,
+      precioCompra: prod.precioCompra, // 👈 debe venir del backend
       descuento: 0,
     });
     showFeedback("Producto agregado al carrito 🛒", "success");
@@ -505,16 +549,36 @@ const removeFromCart = (item) => {
   showFeedback("Producto eliminado del carrito", "warning");
 };
 
+const clearCart = () => {
+  cart.value = [];
+  showFeedback("Carrito vaciado 🗑️", "info");
+};
+
 const validateCartItem = (item) => {
   if (item.cantidad < 1) item.cantidad = 1;
   if (item.cantidad > item.stock) item.cantidad = item.stock;
+  validateDiscount(item);
+};
+
+// 🔹 Calcula el precio final con descuento pero sin bajar de costo
+const finalPrice = (item) => {
+  const bruto = item.cantidad * item.precioUnitario;
+  const maxDescuento = bruto - item.precioCompra;
+  const descuentoValido = Math.min(item.descuento || 0, maxDescuento);
+  return bruto - descuentoValido;
+};
+
+// 🔹 Valida descuentos
+const validateDiscount = (item) => {
+  const bruto = item.cantidad * item.precioUnitario;
+  const maxDescuento = bruto - item.precioCompra;
   if (item.descuento < 0) item.descuento = 0;
-  if (item.descuento > item.cantidad * item.precioUnitario) {
-    item.descuento = item.cantidad * item.precioUnitario;
+  if (item.descuento > maxDescuento) {
+    item.descuento = maxDescuento;
   }
 };
 
-// Métodos de la Venta
+// -------------------- Venta --------------------
 const finalizeSale = async () => {
   if (!selectedCustomer.value) {
     showFeedback("Seleccione un cliente antes de finalizar", "warning");
@@ -525,7 +589,6 @@ const finalizeSale = async () => {
     return;
   }
 
-  // Activa el estado de carga
   isFinalizing.value = true;
 
   const saleData = {
@@ -541,32 +604,29 @@ const finalizeSale = async () => {
   };
 
   try {
-  const response = await axios.post("http://localhost:8080/Ventas/sales", saleData);
-  showFeedback(response.data.message || "Venta registrada correctamente ✅", "success");
-  resetForm();
-  await fetchDeudasPendientes(); // Actualiza el contador de deudas pendientes
-} catch (error) {
-  if (error.response) {
-    // El backend devolvió un error con JSON { message: "..." }
-    console.error("Backend error:", error.response.data);
-    showFeedback(
-      `Error al registrar la venta ❌: ${error.response.data.message || "Error interno"}`,
-      "danger"
-    );
-  } else if (error.request) {
-    // No hubo respuesta del backend
-    console.error("No response from backend:", error.request);
-    showFeedback("No hay conexión con el servidor ❌", "danger");
-  } else {
-    // Otro error (axios config, etc.)
-    console.error("Axios error:", error.message);
-    showFeedback("Error inesperado ❌", "danger");
+    const response = await api.post("/sales", saleData);
+    showFeedback(response.data.message || "Venta registrada correctamente ✅", "success");
+    resetForm();
+    await fetchDeudasPendientes();
+  } catch (error) {
+    if (error.response) {
+      console.error("Backend error:", error.response.data);
+      showFeedback(
+        `Error al registrar la venta ❌: ${error.response.data.message || "Error interno"}`,
+        "danger"
+      );
+    } else if (error.request) {
+      console.error("No response from backend:", error.request);
+      showFeedback("No hay conexión con el servidor ❌", "danger");
+    } else {
+      console.error("Axios error:", error.message);
+      showFeedback("Error inesperado ❌", "danger");
+    }
+  } finally {
+    isFinalizing.value = false;
   }
-} finally {
-  isFinalizing.value = false;
-}
-
 };
+
 
 const resetForm = () => {
   customerSearchQuery.value = "";
@@ -579,7 +639,7 @@ const resetForm = () => {
   abonoAmount.value = 0;
 };
 
-// Métodos de Feedback
+// -------------------- Feedback --------------------
 const showFeedback = (msg, type) => {
   feedbackMessage.value = msg;
   feedbackClass.value = `alert-${type}`;
@@ -626,7 +686,7 @@ const showFeedback = (msg, type) => {
   position: fixed;
   top: 100px;
   right: 20px;
-  width: 360px;
+  width: 25vw;
   background-color: #fff;
   border-radius: 0.75rem;
   border: 1px solid #dee2e6;
