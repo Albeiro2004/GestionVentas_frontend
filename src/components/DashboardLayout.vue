@@ -193,7 +193,7 @@
       <div class="flex-fill content-scrollable bg-gradient-light my-0 py-0 position-relative child-scope">
         <div class="container-fluid p-0 m-0 h-100 w-100">
           <transition name="slide-fade" mode="out-in">
-            <div class="isolated-root h-100 w-100">
+            <div class="isolated-root h-100 w-100" style="position: relative;">
               <component :is="currentComponent" :key="activeTab" :search-query="searchQuery" />
             </div>
           </transition>
@@ -313,6 +313,7 @@ import ReportSummary from "./ReportSummary.vue"
 import DashboardCards from "./DashboardCards.vue"
 import DebtManager from "./DebtManager.vue"
 import Usuarios from "./UsuariosGestion.vue"
+import InvoicesManager from "./InvoicesManager.vue"
 import { useRouter } from 'vue-router'
 
 // Estado básico
@@ -394,7 +395,7 @@ const navLinks = [
   },
   { 
     name: "sales", 
-    label: "Ventas", 
+    label: "Vender", 
     icon: "fas fa-cash-register",
     description: "Registrar ventas",
     roles: ["ADMIN", "USER"]
@@ -418,14 +419,7 @@ const navLinks = [
     label: "Cuentas por Cobrar", 
     icon: "fas fa-file-invoice-dollar",
     description: "Deudas pendientes",
-    roles: ["ADMIN"]
-  },
-  { 
-    name: "reports", 
-    label: "Reportes", 
-    icon: "fas fa-chart-bar",
-    description: "Análisis y reportes",
-    roles: ["ADMIN"]
+    roles: ["ADMIN", "USER"]
   },
   { 
     name: "usuarios", 
@@ -433,6 +427,20 @@ const navLinks = [
     icon: "fas fa-users-cog",
     description: "Gestión de usuarios",
     roles: ["ADMIN"]
+  },
+  { 
+    name: "invoices", 
+    label: "Gestión Ventas", 
+    icon: "bi bi-kanban",
+    description: "Gestión Ventas",
+    roles: ["ADMIN", "USER"]
+  },
+  { 
+    name: "reports", 
+    label: "Reportes", 
+    icon: "fas fa-chart-bar",
+    description: "Análisis y reportes",
+    roles: ["ADMIN", "USER"]
   },
 ]
 
@@ -467,7 +475,8 @@ const currentComponent = computed(() => {
     sales: SaleForm,
     reports: ReportSummary,
     deudas: DebtManager,
-    usuarios: Usuarios
+    usuarios: Usuarios,
+    invoices: InvoicesManager,
   }
   return componentMap[activeTab.value] || DashboardCards
 })

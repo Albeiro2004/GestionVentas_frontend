@@ -16,6 +16,9 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
+// 👉 flag para no redirigir varias veces
+let isRedirecting = false;
+
 // 🔹 Manejar respuestas de error globalmente
 api.interceptors.response.use(
   (response) => response,
@@ -24,25 +27,41 @@ api.interceptors.response.use(
       const status = error.response.status;
 
       if (status === 401) {
-        Swal.fire("Sesión expirada", "Por favor inicia sesión nuevamente.", "warning");
-        localStorage.removeItem("token");
-        localStorage.removeItem("role");
-        router.push("/login");
+        if (!isRedirecting) {
+          isRedirecting = true;
+          Swal.fire("Sesión expirada", "Por favor inicia sesión nuevamente.", "warning");
+          localStorage.removeItem("token");
+          localStorage.removeItem("role");
+          router.push("/login").finally(() => {
+            isRedirecting = false;
+          });
+        }
       } 
       else if (status === 403) {
-        Swal.fire("Acceso denegado", "No tienes permisos para realizar esta acción.", "error");
+        Swal.fire("Acceso denegado", "No tienes permisos para realizar esta acción. ¡No eres ADMIN!", "error");
       } 
       else if (status === 404) {
-        Swal.fire("No encontrado", "El recurso solicitado no existe.", "info");
+        /* Opcional: Swal.fire("No encontrado", "El recurso solicitado no existe.", "info"); */
       } 
       else if (status >= 500) {
-        Swal.fire("Error del servidor", "Intenta más tarde o contacta al administrador.", "error");
+        if (!isRedirecting) {
+          isRedirecting = true;
+          Swal.fire("Error del servidor", "Intenta más tarde o contacta al administrador.", "error");
+          router.push("/login").finally(() => {
+            isRedirecting = false;
+          });
+        }
       }
     } else {
-      Swal.fire("Error de conexión", "No se pudo conectar con el servidor.", "error");
+      if (!isRedirecting) {
+        isRedirecting = true;
+        Swal.fire("Error de conexión", "No se pudo conectar con el servidor.", "error");
+        router.push("/login").finally(() => {
+          isRedirecting = false;
+        });
+      }
     }
 
-    // 🔹 Importante: devolvemos el error para que los componentes puedan decidir si lo usan
     return Promise.reject(error);
   }
 );
