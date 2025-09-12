@@ -15,6 +15,8 @@ async function fetchDeudasPendientes() {
     deudasPendientes.value = res.data
   } catch (err) {
     deudasPendientes.value = 0 
+    localStorage.removeItem("token");
+    localStorage.removeItem("role");
     error.value = 'No se pudo cargar la cantidad de deudas.'
     router.push("/login")
   } finally {

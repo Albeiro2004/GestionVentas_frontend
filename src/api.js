@@ -47,6 +47,8 @@ api.interceptors.response.use(
         if (!isRedirecting) {
           isRedirecting = true;
           Swal.fire("Error del servidor", "Intenta más tarde o contacta al administrador.", "error");
+          localStorage.removeItem("token");
+          localStorage.removeItem("role");
           router.push("/login").finally(() => {
             isRedirecting = false;
           });

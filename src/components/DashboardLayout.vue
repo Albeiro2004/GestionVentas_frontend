@@ -451,7 +451,7 @@ const filteredNavLinks = computed(() => {
 // Función de logout mejorada
 async function logout() {
   try {
-    await fetch("http://localhost:8080/Ventas/users/logout", {
+    await fetch("https://sobreruedas.onrender.com/Ventas/users/logout", {
       method: "POST",
       headers: { "Authorization": `Bearer ${localStorage.getItem("token")}` }
     });
