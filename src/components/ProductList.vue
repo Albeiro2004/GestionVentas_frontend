@@ -291,7 +291,7 @@
   </div>
 </template>
 
-<script>
+<script scoped>
 import api from '@/api';
 import { useModal } from '@/composables/useModal';
 import Swal from "sweetalert2";

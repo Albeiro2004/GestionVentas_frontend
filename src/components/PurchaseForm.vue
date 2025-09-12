@@ -147,7 +147,7 @@
   </div>
 </template>
 
-<script>
+<script scoped>
 import api from '@/api';
 import Swal from "sweetalert2";
 import { usePurchaseStore } from '@/stores/purchaseStore';

@@ -190,7 +190,7 @@
       </nav>
 
       <!-- Dynamic content con transiciones mejoradas -->
-      <div class="flex-fill content-scrollable bg-gradient-light my-0 py-0 position-relative child-scope">
+      <div class="flex-fill content-scrollable my-0 py-0 position-relative child-scope">
         <div class="container-fluid p-0 m-0 h-100 w-100">
           <transition name="slide-fade" mode="out-in">
             <div class="isolated-root h-100 w-100" style="position: relative;">
@@ -578,7 +578,6 @@ onMounted(async () => {
 }
 
 .bg-gradient-light {
-  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
   position: relative;
 }
 
