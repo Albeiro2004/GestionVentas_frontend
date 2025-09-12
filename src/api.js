@@ -3,9 +3,9 @@ import axios from "axios";
 import router from "@/router";
 import Swal from "sweetalert2";
 
-const apiUrl = import.meta.env.VITE_API_URL;
+const apiUrl = process.env.VUE_APP_API_URL;
 if (!apiUrl) {
-  console.error("VITE_API_URL no está definida!");
+  console.error("VUE_APP_API_URL no está definida!");
 }
 
 const api = axios.create({
