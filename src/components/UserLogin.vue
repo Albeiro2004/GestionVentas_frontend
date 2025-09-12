@@ -113,9 +113,6 @@ export default {
         localStorage.setItem('name', data.name)
         localStorage.setItem('username', data.username)
 
-        // Configurar token en Axios
-        axios.defaults.headers.common['Authorization'] = `Bearer ${data.token}`
-
         // Pequeña pausa para mostrar el éxito visualmente
         await new Promise(resolve => setTimeout(resolve, 500))
 
