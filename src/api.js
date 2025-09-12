@@ -4,7 +4,7 @@ import router from "@/router";
 import Swal from "sweetalert2";
 
 const api = axios.create({
-  baseURL: "https://sobreruedas.onrender.com",
+  baseURL: import.meta.env.VITE_API_URL,
 });
 
 // 🔹 Inyectar token en cada request
