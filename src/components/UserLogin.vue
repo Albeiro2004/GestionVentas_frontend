@@ -82,7 +82,7 @@
 </template>
 
 <script>
-import api from '@/api'
+import axios from 'axios'
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 
@@ -102,7 +102,7 @@ export default {
       error.value = ''
 
       try {
-        const { data } = await api.post('/auth/login', {
+        const { data } = await axios.post('https://sobreruedas.onrender.com/auth/login', {
           username: username.value,
           password: password.value
         })
@@ -112,6 +112,9 @@ export default {
         localStorage.setItem('role', data.role)
         localStorage.setItem('name', data.name)
         localStorage.setItem('username', data.username)
+
+        // Configurar token en Axios
+        axios.defaults.headers.common['Authorization'] = `Bearer ${data.token}`
 
         // Pequeña pausa para mostrar el éxito visualmente
         await new Promise(resolve => setTimeout(resolve, 500))
