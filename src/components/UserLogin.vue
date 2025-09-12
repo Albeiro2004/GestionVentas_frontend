@@ -82,7 +82,7 @@
 </template>
 
 <script>
-import axios from 'axios'
+import api from '@/api'
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 
@@ -102,7 +102,7 @@ export default {
       error.value = ''
 
       try {
-        const { data } = await axios.post('http://localhost:8080/auth/login', {
+        const { data } = await api.post('/auth/login', {
           username: username.value,
           password: password.value
         })
