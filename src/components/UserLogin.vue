@@ -120,7 +120,7 @@ export default {
         await new Promise(resolve => setTimeout(resolve, 500))
 
         // Redirigir al dashboard
-        router.replace('/dashboard')
+        router.replace('/Home')
       } catch (e) {
         error.value = 'Usuario o contraseña inválidos'
         
@@ -155,7 +155,7 @@ export default {
       const token = localStorage.getItem("token");
       if (token) {
         // Si ya está logueado, lo mandamos al Dashboard
-        router.replace("/dashboard");
+        router.replace("/Home");
       }
 
       const card = document.querySelector('.login-card')

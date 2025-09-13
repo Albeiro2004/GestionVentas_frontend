@@ -20,9 +20,9 @@
       <div class="sidebar-nav p-3">
         <ul class="nav flex-column">
           <li v-for="link in filteredNavLinks" :key="link.name" class="nav-item mb-1">
-            <a href="#" class="nav-link text-white rounded-3 py-3 px-3 sidebar-link" :class="{
-                'active text-dark shadow-sm enfocado': activeTab === link.name
-              }" @click.prevent="setActiveTab(link.name)">
+            <router-link :to="link.route" class="nav-link text-white rounded-3 py-3 px-3 sidebar-link" :class="{
+              'active text-dark shadow-sm enfocado': $route.path === link.route //👈 Revisa aquí
+            }">
               <div class="d-flex align-items-center">
                 <div class="icon-wrapper me-3">
                   <i :class="link.icon" class="fs-5"></i>
@@ -33,13 +33,12 @@
                     {{ link.description }}
                   </small>
                 </div>
-                <!-- Badge con animación pulsante -->
                 <div v-if="link.name === 'deudas' && deudasPendientes > 0"
                   class="badge bg-danger rounded-pill pulse-badge">
                   {{ deudasPendientes }}
                 </div>
               </div>
-            </a>
+            </router-link>
           </li>
         </ul>
 
@@ -88,14 +87,14 @@
             </nav>
           </div>
 
-          <!-- Barra de búsqueda mejorada -->
+          <!-- Barra de búsqueda mejorada esté en el input v-model="searchQuery"  -->
           <div class="search-container d-none d-md-flex mx-4 flex-grow-1" style="max-width: 400px;">
             <div class="input-group enhanced-search">
               <span class="input-group-text bg-warning border-end-0">
                 <i class="fas fa-search text-black"></i>
               </span>
               <input type="text" class="form-control bg-dark-subtle border-start-0"
-                placeholder="Buscar productos, clientes..." v-model="searchQuery">
+                placeholder="Buscar productos, clientes...">
             </div>
           </div>
 
@@ -189,16 +188,16 @@
         </div>
       </nav>
 
-      <!-- Dynamic content con transiciones mejoradas -->
       <div class="flex-fill content-scrollable my-0 py-0 position-relative child-scope">
         <div class="container-fluid p-0 m-0 h-100 w-100">
           <transition name="slide-fade" mode="out-in">
             <div class="isolated-root h-100 w-100" style="position: relative;">
-              <component :is="currentComponent" :key="activeTab" :search-query="searchQuery" />
+              <router-view />
             </div>
           </transition>
         </div>
       </div>
+
 
       <!-- Modales mejorados -->
       <!-- Modal Perfil -->
@@ -303,24 +302,15 @@
 import { ref, computed, onMounted, nextTick } from "vue"
 import * as bootstrap from "bootstrap"
 import { useDeudas } from '@/composables/useDeudas'
+import { useRouter, useRoute} from 'vue-router'
+
 
 const { deudasPendientes, fetchDeudasPendientes } = useDeudas()
-
-import ProductList from "./ProductList.vue"
-import PurchaseForm from "./PurchaseForm.vue"
-import SaleForm from "./SaleForm.vue"
-import ReportSummary from "./ReportSummary.vue"
-import DashboardCards from "./DashboardCards.vue"
-import DebtManager from "./DebtManager.vue"
-import Usuarios from "./UsuariosGestion.vue"
-import InvoicesManager from "./InvoicesManager.vue"
-import { useRouter } from 'vue-router'
-
+const route = useRoute()
 // Estado básico
 const role = ref(localStorage.getItem("role"))
-const activeTab = ref("dashboard")
 const isSidebarOpen = ref(false)
-const searchQuery = ref("")
+// const searchQuery = ref("")
 const fullName = ref("")
 const usuario = ref("")
 const password = ref("")
@@ -387,60 +377,68 @@ function guardarConfig() {
 // Configuración de navegación (mantenida igual)
 const navLinks = [
   { 
-    name: "dashboard", 
-    label: "Dashboard", 
+    name: "home", 
+    label: "Inicio", 
     icon: "fas fa-tachometer-alt",
     description: "Vista general",
-    roles: ["ADMIN", "USER"]
+    roles: ["ADMIN", "USER"],
+    route: "/Home"
   },
   { 
     name: "sales", 
     label: "Vender", 
     icon: "fas fa-cash-register",
     description: "Registrar ventas",
-    roles: ["ADMIN", "USER"]
+    roles: ["ADMIN", "USER"],
+    route: "/Home/sales"
   },
   { 
     name: "purchases", 
     label: "Compras", 
     icon: "fas fa-shopping-cart",
     description: "Gestionar compras",
-    roles: ["ADMIN"]
+    roles: ["ADMIN"],
+    route: "/Home/purchases"
   },
   { 
     name: "products", 
     label: "Productos", 
     icon: "fas fa-boxes",
     description: "Inventario",
-    roles: ["ADMIN","USER"]
+    roles: ["ADMIN","USER"],
+    route: "/Home/products"
   },
   { 
-    name: "deudas", 
-    label: "Cuentas por Cobrar", 
+    name: "debts", 
+    label: "Deudas", 
     icon: "fas fa-file-invoice-dollar",
     description: "Deudas pendientes",
-    roles: ["ADMIN", "USER"]
+    roles: ["ADMIN", "USER"],
+    route: "/Home/debts"
   },
   { 
     name: "usuarios", 
     label: "Usuarios", 
     icon: "fas fa-users-cog",
     description: "Gestión de usuarios",
-    roles: ["ADMIN"]
+    roles: ["ADMIN"],
+    route: "/Home/users"
   },
   { 
     name: "invoices", 
     label: "Gestión Ventas", 
     icon: "bi bi-kanban",
     description: "Gestión Ventas",
-    roles: ["ADMIN", "USER"]
+    roles: ["ADMIN", "USER"],
+    route: "/Home/invoices"
   },
   { 
     name: "reports", 
     label: "Reportes", 
     icon: "fas fa-chart-bar",
     description: "Análisis y reportes",
-    roles: ["ADMIN", "USER"]
+    roles: ["ADMIN", "USER"],
+    route: "/Home/reports"
   },
 ]
 
@@ -466,36 +464,14 @@ async function logout() {
   router.replace("/login");
 }
 
-// Computed properties (mantenidos)
-const currentComponent = computed(() => {
-  const componentMap = {
-    dashboard: DashboardCards,
-    products: ProductList,
-    purchases: PurchaseForm,
-    sales: SaleForm,
-    reports: ReportSummary,
-    deudas: DebtManager,
-    usuarios: Usuarios,
-    invoices: InvoicesManager,
-  }
-  return componentMap[activeTab.value] || DashboardCards
-})
-
 const currentTitle = computed(() => {
-  const link = navLinks.find((item) => item.name === activeTab.value)
-  return link ? link.label : "Dashboard"
-})
+  const link = navLinks.find((item) => item.name === route.name);
+  return link ? link.label : "No cargo label";
+});
 
 // Métodos (mantenidos)
 function toggleSidebar() {
   isSidebarOpen.value = !isSidebarOpen.value
-}
-
-function setActiveTab(tab) {
-  activeTab.value = tab
-  if (window.innerWidth <= 992) {
-    isSidebarOpen.value = false
-  }
 }
 
 // Lifecycle mejorado
