@@ -8,6 +8,8 @@ if (!apiUrl) {
   console.error("VUE_APP_API_URL no está definida!");
 }
 
+console.error("API URL:", apiUrl);
+
 const api = axios.create({
   baseURL: apiUrl,
 });
