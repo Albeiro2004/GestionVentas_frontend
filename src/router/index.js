@@ -13,7 +13,7 @@ const routes = [
   { path: '/dashboard', component: DashboardLayout },
   { path: '/DebtManager', component: DebtManager },
   { path: '/Invoices', component: InvoicesManager},
-  { path: 'Products', component: ProductList},
+  { path: '/Products', component: ProductList},
   { path: '/Purchase', component: PurchaseForm},
   { path: '/Users', component: UsuariosGestion}
 ]
