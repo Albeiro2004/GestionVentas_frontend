@@ -22,7 +22,7 @@
           <li v-for="link in filteredNavLinks" :key="link.name" class="nav-item mb-1">
             <router-link :to="link.route" class="nav-link text-white rounded-3 py-3 px-3 sidebar-link" :class="{
               'active text-dark shadow-sm enfocado': $route.path === link.route //👈 Revisa aquí
-            }">
+              }" @click="closeSidebar">
               <div class="d-flex align-items-center">
                 <div class="icon-wrapper me-3">
                   <i :class="link.icon" class="fs-5"></i>
@@ -62,20 +62,19 @@
 
     <!-- Main content con margen para el sidebar fijo -->
     <div class="flex-fill d-flex flex-column main-content my-0 p-0">
+      
       <!-- Navbar profesional con glassmorphism -->
-      <nav
-        class="navbar navbar-expand-lg bg-gradient-dark shadow-sm w-100 flex-shrink-0 border-bottom navHorizontal my-0"
-        style="z-index: 1040 !important;">
-        <div class="container-fluid d-flex justify-content-between align-items-center px-4 py-2">
+      <nav class="navbar navbar-expand-lg bg-gradient-dark shadow-sm w-100 flex-shrink-0 border-bottom navHorizontal my-0" style="z-index: 1040 !important;">
+        <div class="container-fluid d-flex justify-content-between align-items-center px-0 py-2">
           <!-- Botón hamburguesa y breadcrumb -->
-          <div class="d-flex align-items-center">
-            <button class="btn btn-outline-primary border-0 me-3 d-lg-none" @click="toggleSidebar" data-sidebar-toggle>
+          <div class="col-6 col-md-4 d-flex align-items-center">
+            <button class="btn btn-outline-primary border-0 me-3 d-lg-none fs-2" @click="toggleSidebar" data-sidebar-toggle>
               <i class="fas fa-bars"></i>
             </button>
 
             <!-- Breadcrumb mejorado -->
             <nav aria-label="breadcrumb">
-              <ol class="breadcrumb mb-0 enhanced-breadcrumb">
+              <ol class="breadcrumb mb-0 enhanced-breadcrumb navega">
                 <li class="breadcrumb-item">
                   <i class="fas fa-home text-warning me-1"></i>
                   <span class="text-muted"><b>Inicio</b></span>
@@ -88,7 +87,7 @@
           </div>
 
           <!-- Barra de búsqueda mejorada esté en el input v-model="searchQuery"  -->
-          <div class="search-container d-none d-md-flex mx-4 flex-grow-1" style="max-width: 400px;">
+          <div class="col-md-4 search-container d-none d-md-flex mx-4 flex-grow-1" style="max-width: 400px;">
             <div class="input-group enhanced-search">
               <span class="input-group-text bg-warning border-end-0">
                 <i class="fas fa-search text-black"></i>
@@ -99,9 +98,9 @@
           </div>
 
           <!-- Sección de notificaciones y usuario -->
-          <div class="d-flex align-items-center">
+          <div class="col-6 col-md-4 d-flex align-items-center justify-content-end me-5">
             <!-- Notificaciones mejoradas -->
-            <div class="dropdown me-3" style="z-index: 2000;">
+            <div class="dropdown me-3">
               <button class="btn btn-outline-secondary border-0 position-relative me-1 notification-btn"
                 data-bs-toggle="dropdown" aria-expanded="false">
                 <i class="fas fa-bell fs-5 text-white"></i>
@@ -145,7 +144,7 @@
             </div>
 
             <!-- Usuario mejorado -->
-            <div class="dropdown">
+            <div class="dropdown usuario">
               <a class="nav-link dropdown-toggle d-flex align-items-center text-decoration-none p-1 user-dropdown"
                 href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                 <div class="position-relative me-3">
@@ -184,7 +183,7 @@
                 </li>
               </ul>
             </div>
-          </div>
+        </div>
         </div>
       </nav>
 
@@ -472,6 +471,13 @@ const currentTitle = computed(() => {
 // Métodos (mantenidos)
 function toggleSidebar() {
   isSidebarOpen.value = !isSidebarOpen.value
+}
+
+// 🔹 Nueva función para cerrar sidebar al navegar
+function closeSidebar() {
+  if (window.innerWidth <= 992) {
+    isSidebarOpen.value = false
+  }
 }
 
 // Lifecycle mejorado
@@ -911,18 +917,6 @@ onMounted(async () => {
 .btn {
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
-  overflow: hidden;
-}
-
-.btn::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-  transition: left 0.6s;
 }
 
 .btn:hover::before {
@@ -932,6 +926,8 @@ onMounted(async () => {
 .btn:hover {
   transform: translateY(-2px);
   box-shadow: var(--shadow-hover);
+  background-color: #0b5ed7; /* Azul más oscuro */
+  color: #fff;
 }
 
 .enhanced-btn {
@@ -956,6 +952,13 @@ onMounted(async () => {
 }
 
 .notification-btn:hover {
+  background: var(--glass-bg);
+  border-color: var(--glass-border);
+  color: white;
+  transform: scale(1.05);
+}
+
+.usuario:hover {
   background: var(--glass-bg);
   border-color: var(--glass-border);
   color: white;
@@ -1224,6 +1227,13 @@ onMounted(async () => {
 }
 
 /* Responsive mejorado */
+@media (max-width: 1720px) {
+  .search-container {
+    display: none !important;
+  }
+
+}
+
 @media (max-width: 992px) {
   .sidebar {
     transform: translateX(-100%);
@@ -1242,8 +1252,9 @@ onMounted(async () => {
     width: 100%;
   }
 
-  .search-container {
-    display: none !important;
+  .navega {
+    font-size: 14px !important;
+    padding: 0;
   }
 }
 
@@ -1302,6 +1313,41 @@ onMounted(async () => {
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(20px); }
   to { opacity: 1; transform: translateY(0); }
+}
+
+/* Sidebar en móvil: ocupa toda la pantalla */
+@media (max-width: 991.98px) {
+  .sidebar {
+    transform: translateX(-100%);
+    width: 80%; /* ocupa 80% del ancho en móvil */
+    max-width: 260px;
+    z-index: 1050; /* más alto que el navbar */
+  }
+  .sidebar.open {
+    transform: translateX(0);
+  }
+
+  .main-content {
+    margin-left: 0 !important;
+    width: 100% !important;
+  }
+
+  .sidebar-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0,0,0,0.6);
+    z-index: 1045;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s ease;
+  }
+  .sidebar-overlay.show {
+    opacity: 1;
+    visibility: visible;
+  }
 }
 
 </style>
