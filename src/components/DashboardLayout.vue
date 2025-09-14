@@ -68,7 +68,7 @@
         <div class="container-fluid d-flex justify-content-between align-items-center px-0 py-2">
           <!-- Botón hamburguesa y breadcrumb -->
           <div class="col-6 col-md-4 d-flex align-items-center">
-            <button class="btn btn-outline-primary border-0 me-3 d-lg-none fs-2" @click="toggleSidebar" data-sidebar-toggle>
+            <button class="btn btn-outline-primary border-0 me-1 d-lg-none fs-2" @click="toggleSidebar" data-sidebar-toggle>
               <i class="fas fa-bars"></i>
             </button>
 
@@ -77,9 +77,9 @@
               <ol class="breadcrumb mb-0 enhanced-breadcrumb navega">
                 <li class="breadcrumb-item">
                   <i class="fas fa-home text-warning me-1"></i>
-                  <span class="text-muted"><b>Inicio</b></span>
+                  <span class="text-muted"><b>Sobre Ruedas</b></span>
                 </li>
-                <li class="breadcrumb-item active fw-semibold text-warning">
+                <li class="breadcrumb-item active fw-semibold text-warning nave">
                   {{ currentTitle }}
                 </li>
               </ol>
@@ -98,7 +98,7 @@
           </div>
 
           <!-- Sección de notificaciones y usuario -->
-          <div class="col-6 col-md-4 d-flex align-items-center justify-content-end me-5">
+          <div class="col-6 col-md-4 d-flex align-items-center justify-content-end pe-5">
             <!-- Notificaciones mejoradas -->
             <div class="dropdown me-3">
               <button class="btn btn-outline-secondary border-0 position-relative me-1 notification-btn"
@@ -183,7 +183,7 @@
                 </li>
               </ul>
             </div>
-        </div>
+          </div>
         </div>
       </nav>
 
@@ -1255,6 +1255,10 @@ onMounted(async () => {
   .navega {
     font-size: 14px !important;
     padding: 0;
+  }
+
+  .nave {
+    display: none !important;
   }
 }
 
