@@ -42,44 +42,51 @@
           </li>
         </ul>
 
-        <!-- Información del sistema mejorada -->
+        <!-- Información del token JWT -->
         <div class="mt-4 p-3 bg-dark-subtle rounded-3 system-info">
           <div class="d-flex align-items-center mb-2">
-            <i class="fas fa-server text-success me-2 micro-bounce"></i>
-            <small class="text-muted">Sistema Activo</small>
-            <span class="loading-dots ms-auto text-success"></span>
+            <i class="fas fa-key text-warning me-2 micro-bounce"></i>
+            <small class="text-muted">Token JWT</small>
+            <span class="loading-dots ms-auto text-warning"></span>
           </div>
           <div class="progress mb-2" style="height: 6px;">
-            <div class="progress-bar bg-success animated-progress" style="width: 85%" role="progressbar"></div>
+            <!-- Aquí el ancho de la barra depende del % de vida restante -->
+            <div class="progress-bar bg-warning animated-progress" :style="{ width: tokenLifePercent + '%' }"
+              role="progressbar"></div>
           </div>
           <div class="d-flex justify-content-between">
-            <small class="text-muted">Rendimiento</small>
-            <small class="text-success fw-semibold">{{ systemHealth }}%</small>
+            <small class="text-muted">Tiempo restante</small>
+            <small class="text-warning fw-semibold">{{ tokenTimeRemaining }}</small>
           </div>
         </div>
+
+
       </div>
     </nav>
 
     <!-- Main content con margen para el sidebar fijo -->
     <div class="flex-fill d-flex flex-column main-content my-0 p-0">
-      
+
       <!-- Navbar profesional con glassmorphism -->
-      <nav class="navbar navbar-expand-lg bg-gradient-dark shadow-sm w-100 flex-shrink-0 border-bottom navHorizontal my-0" style="z-index: 1040 !important;">
+      <nav
+        class="navbar navbar-expand-lg bg-gradient-dark shadow-sm w-100 flex-shrink-0 border-bottom navHorizontal my-0"
+        style="z-index: 1040 !important;">
         <div class="container-fluid d-flex justify-content-between align-items-center px-0 py-2">
           <!-- Botón hamburguesa y breadcrumb -->
           <div class="col-6 col-md-4 d-flex align-items-center">
-            <button class="btn btn-outline-primary border-0 me-1 d-lg-none fs-2" @click="toggleSidebar" data-sidebar-toggle>
+            <button class="btn btn-outline-primary border-0 me-1 d-lg-none fs-2" @click="toggleSidebar"
+              data-sidebar-toggle>
               <i class="fas fa-bars"></i>
             </button>
 
             <!-- Breadcrumb mejorado -->
             <nav aria-label="breadcrumb">
-              <ol class="breadcrumb mb-0 enhanced-breadcrumb navega">
-                <li class="breadcrumb-item">
+              <ol class="breadcrumb mb-0 enhanced-breadcrumb navega p-1">
+                <li class="breadcrumb-item p-1">
                   <i class="fas fa-home text-warning me-1"></i>
-                  <span class="text-muted"><b>Sobre Ruedas</b></span>
+                  <span class="text-muted"><b> Sobre Ruedas</b></span>
                 </li>
-                <li class="breadcrumb-item active fw-semibold text-warning nave">
+                <li class="breadcrumb-item active fw-semibold text-warning  d-flex align-items-center nave">
                   {{ currentTitle }}
                 </li>
               </ol>
@@ -98,7 +105,7 @@
           </div>
 
           <!-- Sección de notificaciones y usuario -->
-          <div class="col-6 col-md-4 d-flex align-items-center justify-content-end pe-5">
+          <div class="col-6 col-md-4 d-flex align-items-center justify-content-end pe-5 usuario">
             <!-- Notificaciones mejoradas -->
             <div class="dropdown me-3">
               <button class="btn btn-outline-secondary border-0 position-relative me-1 notification-btn"
@@ -144,7 +151,7 @@
             </div>
 
             <!-- Usuario mejorado -->
-            <div class="dropdown usuario">
+            <div class="dropdown usuariop">
               <a class="nav-link dropdown-toggle d-flex align-items-center text-decoration-none p-1 user-dropdown"
                 href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                 <div class="position-relative me-3">
@@ -316,10 +323,53 @@ const password = ref("")
 const router = useRouter()
 
 // Estados mejorados
-const systemHealth = ref(85)
 const notificationCount = ref(3)
 const lastLogin = ref("Hoy, 10:30 AM")
 const userAvatar = ref("https://imgs.search.brave.com/41T2ZiW65TNJLqsqvfpph6-mImFuGDE8uI221O7FiD4/rs:fit:860:0:0:0/g:ce/aHR0cHM6Ly9jZG4t/aWNvbnMtcG5nLmZs/YXRpY29uLmNvbS8x/MjgvNjA3My82MDcz/ODczLnBuZw")
+const tokenLifePercent = ref(0);
+const tokenTimeRemaining = ref("");
+
+
+function parseJwt(token) {
+  try {
+    const base64Url = token.split(".")[1];
+    const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
+    const jsonPayload = decodeURIComponent(
+      atob(base64)
+        .split("")
+        .map(c => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
+        .join("")
+    );
+    return JSON.parse(jsonPayload);
+  } catch (e) {
+    console.error("Token inválido:", e);
+    return null;
+  }
+}
+
+// 🔹 Calcular tiempo restante y porcentaje
+function updateTokenInfo(token) {
+  const payload = parseJwt(token);
+  if (!payload || !payload.exp || !payload.iat) return;
+
+  const now = Math.floor(Date.now() / 1000); // tiempo actual en segundos
+  const total = payload.exp - payload.iat;   // duración total del token
+  const remaining = payload.exp - now;       // tiempo restante en segundos
+
+  if (remaining <= 0) {
+    tokenLifePercent.value = 0;
+    tokenTimeRemaining.value = "Expirado";
+    return;
+  }
+
+  // Calcular porcentaje de vida restante
+  tokenLifePercent.value = Math.floor((remaining / total) * 100);
+
+  // Formatear tiempo legible (minutos:segundos)
+  const minutes = Math.floor(remaining / 60);
+  const seconds = remaining % 60;
+  tokenTimeRemaining.value = `${minutes}m ${seconds}s`;
+}
 
 // Notificaciones mejoradas
 const notifications = ref([
@@ -416,7 +466,7 @@ const navLinks = [
     route: "/Home/debts"
   },
   { 
-    name: "usuarios", 
+    name: "users", 
     label: "Usuarios", 
     icon: "fas fa-users-cog",
     description: "Gestión de usuarios",
@@ -505,10 +555,17 @@ onMounted(async () => {
     }
   })
 
-  // Simular actualizaciones del sistema
-  setInterval(() => {
-    systemHealth.value = Math.floor(Math.random() * (95 - 75) + 75);
-  }, 30000);
+  const jwt = localStorage.getItem("token"); // 👈 tu token guardado
+  if (!jwt) {
+    tokenTimeRemaining.value = "No disponible";
+    return;
+  }
+
+  updateTokenInfo(jwt);
+
+  // 🔄 refrescar cada segundo
+  setInterval(() => updateTokenInfo(jwt), 1000);
+
 })
 </script>
 
@@ -958,7 +1015,7 @@ onMounted(async () => {
   transform: scale(1.05);
 }
 
-.usuario:hover {
+.usuariop:hover {
   background: var(--glass-bg);
   border-color: var(--glass-border);
   color: white;
@@ -1253,12 +1310,15 @@ onMounted(async () => {
   }
 
   .navega {
-    font-size: 14px !important;
-    padding: 0;
+    font-size: 16px !important;
   }
 
   .nave {
     display: none !important;
+  }
+
+  .usuario {
+    padding-right: 0 !important;
   }
 }
 
@@ -1283,6 +1343,7 @@ onMounted(async () => {
   .enhanced-dropdown {
     width: 280px !important;
   }
+
 }
 
 /* Mejoras en accesibilidad */

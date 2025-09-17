@@ -264,32 +264,29 @@ const summaryCards = ref([
     label: 'Ventas Totales',
     value: 0,
     type: 'currency',
-    icon: 'fas fa-chart-line',
+    icon: 'fas fa-cash-register',
     iconBg: 'bg-gradient-primary',
     bgClass: 'bg-primary-pattern',
     textClass: 'text-primary',
     progressClass: 'bg-primary',
     change: 0,
-    trend: 'up',
-    goal: 50000
+    goal: 100000 // meta mensual
   },
   {
-    id: 'purchases',
-    label: 'Compras Realizadas',
+    id: 'expenses',
+    label: 'Egresos Totales',
     value: 0,
     type: 'currency',
-    icon: 'fas fa-shopping-cart',
-    iconBg: 'bg-gradient-success',
-    bgClass: 'bg-success-pattern',
-    textClass: 'text-success',
-    progressClass: 'bg-success',
-    change: 0,
-    trend: 'up',
-    goal: 30000
+    icon: 'fas fa-file-invoice-dollar',
+    iconBg: 'bg-gradient-danger',
+    bgClass: 'bg-danger-pattern',
+    textClass: 'text-danger',
+    progressClass: 'bg-danger',
+    change: 0
   },
   {
     id: 'products',
-    label: 'Productos Activos',
+    label: 'Productos en Inventario',
     value: 0,
     type: 'number',
     icon: 'fas fa-boxes',
@@ -297,12 +294,11 @@ const summaryCards = ref([
     bgClass: 'bg-warning-pattern',
     textClass: 'text-warning',
     progressClass: 'bg-warning',
-    change: 0,
-    trend: 'stable'
+    change: 0
   },
   {
     id: 'customers',
-    label: 'Clientes Activos',
+    label: 'Clientes Registrados',
     value: 0,
     type: 'number',
     icon: 'fas fa-users',
@@ -310,9 +306,7 @@ const summaryCards = ref([
     bgClass: 'bg-info-pattern',
     textClass: 'text-info',
     progressClass: 'bg-info',
-    change: 0,
-    trend: 'up',
-    goal: 500
+    change: 0
   }
 ])
 
@@ -483,9 +477,9 @@ const loadData = async () => {
 
     // Simular llamadas a API
     const [salesRes, purchasesRes, productsRes] = await Promise.all([
-      api.get("/summary?type=sales").catch(() => ({ data: null })),
-      api.get("/summary?type=purchases").catch(() => ({ data: null })),
-      api.get("/summary?type=products").catch(() => ({ data: null }))
+      api.get("/dashboard/sales").catch(() => ({ data: null })),
+      api.get("/dashboard/products").catch(() => ({ data: null })),
+      api.get("/dashboard/customers").catch(() => ({ data: null }))
     ]);
 
     // Si las APIs fallan, usar datos simulados

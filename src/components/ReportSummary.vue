@@ -505,9 +505,7 @@ ChartJS.register(
   Legend
 );
 
-// ----------------------------------------------------
 // Estado reactivo y datos principales
-// ----------------------------------------------------
 const reportData = ref({})
 const loading = ref(false);
 const error = ref(null);
@@ -671,8 +669,8 @@ const updateTrendChart = () => {
 // ----------------------------------------------------
 onMounted(() => {
   const now = moment();
-  dateRange.endDate = now.format('YYYY-MM-DD');
-  dateRange.startDate = now.format('YYYY-MM-DD');
+      dateRange.startDate = now.startOf('month').format('YYYY-MM-DD');
+      dateRange.endDate = now.endOf('month').format('YYYY-MM-DD');
   fetchFullReport(); // Inicia la carga de datos al montar el componente
 });
 
