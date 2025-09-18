@@ -1,14 +1,13 @@
 <template>
-  <div class="dashboard-container px-5 py-4">
+  <div class="dashboard-container px-5 py-4 bg-dark-subtle">
     <!-- Estado de carga global -->
-    <div v-if="globalLoading" class="loading-overlay mt-5 pt-5">
+    <div v-if="globalLoading" class="loading-overlay mt-5 pt-5 d-flex flex-column align-items-center justify-content-center h-100">
       <div class="loading-content">
         <div class="loading-spinner mb-3"></div>
         <h4 class="text-primary fw-bold">Cargando Dashboard</h4>
         <p class="text-muted">Obteniendo datos en tiempo real...</p>
         <div class="progress" style="width: 200px; height: 4px;">
-          <div class="progress-bar progress-bar-striped progress-bar-animated bg-primary" 
-               :style="{ width: loadingProgress + '%' }"></div>
+          <div class="progress-bar progress-bar-striped progress-bar-animated bg-primary" :style="{ width: loadingProgress + '%' }"></div>
         </div>
       </div>
     </div>
@@ -77,7 +76,7 @@
                       <div class="d-flex align-items-center">
                         <span class="change-indicator" :class="getChangeClass(card.change)">
                           <i :class="getChangeIcon(card.change)" class="me-1"></i>
-                          {{ Math.abs(card.change) }}%
+                          {{ Math.abs(card.change).toFixed(0) }}%
                         </span>
                         <span class="text-muted ms-2 small">vs período anterior</span>
                       </div>
@@ -270,7 +269,7 @@ const summaryCards = ref([
     textClass: 'text-primary',
     progressClass: 'bg-primary',
     change: 0,
-    goal: 100000 // meta mensual
+    goal: 10000000
   },
   {
     id: 'expenses',
@@ -435,13 +434,14 @@ const lastUpdated = computed(() => {
 // Métodos
 const formatValue = (value, type) => {
   if (type === 'currency') {
-    return new Intl.NumberFormat('es-ES', {
+    return new Intl.NumberFormat('es-CO', {
       style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 0
+      currency: 'COP',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0
     }).format(value)
   }
-  return value.toLocaleString('es-ES')
+  return value.toLocaleString('es-CO')
 }
 
 const getChangeClass = (change) => {
@@ -469,46 +469,52 @@ const loadData = async () => {
   try {
     // Simular carga progresiva
     const progressSteps = [20, 40, 60, 80, 100]
-    
     for (let i = 0; i < progressSteps.length; i++) {
       await new Promise(resolve => setTimeout(resolve, 200))
       loadingProgress.value = progressSteps[i]
     }
 
-    // Simular llamadas a API
-    const [salesRes, purchasesRes, productsRes] = await Promise.all([
-      api.get("/dashboard/sales").catch(() => ({ data: null })),
-      api.get("/dashboard/products").catch(() => ({ data: null })),
-      api.get("/dashboard/customers").catch(() => ({ data: null }))
+    // Llamadas reales al backend
+    const [salesRes, expensesRes, productsRes, customersRes] = await Promise.all([
+      api.get(`/dashboard/sales?period=${selectedPeriod.value}`),
+      api.get(`/dashboard/expenses?period=${selectedPeriod.value}`),
+      api.get("/dashboard/products"),
+      api.get("/dashboard/customers")
     ]);
 
-    // Si las APIs fallan, usar datos simulados
-    const salesData = salesRes.ok ? await salesRes.json() : { total_sales: 47850, change: 12.5 }
-    const purchasesData = purchasesRes.ok ? await purchasesRes.json() : { total_purchases: 28900, change: 8.3 }
-    const productsData = productsRes.ok ? await productsRes.json() : { total_products: 156, change: 3.2 }
+    // Extraer datos de las respuestas
+    const salesData = salesRes.data || { total_sales: 0, change: 0 }
+    const expensesData = expensesRes.data || { total_expenses: 0, change: 0 }
+    const productsData = productsRes.data || { total_products: 0, change: 0 }
+    const customersData = customersRes.data || { total_customers: 0, change: 0 }
 
     // Actualizar cards
-    summaryCards.value[0].value = salesData.total_sales || 47850
-    summaryCards.value[0].change = salesData.change || 12.5
+    summaryCards.value[0].value = salesData.total_sales
+    summaryCards.value[0].change = salesData.change
     
-    summaryCards.value[1].value = purchasesData.total_purchases || 28900
-    summaryCards.value[1].change = purchasesData.change || 8.3
+    summaryCards.value[1].value = expensesData.total_expenses
+    summaryCards.value[1].change = expensesData.change
     
-    summaryCards.value[2].value = productsData.total_products || 156
-    summaryCards.value[2].change = productsData.change || 3.2
+    summaryCards.value[2].value = productsData.total_products
+    summaryCards.value[2].change = productsData.change
     
-    summaryCards.value[3].value = 342
-    summaryCards.value[3].change = 15.7
+    summaryCards.value[3].value = customersData.total_customers
+    summaryCards.value[3].change = customersData.change
 
   } catch (error) {
     console.error('Error cargando datos:', error)
     // Datos por defecto en caso de error
     summaryCards.value[0].value = 47850
+    summaryCards.value[0].change = 12.5
     summaryCards.value[1].value = 28900
+    summaryCards.value[1].change = 8.3
     summaryCards.value[2].value = 156
+    summaryCards.value[2].change = 3.2
     summaryCards.value[3].value = 342
+    summaryCards.value[3].change = 15.7
   }
 }
+
 
 const refreshData = async () => {
   isRefreshing.value = true
@@ -628,16 +634,8 @@ onMounted(async () => {
 }
 
 .loading-overlay {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
   background: rgba(255, 255, 255, 0);
   backdrop-filter: blur(10px);
-  display: flex;
-  align-items: center;
-  justify-content: center;
   z-index: 9999;
 }
 

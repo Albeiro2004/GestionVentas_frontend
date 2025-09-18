@@ -13,7 +13,6 @@
           </div>
         </div>
         <h5 class="text-white fw-bold mb-1">Sobre Ruedas</h5>
-        <small class="text-muted d-block opacity-75">Sistema de Gestión</small>
       </div>
 
       <!-- Navegación mejorada -->
@@ -197,15 +196,13 @@
       <div class="flex-fill content-scrollable my-0 py-0 position-relative child-scope">
         <div class="container-fluid p-0 m-0 h-100 w-100">
           <transition name="slide-fade" mode="out-in">
-            <div class="isolated-root h-100 w-100" style="position: relative;">
+            <div class="isolated-root h-100 w-100 bg-dark-subtle" style="position: relative;">
               <router-view />
             </div>
           </transition>
         </div>
       </div>
 
-
-      <!-- Modales mejorados -->
       <!-- Modal Perfil -->
       <div class="modal fade" id="perfilModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
