@@ -6,13 +6,8 @@
     <!-- Sidebar profesional con glassmorphism -->
     <nav class="sidebar bg-gradient-dark text-white vh-100 shadow-xl position-fixed" :class="{ open: isSidebarOpen }">
       <!-- Header del sidebar mejorado -->
-      <div class="sidebar-header text-center py-4 border-bottom border-secondary">
-        <div class="logo-container mb-3">
-          <div class="logo-circle bg-warning d-inline-flex align-items-center justify-content-center micro-bounce">
-            <i class="fas fa-chart-line text-dark fs-4"></i>
-          </div>
-        </div>
-        <h5 class="text-white fw-bold mb-1">Sobre Ruedas</h5>
+      <div class="sidebar-header text-center px-0 py-2 border-bottom border-secondary">
+        <img src="/logo.png" alt="Logo Sobre Ruedas" class="img-fluid mx-auto d-block" style="max-height: 120px;" />
       </div>
 
       <!-- Navegación mejorada -->
@@ -666,42 +661,6 @@ onMounted(async () => {
   box-shadow: 
     0 8px 32px rgba(0, 0, 0, 0.3),
     inset 0 1px 0 rgba(255, 255, 255, 0.1);
-}
-
-/* Logo mejorado con efectos */
-.logo-circle {
-  width: 70px;
-  height: 70px;
-  border-radius: 24px;
-  background: linear-gradient(135deg, #ffd700 0%, #ffb347 100%);
-  box-shadow: 
-    0 8px 25px rgba(255, 193, 7, 0.4),
-    0 0 0 3px rgba(255, 255, 255, 0.1);
-  transition: all 0.3s ease;
-  position: relative;
-  overflow: hidden;
-}
-
-.logo-circle::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
-  transition: left 0.5s;
-}
-
-.micro-bounce:hover .logo-circle::before {
-  left: 100%;
-}
-
-.micro-bounce:hover .logo-circle {
-  transform: translateY(-3px) rotate(5deg);
-  box-shadow: 
-    0 12px 35px rgba(255, 193, 7, 0.5),
-    0 0 0 3px rgba(255, 255, 255, 0.2);
 }
 
 /* Header del sidebar mejorado */

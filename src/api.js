@@ -43,7 +43,7 @@ api.interceptors.response.use(
         }
       } 
       else if (status === 403) {
-        Swal.fire("Acceso denegado", "No tienes permisos para realizar esta acción. ¡No eres ADMIN!", "error");
+        Swal.fire("Acceso denegado", "¡Intenta Nuevamente!", "error");
       } 
       else if (status === 404) {
         /* Opcional: Swal.fire("No encontrado", "El recurso solicitado no existe.", "info"); */
@@ -51,7 +51,7 @@ api.interceptors.response.use(
       else if (status >= 500) {
         if (!isRedirecting) {
           isRedirecting = true;
-          Swal.fire("Error del servidor", "Intenta más tarde o contacta al administrador.", "error");
+          Swal.fire("Error del servidor", "¡Contacta al ADMIN!", "error");
           localStorage.removeItem("token");
           localStorage.removeItem("role");
           router.push("/login").finally(() => {
