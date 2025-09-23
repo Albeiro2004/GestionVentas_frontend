@@ -14,7 +14,7 @@
       <div class="sidebar-nav p-3">
         <ul class="nav flex-column">
           <li v-for="link in filteredNavLinks" :key="link.name" class="nav-item mb-1">
-            <router-link :to="link.route" class="nav-link text-white rounded-3 py-3 px-3 sidebar-link" :class="{
+            <router-link :to="link.route" class="nav-link text-white rounded-3 p-3 sidebar-link" :class="{
               'active text-dark shadow-sm enfocado': $route.path === link.route //👈 Revisa aquí
               }" @click="closeSidebar">
               <div class="d-flex align-items-center">
@@ -23,7 +23,7 @@
                 </div>
                 <div class="flex-grow-1">
                   <div class="fw-semibold text-warning">{{ link.label }}</div>
-                  <small class="text-muted d-block" style="color: aliceblue !important;" v-if="link.description">
+                  <small class="text-muted d-block" style="color: aliceblue !important; font-size: smaller;" v-if="link.description">
                     {{ link.description }}
                   </small>
                 </div>
@@ -110,7 +110,7 @@
                   {{ notificationCount }}
                 </span>
               </button>
-              <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0 mt-2 enhanced-dropdown"
+              <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0 mt-2 enhanced-dropdown noti"
                 style="width: 320px;">
                 <li class="dropdown-header d-flex justify-content-between align-items-center py-3">
                   <span class="fw-bold">Notificaciones</span>
@@ -120,25 +120,17 @@
                   <hr class="dropdown-divider">
                 </li>
                 <li v-for="notification in notifications" :key="notification.id">
-                  <a class="dropdown-item py-3 notification-item" href="#">
+                  <a class="dropdown-item p-3 mx-0 notification-item" href="#">
                     <div class="d-flex align-items-start">
-                      <div class="flex-shrink-0">
+                      <div class="flex-shrink-0 text-danger">
                         <i :class="notification.icon" :style="{ color: notification.color }"></i>
                       </div>
-                      <div class="flex-grow-1 ms-3">
-                        <div class="fw-semibold">{{ notification.title }}</div>
-                        <small class="text-muted">{{ notification.message }}</small>
+                      <div class="flex-grow-1 ms-3 text-truncate">
+                        <div class="fw-semibold text-wrap text-white">{{ notification.title }}</div>
+                        <small class="text-muted text-wrap">{{ notification.message }}</small>
                         <small class="text-muted d-block">{{ notification.time }}</small>
                       </div>
                     </div>
-                  </a>
-                </li>
-                <li>
-                  <hr class="dropdown-divider">
-                </li>
-                <li>
-                  <a class="dropdown-item text-center py-2 text-primary" href="#">
-                    <small>Ver todas las notificaciones</small>
                   </a>
                 </li>
               </ul>
@@ -189,9 +181,9 @@
       </nav>
 
       <div class="flex-fill content-scrollable my-0 py-0 position-relative child-scope">
-        <div class="container-fluid p-0 m-0 h-100 w-100">
+        <div class="container-fluid p-0 m-0 w-100">
           <transition name="slide-fade" mode="out-in">
-            <div class="isolated-root h-100 w-100 bg-dark-subtle" style="position: relative;">
+            <div class="isolated-root w-100" style="position: relative;">
               <router-view />
             </div>
           </transition>
@@ -301,7 +293,7 @@ import { ref, computed, onMounted, nextTick } from "vue"
 import * as bootstrap from "bootstrap"
 import { useDeudas } from '@/composables/useDeudas'
 import { useRouter, useRoute} from 'vue-router'
-
+import api from '@/api'
 
 const { deudasPendientes, fetchDeudasPendientes } = useDeudas()
 const route = useRoute()
@@ -315,12 +307,12 @@ const password = ref("")
 const router = useRouter()
 
 // Estados mejorados
-const notificationCount = ref(3)
 const lastLogin = ref("Hoy, 10:30 AM")
 const userAvatar = ref("https://imgs.search.brave.com/41T2ZiW65TNJLqsqvfpph6-mImFuGDE8uI221O7FiD4/rs:fit:860:0:0:0/g:ce/aHR0cHM6Ly9jZG4t/aWNvbnMtcG5nLmZs/YXRpY29uLmNvbS8x/MjgvNjA3My82MDcz/ODczLnBuZw")
 const tokenLifePercent = ref(0);
 const tokenTimeRemaining = ref("");
-
+const notifications = ref([]); 
+const notificationCount = computed(() => notifications.value.length);
 
 function parseJwt(token) {
   try {
@@ -363,7 +355,16 @@ function updateTokenInfo(token) {
   tokenTimeRemaining.value = `${minutes}m ${seconds}s`;
 }
 
-// Notificaciones mejoradas
+const loadNotifications = async () => {
+  try {
+    const response = await api.get("/dashboard/alerts");
+    notifications.value = response.data; // aquí debe venir un array de objetos
+  } catch (error) {
+    console.error("Error cargando notificaciones:", error);
+  }
+};
+
+/* Notificaciones mejoradas
 const notifications = ref([
   {
     id: 1,
@@ -389,7 +390,7 @@ const notifications = ref([
     message: "Cliente: María García - $500",
     time: "Hace 2 horas"
   }
-])
+])*/
 
 // Función mejorada para guardar configuración
 function guardarConfig() {
@@ -557,6 +558,8 @@ onMounted(async () => {
 
   // 🔄 refrescar cada segundo
   setInterval(() => updateTokenInfo(jwt), 1000);
+
+  loadNotifications();
 
 })
 </script>
@@ -969,6 +972,23 @@ onMounted(async () => {
   border-color: var(--glass-border);
   color: white;
   transform: scale(1.05);
+}
+
+.noti {
+  background: linear-gradient(135deg, 
+    rgba(26, 26, 46, 0.9) 0%, 
+    rgba(22, 33, 62, 0.9) 50%, 
+    rgba(15, 52, 96, 0.9) 100%) !important;
+}
+
+.notification-item {
+  white-space: normal;       /* Permite que el texto se divida en varias líneas */
+  word-wrap: break-word;     /* Rompe palabras largas si es necesario */
+  max-width: 100%;           /* Se ajusta al ancho del contenedor */
+}
+
+.notification-item small {
+  display: block;            /* Para que cada línea de mensaje/tiempo baje */
 }
 
 .usuariop:hover {

@@ -1,5 +1,5 @@
 <template>
-  <div class="dashboard-container p-4 bg-dark-subtle">
+  <div class="dashboard-container p-4">
     <!-- Estado de carga global -->
     <div v-if="globalLoading"
       class="loading-overlay mt-5 pt-5 d-flex flex-column align-items-center justify-content-center h-100">
@@ -114,7 +114,7 @@
                   <div v-if="card.goal" class="mt-3">
                     <div class="d-flex justify-content-between align-items-center mb-2">
                       <small class="text-muted">Objetivo del {{ selectedPeriod === 'month' ? 'mes' : 'período'
-                        }}</small>
+                      }}</small>
                       <small class="fw-semibold">{{ Math.round((card.value / card.goal) * 100) }}%</small>
                     </div>
                     <div class="progress" style="height: 6px;">
@@ -158,37 +158,31 @@
         </div>
       </div>
 
-      <!-- Panel de actividad reciente -->
       <div class="col-xl-4 col-12">
         <div class="card border-0 shadow-sm h-100">
           <div class="card-header bg-white border-bottom py-3">
-            <div class="d-flex justify-content-between align-items-center">
-              <div>
-                <h5 class="fw-bold mb-1">Actividad Reciente</h5>
-                <p class="text-muted small mb-0">Últimas transacciones</p>
-              </div>
-              <button class="btn btn-link btn-sm text-primary p-0">
-                Ver todas <i class="fas fa-arrow-right ms-1"></i>
-              </button>
-            </div>
+            <h5 class="fw-bold mb-1">Alertas del Sistema</h5>
+            <p class="text-muted small mb-0">Notificaciones importantes</p>
           </div>
-          <div class="card-body p-0">
-            <div class="activity-list">
-              <div v-for="activity in recentActivities" :key="activity.id"
-                class="activity-item d-flex align-items-center p-3 border-bottom">
-                <div class="activity-icon me-3" :class="activity.iconBg">
-                  <i :class="activity.icon" class="text-white"></i>
-                </div>
-                <div class="flex-grow-1">
-                  <div class="fw-semibold">{{ activity.title }}</div>
-                  <div class="text-muted small">{{ activity.description }}</div>
-                  <div class="text-muted small">
-                    <i class="fas fa-clock me-1"></i>
-                    {{ activity.time }}
+          <div class="card-body">
+            <div class="alerts-container">
+              <div v-for="alert in systemAlerts" :key="alert.id" class="alert-item mb-3 p-3 rounded-3"
+                :class="alert.alertClass">
+                <div class="d-flex align-items-start">
+                  <div class="alert-icon me-3">
+                    <i :class="[alert.icon, alert.iconClass || '']"></i>
                   </div>
-                </div>
-                <div class="activity-amount fw-bold" :class="activity.amountClass">
-                  {{ activity.amount }}
+                  <div class="flex-grow-1">
+                    <div class="fw-semibold mb-1">{{ alert.title }}</div>
+                    <div class="small">{{ alert.message }}</div>
+                    <div class="text-muted small mt-1">
+                      <i class="fas fa-clock me-1"></i>
+                      {{ alert.time }}
+                    </div>
+                  </div>
+                  <button class="btn btn-link btn-sm text-muted p-0">
+                    <i class="fas fa-times"></i>
+                  </button>
                 </div>
               </div>
             </div>
@@ -228,32 +222,36 @@
         </div>
       </div>
 
-      <!-- Alertas y notificaciones -->
       <div class="col-xl-6 col-12">
         <div class="card border-0 shadow-sm h-100">
           <div class="card-header bg-white border-bottom py-3">
-            <h5 class="fw-bold mb-1">Alertas del Sistema</h5>
-            <p class="text-muted small mb-0">Notificaciones importantes</p>
+            <div class="d-flex justify-content-between align-items-center">
+              <div>
+                <h5 class="fw-bold mb-1">Actividad Reciente</h5>
+                <p class="text-muted small mb-0">Últimas transacciones</p>
+              </div>
+              <button class="btn btn-link btn-sm text-primary p-0">
+                Ver todas <i class="fas fa-arrow-right ms-1"></i>
+              </button>
+            </div>
           </div>
-          <div class="card-body">
-            <div class="alerts-container">
-              <div v-for="alert in systemAlerts" :key="alert.id" class="alert-item mb-3 p-3 rounded-3"
-                :class="alert.alertClass">
-                <div class="d-flex align-items-start">
-                  <div class="alert-icon me-3">
-                    <i :class="[alert.icon, alert.iconClass || '']"></i>
+          <div class="card-body p-0">
+            <div class="activity-list">
+              <div v-for="activity in recentActivities" :key="activity.id"
+                class="activity-item d-flex align-items-center p-3 border-bottom">
+                <div class="activity-icon me-3" :class="activity.iconBg">
+                  <i :class="activity.icon" class="text-white"></i>
+                </div>
+                <div class="flex-grow-1">
+                  <div class="fw-semibold">{{ activity.title }}</div>
+                  <div class="text-muted small">{{ activity.description }}</div>
+                  <div class="text-muted small">
+                    <i class="fas fa-clock me-1"></i>
+                    {{ activity.time }}
                   </div>
-                  <div class="flex-grow-1">
-                    <div class="fw-semibold mb-1">{{ alert.title }}</div>
-                    <div class="small">{{ alert.message }}</div>
-                    <div class="text-muted small mt-1">
-                      <i class="fas fa-clock me-1"></i>
-                      {{ alert.time }}
-                    </div>
-                  </div>
-                  <button class="btn btn-link btn-sm text-muted p-0">
-                    <i class="fas fa-times"></i>
-                  </button>
+                </div>
+                <div class="activity-amount fw-bold" :class="activity.amountClass">
+                  {{ activity.amount }}
                 </div>
               </div>
             </div>
@@ -265,7 +263,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed, watch, nextTick } from 'vue'
+import { ref, onMounted, computed, watch, nextTick, onBeforeUnmount } from 'vue'
 import { Chart, registerables } from "chart.js";
 import api from "@/api";
 import { useRouter } from 'vue-router'
@@ -477,13 +475,13 @@ const loadData = async () => {
     // Actualizar cards
     summaryCards.value[0].value = sales.total_sales
     summaryCards.value[0].change = sales.change
-    
+
     summaryCards.value[1].value = expensesData.total_expenses
     summaryCards.value[1].change = expensesData.change
-    
+
     summaryCards.value[2].value = productsData.total_products
     summaryCards.value[2].change = productsData.change
-    
+
     summaryCards.value[3].value = customersData.total_customers
     summaryCards.value[3].change = customersData.change
 
@@ -504,23 +502,22 @@ const loadData = async () => {
 
 const refreshData = async () => {
   isRefreshing.value = true
-  await loadData()   
-  updateChart()       
+  await loadData()
+  updateChart()
   setTimeout(() => {
     isRefreshing.value = false
   }, 1000)
 }
 
 const createChart = () => {
-
   if (!salesChart.value) {
     console.warn("⚠️ Canvas aún no está en el DOM")
     return
   }
 
   const ctx = salesChart.value.getContext("2d")
-  if (!ctx || typeof ctx.save !== "function") {
-    console.warn("⚠️ Contexto de canvas inválido")
+  if (!ctx) {
+    console.warn("⚠️ Contexto inválido (canvas desmontado)")
     return
   }
 
@@ -529,99 +526,83 @@ const createChart = () => {
     return
   }
 
+  // 🔹 destruye solo aquí
   if (chartInstance.value) {
     chartInstance.value.destroy()
-  }
-
-  const data = {
-    labels: salesData.value.labels,     
-    datasets: [
-      {
-        label: 'Ventas actuales',
-        data: salesData.value.actual,   
-        borderColor: '#0d6efd',
-        backgroundColor: 'rgba(13, 110, 253, 0.1)',
-        borderWidth: 3,
-        fill: chartType.value === 'line',
-        tension: 0.4
-      },
-      {
-        label: 'Ventas anteriores',
-        data: salesData.value.previous,
-        borderColor: '#6c757d',
-        backgroundColor: 'rgba(108, 117, 125, 0.1)',
-        borderWidth: 2,
-        fill: false,
-        tension: 0.4
-      }
-    ]
+    chartInstance.value = null
   }
 
   chartInstance.value = new Chart(ctx, {
     type: chartType.value,
-    data: data,
+    data: {
+      labels: salesData.value.labels,
+      datasets: [
+        {
+          label: "Ventas actuales",
+          data: salesData.value.actual,
+          borderColor: "#0d6efd",
+          backgroundColor: "rgba(13, 110, 253, 0.1)",
+          borderWidth: 3,
+          fill: chartType.value === "line",
+          tension: 0.4
+        },
+        {
+          label: "Ventas anteriores",
+          data: salesData.value.previous,
+          borderColor: "#6c757d",
+          backgroundColor: "rgba(108, 117, 125, 0.1)",
+          borderWidth: 2,
+          fill: false,
+          tension: 0.4
+        }
+      ]
+    },
     options: {
       responsive: true,
       maintainAspectRatio: false,
+      animation: false, // 👈 corta animaciones largas
       plugins: {
         legend: {
-          position: 'top',
-          labels: {
-            usePointStyle: true,
-            padding: 20
-          }
+          position: "top",
+          labels: { usePointStyle: true, padding: 20 }
         },
         tooltip: {
-          backgroundColor: 'rgba(0, 0, 0, 0.8)',
-          titleColor: 'white',
-          bodyColor: 'white',
-          borderColor: '#0d6efd',
-          borderWidth: 1,
           callbacks: {
             label: (ctx) => ` $${ctx.parsed.y.toLocaleString()}`
           }
         }
       },
       scales: {
-        y: {
-          beginAtZero: true,
-          grid: {
-            color: 'rgba(0, 0, 0, 0.05)'
-          },
-          ticks: {
-            callback: function(value) {
-              return '$' + value.toLocaleString()
-            }
-          }
-        },
-        x: {
-          grid: { display: false }
-        }
+        y: { beginAtZero: true },
+        x: { grid: { display: false } }
       }
     }
   })
 }
 
-const updateChart = () => {
-  nextTick(() => {
-    createChart()
-  })
-}
-
-// 🔹 Watchers
+// 🔹 Watcher simplificado
 watch(chartType, () => {
   updateChart()
 })
 
+// 🔹 UpdateChart solo redibuja
+const updateChart = () => {
+  nextTick(() => createChart())
+}
+
+// 🔹 Montaje seguro
 onMounted(async () => {
   await loadData()
   globalLoading.value = false
-
-  // Espera a que Vue pinte el DOM sin el v-if
   await nextTick()
+  createChart()
+})
 
-  if (salesData.value.labels.length) {
-    createChart()
+// 🔹 Limpieza al desmontar
+onBeforeUnmount(() => {
+  if (chartInstance.value) {
+    chartInstance.value.destroy()
+    chartInstance.value = null
   }
 })
 
@@ -737,10 +718,10 @@ onMounted(async () => {
 .sparkline {
   width: 60px;
   height: 20px;
-  background: linear-gradient(90deg, 
-    rgba(13, 110, 253, 0.1) 0%, 
-    rgba(13, 110, 253, 0.3) 50%, 
-    rgba(13, 110, 253, 0.1) 100%);
+  background: linear-gradient(90deg,
+      rgba(13, 110, 253, 0.1) 0%,
+      rgba(13, 110, 253, 0.3) 50%,
+      rgba(13, 110, 253, 0.1) 100%);
   border-radius: 10px;
   position: relative;
   overflow: hidden;
@@ -753,10 +734,10 @@ onMounted(async () => {
   left: -100%;
   width: 100%;
   height: 100%;
-  background: linear-gradient(90deg, 
-    transparent, 
-    rgba(255, 255, 255, 0.4), 
-    transparent);
+  background: linear-gradient(90deg,
+      transparent,
+      rgba(255, 255, 255, 0.4),
+      transparent);
   animation: shimmer 2s infinite;
 }
 
@@ -878,6 +859,7 @@ onMounted(async () => {
     opacity: 0;
     transform: translateY(30px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -889,6 +871,7 @@ onMounted(async () => {
     opacity: 0;
     transform: translateY(50px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -896,18 +879,35 @@ onMounted(async () => {
 }
 
 @keyframes spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 @keyframes shimmer {
-  0% { left: -100%; }
-  100% { left: 100%; }
+  0% {
+    left: -100%;
+  }
+
+  100% {
+    left: 100%;
+  }
 }
 
 @keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.7; }
+
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.7;
+  }
 }
 
 /* Efectos de hover mejorados */
@@ -927,6 +927,7 @@ onMounted(async () => {
     opacity: 0;
     transform: translateY(-10px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -965,16 +966,14 @@ onMounted(async () => {
   left: 0;
   bottom: 0;
   right: 0;
-  background-image: linear-gradient(
-    -45deg,
-    rgba(255, 255, 255, 0.2) 25%,
-    transparent 25%,
-    transparent 50%,
-    rgba(255, 255, 255, 0.2) 50%,
-    rgba(255, 255, 255, 0.2) 75%,
-    transparent 75%,
-    transparent
-  );
+  background-image: linear-gradient(-45deg,
+      rgba(255, 255, 255, 0.2) 25%,
+      transparent 25%,
+      transparent 50%,
+      rgba(255, 255, 255, 0.2) 50%,
+      rgba(255, 255, 255, 0.2) 75%,
+      transparent 75%,
+      transparent);
   z-index: 1;
   background-size: 50px 50px;
   animation: move 2s linear infinite;
@@ -984,6 +983,7 @@ onMounted(async () => {
   0% {
     background-position: 0 0;
   }
+
   100% {
     background-position: 50px 50px;
   }
@@ -1017,25 +1017,25 @@ onMounted(async () => {
   .metric-value {
     font-size: 1.5rem;
   }
-  
+
   .metric-icon {
     width: 50px;
     height: 50px;
   }
-  
+
   .chart-container {
     height: 250px !important;
   }
-  
+
   .activity-item,
   .product-item {
     padding: 0.75rem;
   }
-  
+
   .dashboard-container .row {
     margin: 0;
   }
-  
+
   .dashboard-container .col-12,
   .dashboard-container .col-md-6,
   .dashboard-container .col-xl-3,
@@ -1052,11 +1052,11 @@ onMounted(async () => {
     flex-direction: column;
     gap: 1rem;
   }
-  
+
   .btn-group {
     width: 100%;
   }
-  
+
   .btn-group .btn {
     flex: 1;
   }
@@ -1069,18 +1069,18 @@ onMounted(async () => {
     color: rgb(56, 152, 216);
     border-radius: 20px;
   }
-  
+
   .text-muted {
     color: #747474 !important;
   }
-  
+
   .bg-white {
-    background: linear-gradient(135deg, 
-    rgba(26, 26, 46, 0.95) 0%, 
-    rgba(22, 33, 62, 0.95) 50%, 
-    rgba(15, 52, 96, 0.95) 100%) !important;
+    background: linear-gradient(135deg,
+        rgba(26, 26, 46, 0.95) 0%,
+        rgba(22, 33, 62, 0.95) 50%,
+        rgba(15, 52, 96, 0.95) 100%) !important;
   }
-  
+
   .border-bottom {
     border-color: #4a5568 !important;
   }
