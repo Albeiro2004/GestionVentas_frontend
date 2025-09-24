@@ -180,9 +180,6 @@
                       {{ alert.time }}
                     </div>
                   </div>
-                  <button class="btn btn-link btn-sm text-muted p-0">
-                    <i class="fas fa-times"></i>
-                  </button>
                 </div>
               </div>
             </div>
