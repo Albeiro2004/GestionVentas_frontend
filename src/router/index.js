@@ -9,6 +9,7 @@ import UsuariosGestion from '@/components/UsuariosGestion.vue'
 import SaleForm from '@/components/SaleForm.vue'
 import ReportSummary from '@/components/ReportSummary.vue'
 import DashboardCards from '@/components/DashboardCards.vue'
+import ServiceAndPayments from '@/components/ServiceAndPayments.vue'
 
 const routes = [
   { path: '/', redirect: '/login' },
@@ -25,6 +26,7 @@ const routes = [
       { path: 'users', name: 'users', component: UsuariosGestion },
       { path: 'invoices', name: 'invoices', component: InvoicesManager },
       { path: 'reports', name: 'reports', component: ReportSummary },
+      { path: 'service', name: 'service', component: ServiceAndPayments },
     ]
   }
 ];

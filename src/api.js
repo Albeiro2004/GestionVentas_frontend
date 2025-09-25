@@ -8,6 +8,8 @@ if (!apiUrl) {
   console.error("VUE_APP_API_URL no está definida!");
 }
 
+//const apiUrl = "http://localhost:8080/Ventas";
+
 const api = axios.create({
   baseURL: apiUrl,
 });

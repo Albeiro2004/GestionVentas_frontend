@@ -481,6 +481,14 @@ const navLinks = [
     roles: ["ADMIN", "USER"],
     route: "/Home/reports"
   },
+  { 
+    name: "service", 
+    label: "Taller", 
+    icon: "fas fa-chart-bar",
+    description: "Servicios y Pagos",
+    roles: ["ADMIN"],
+    route: "/Home/service"
+  }
 ]
 
 const filteredNavLinks = computed(() => {
