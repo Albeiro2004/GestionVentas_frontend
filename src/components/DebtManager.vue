@@ -135,7 +135,7 @@
                 <td>
                   <div class="customer-info">
                     <div class="customer-avatar">
-                      {{ debt.customerName.charAt(0).toUpperCase() }}
+                      {{ debt.customerName ? debt.customerName.charAt(0).toUpperCase() : "?" }}
                     </div>
                     <div class="customer-details">
                       <div class="customer-name">{{ debt.customerName }}</div>
@@ -399,7 +399,7 @@
                     <tr v-for="customer in filteredCustomers" :key="customer.customerId" class="debt-row">
                       <td>
                         <div class="customer-info">
-                          <div class="customer-avatar">{{ customer.customerName.charAt(0).toUpperCase() }}</div>
+                          <div class="customer-avatar">{{ customer.customerName ? customer.customerName.charAt(0).toUpperCase() : "?"}}</div>
                           <div class="customer-details">
                             <div class="customer-name">{{ customer.customerName }}</div>
                             <small class="text-muted">ID: {{ customer.customerId }}</small>

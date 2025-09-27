@@ -54,11 +54,13 @@
                     <div class="card-body">
                         <form @submit.prevent="registerService">
                             <div class="row g-3">
+
+                                <!-- Descripción -->
                                 <div class="col-md-6">
                                     <label class="form-label fw-semibold">Descripción del Servicio *</label>
                                     <input type="text" class="form-control form-control-lg"
-                                        :class="{ 'is-invalid': serviceErrors.description }"
                                         v-model="service.description"
+                                        :class="{ 'is-invalid': serviceErrors.description }"
                                         placeholder="Ej: Cambio de aceite, Reparación de frenos..."
                                         :disabled="loadingRegister">
                                     <div v-if="serviceErrors.description" class="invalid-feedback">
@@ -66,35 +68,39 @@
                                     </div>
                                 </div>
 
+                                <!-- Mano de obra -->
                                 <div class="col-md-6">
-                                    <label class="form-label fw-semibold">Precio Total *</label>
+                                    <label class="form-label fw-semibold">Costo Mano de Obra *</label>
                                     <div class="input-group input-group-lg">
                                         <span class="input-group-text">$</span>
                                         <input type="number" step="0.01" min="0" class="form-control"
-                                            :class="{ 'is-invalid': serviceErrors.totalPrice }"
-                                            v-model.number="service.totalPrice" placeholder="0.00"
+                                            v-model.number="service.laborCost"
+                                            :class="{ 'is-invalid': serviceErrors.laborCost }" placeholder="0.00"
                                             :disabled="loadingRegister">
-                                        <div v-if="serviceErrors.totalPrice" class="invalid-feedback">
-                                            {{ serviceErrors.totalPrice }}
+                                        <div v-if="serviceErrors.laborCost" class="invalid-feedback">
+                                            {{ serviceErrors.laborCost }}
                                         </div>
                                     </div>
                                 </div>
 
+                                <!-- Cliente -->
                                 <div class="col-md-6">
                                     <label class="form-label fw-semibold">Cliente *</label>
                                     <div class="position-relative">
-                                        <input type="text" class="form-control form-control-lg"
-                                            :class="{ 'is-invalid': serviceErrors.customerId }" v-model="customerSearch"
+                                        <input type="text" class="form-control form-control-lg" v-model="customerSearch"
                                             @input="handleSearchCustomers"
+                                            :class="{ 'is-invalid': serviceErrors.customerId }"
                                             placeholder="Buscar cliente por nombre o documento..."
                                             :disabled="loadingRegister" autocomplete="off">
+
+                                        <!-- Spinner -->
                                         <div v-if="loadingCustomers"
                                             class="position-absolute top-50 end-0 translate-middle-y me-3">
                                             <div class="spinner-border spinner-border-sm text-primary" role="status">
                                             </div>
                                         </div>
 
-                                        <!-- Dropdown de clientes -->
+                                        <!-- Dropdown -->
                                         <div v-if="customerOptions.length && showCustomerDropdown"
                                             class="customer-dropdown">
                                             <div v-for="customer in customerOptions" :key="customer.value"
@@ -109,10 +115,11 @@
                                     </div>
                                 </div>
 
+                                <!-- Trabajador -->
                                 <div class="col-md-6">
                                     <label class="form-label fw-semibold">Trabajador Asignado *</label>
-                                    <select class="form-select form-select-lg"
-                                        :class="{ 'is-invalid': serviceErrors.workerId }" v-model="service.workerId"
+                                    <select class="form-select form-select-lg" v-model="service.workerId"
+                                        :class="{ 'is-invalid': serviceErrors.workerId }"
                                         :disabled="loadingRegister || loadingWorkers">
                                         <option value="">Seleccionar trabajador</option>
                                         <option v-for="worker in workerOptions" :key="worker.value"
@@ -125,6 +132,54 @@
                                     </div>
                                 </div>
 
+                                <!-- Tipo de pago -->
+                                <div class="col-md-6">
+                                    <label class="form-label fw-semibold">Tipo de Pago *</label>
+                                    <select class="form-select form-select-lg" v-model="service.paymentType"
+                                        :class="{ 'is-invalid': serviceErrors.paymentType }"
+                                        :disabled="loadingRegister">
+                                        <option value="">Seleccionar</option>
+                                        <option value="INMEDIATE">Contado</option>
+                                        <option value="ABONO">Abono</option>
+                                        <option value="DEBT">Fiado</option>
+                                    </select>
+                                    <div v-if="serviceErrors.paymentType" class="invalid-feedback">
+                                        {{ serviceErrors.paymentType }}
+                                    </div>
+                                </div>
+
+                                <!-- Abono inicial (solo si ABONO) -->
+                                <div class="col-md-6" v-if="service.paymentType === 'ABONO'">
+                                    <label class="form-label fw-semibold">Abono inicial</label>
+                                    <div class="input-group input-group-lg">
+                                        <span class="input-group-text">$</span>
+                                        <input type="number" step="0.01" min="0" class="form-control"
+                                            v-model.number="service.abonoAmount" placeholder="0.00"
+                                            :disabled="loadingRegister">
+                                    </div>
+                                </div>
+
+                                <!-- Productos asociados -->
+                                <div class="col-12">
+                                    <label class="form-label fw-semibold">Productos utilizados</label>
+
+                                    <!-- Lista de productos agregados -->
+                                    <div v-for="(p, index) in service.products" :key="index" class="d-flex gap-2 mb-2">
+                                        <span class="flex-grow-1">{{ p.name }} (ID: {{ p.productId }})</span>
+                                        <input type="number" min="1" class="form-control w-25"
+                                            v-model.number="p.quantity" placeholder="Cantidad">
+                                        <button type="button" class="btn btn-sm btn-danger"
+                                            @click="removeProduct(index)">X</button>
+                                    </div>
+
+                                    <!-- Abrir modal -->
+                                    <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal"
+                                        data-bs-target="#productModal" @click="openProductSelector">
+                                        + Agregar producto
+                                    </button>
+                                </div>
+
+                                <!-- Botones -->
                                 <div class="col-12">
                                     <div class="d-flex gap-2">
                                         <button type="submit" class="btn btn-primary btn-lg flex-fill"
@@ -141,6 +196,7 @@
                                         </button>
                                     </div>
                                 </div>
+
                             </div>
                         </form>
                     </div>
@@ -413,15 +469,61 @@
                 </div>
             </div>
         </div>
+
+        <!-- Modal de productos -->
+        <Teleport to="body">
+            <div class="modal fade" id="productModal" tabindex="-1" aria-hidden="true" ref="productModalRef">
+                <div class="modal-dialog modal-lg modal-dialog-scrollable">
+                    <div class="modal-content">
+                        <div class="modal-header bg-primary text-white">
+                            <h5 class="modal-title">Seleccionar producto</h5>
+                            <button type="button" class="btn-close" @click="hideProductModal"
+                                aria-label="Cerrar"></button>
+                        </div>
+                        <div class="modal-body">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Nombre</th>
+                                        <th>Precio</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr v-for="prod in productOptions" :key="prod.id" @click="addProductFromModal(prod)"
+                                        style="cursor:pointer">
+                                        <td>{{ prod.id }}</td>
+                                        <td>{{ prod.nombre }}</td>
+                                        <td>${{ prod.precioVenta.toFixed(2) }}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+
+                            <div v-if="loadingProducts" class="text-center my-3">
+                                <div class="spinner-border text-primary" role="status"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </Teleport>
+
     </div>
 </template>
 
 <script setup>
 import { ref, onMounted } from "vue";
 import api from "@/api";
+import { useModal } from '@/composables/useModal';
 
 // Tabs
 const currentTab = ref("register");
+
+const {
+  modalRef: productModalRef,
+  show: showProductModal,
+  hide: hideProductModal
+} = useModal('productModal');
 
 // Estados de carga
 const loadingRegister = ref(false);
@@ -435,10 +537,61 @@ const loadingWorkers = ref(false);
 // Estados principales
 const service = ref({
     description: "",
-    totalPrice: null,
-    customerId: null,
-    workerId: null || ""
+    laborCost: 0,
+    customerId: "",
+    workerId: "",
+    paymentType: "INMEDIATE",
+    abonoAmount: null,
+    products: []
 });
+
+
+const productOptions = ref([]);
+const loadingProducts = ref(false);
+
+const openProductSelector = () => {
+  showProductModal();
+  loadProducts();
+};
+
+
+const loadProducts = async () => {
+    loadingProducts.value = true;
+    try {
+        const { data } = await api.get("/products"); // ✅ Ajusta tu endpoint
+        productOptions.value = data;
+    } catch (e) {
+        console.error("Error cargando productos", e);
+    } finally {
+        loadingProducts.value = false;
+    }
+};
+
+const addProductFromModal = (prod) => {
+    if (!prod) return; // 👈 valida que no llegue undefined
+
+    if (!Array.isArray(service.value.products)) {
+        service.value.products = []; // 👈 asegura que sea array
+    }
+
+    const exists = service.value.products.find(p => p.productId === prod.id);
+
+    if (!exists) {
+        service.value.products.push({
+            productId: prod.id,
+            name: prod.nombre,
+            quantity: 1,
+        });
+    } else {
+        exists.quantity += 1;
+    }
+
+    hideProductModal();
+};
+
+const removeProduct = (index) => {
+    service.value.products.splice(index, 1);
+};
 
 const payment = ref({
     workerId: null,
@@ -532,8 +685,8 @@ const validateService = () => {
         errors.description = "La descripción es obligatoria";
     }
 
-    if (!service.value.totalPrice || service.value.totalPrice <= 0) {
-        errors.totalPrice = "El precio debe ser mayor a 0";
+    if (!service.value.laborCost || service.value.laborCost <= 0) {
+        errors.laborCost = "El costo de mano de obra debe ser mayor a 0";
     }
 
     if (!service.value.customerId) {
@@ -547,6 +700,7 @@ const validateService = () => {
     serviceErrors.value = errors;
     return Object.keys(errors).length === 0;
 };
+
 
 const validatePayment = () => {
     const errors = {};
@@ -564,17 +718,21 @@ const validatePayment = () => {
 };
 
 const resetServiceForm = () => {
-    service.value = {
-        description: "",
-        totalPrice: null,
-        customerId: null,
-        workerId: null || ""
-    };
-    serviceErrors.value = {};
-    customerSearch.value = "";
-    showCustomerDropdown.value = false;
-    loadGenericCustomer();
+  service.value = {
+    description: "",
+    laborCost: null,
+    customerId: null,
+    workerId: "" ,
+    paymentType: "INMEDIATE",
+    abonoAmount: null,
+    products: [] // 👈 mantener array vacío
+  };
+  serviceErrors.value = {};
+  customerSearch.value = "";
+  showCustomerDropdown.value = false;
+  loadGenericCustomer();
 };
+
 
 const resetPaymentForm = () => {
     payment.value = {
