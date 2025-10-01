@@ -1,5 +1,5 @@
 <template>
-    <div class="position-absolute p-0 m-0 w-100 h-100">
+    <div class="position-relative p-0 m-0 w-100 h-100">
         <div class="container-fluid m-0 p-0" style="overflow-x: auto;">
 
             <!-- Encabezado como card -->
@@ -288,8 +288,8 @@
 
             <!-- Detail Modal -->
             <div v-if="selectedInvoice" class="modal fade show d-block" tabindex="-1" 
-                style="background: rgba(0,0,0,.6); position: absolute; top: 0; left: 0; width: 100%; height: 100%; overflow: auto;" @click.self="closeModal">
-                <div class="modal-dialog modal-xl">
+                style="background: rgba(0,0,0,.6); position: absolute; top: 0; left: 0; width: 100%; height: 100%; overflow: auto; z-index: 1050;" @click.self="closeModal">
+                <div class="modal-dialog modal-xl modal-dialog-centered" style="z-index: 1060;">
                     <div class="modal-content shadow-lg">
                         <div class="modal-header bg-primary text-white">
                             <h5 class="modal-title">

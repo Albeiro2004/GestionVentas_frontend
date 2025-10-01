@@ -108,6 +108,10 @@
                   Cliente
                   <i class="fas fa-sort ms-2" :class="getSortIcon('customerName')"></i>
                 </th>
+                <th class="text-center">
+                  <i class="fas fa-info-circle me-2"></i>
+                  Descipción
+                </th>
                 <th class="text-end sortable" @click="sortBy('totalAmount')">
                   <i class="fas fa-dollar-sign me-2"></i>
                   Monto Total
@@ -142,6 +146,9 @@
                       <small class="text-muted">ID: {{ debt.id }}</small>
                     </div>
                   </div>
+                </td>
+                <td class="text-end">
+                  <div class="text-center text-uppercase text-muted">{{ debt.description }}</div>
                 </td>
                 <td class="text-end">
                   <div class="amount-total">${{ debt.totalAmount.toFixed(2) }}</div>

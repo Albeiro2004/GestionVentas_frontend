@@ -90,6 +90,10 @@
                       <i class="fas fa-tag me-1"></i>
                       Nombre
                     </th>
+                    <th scope="col" class="fw-semibold">
+                      <i class="fas fa-tag me-1"></i>
+                      Marca
+                    </th>
                     <th scope="col" class="fw-semibold text-center">
                       <i class="fas fa-dollar-sign me-1"></i>
                       P. Compra
@@ -121,6 +125,11 @@
                           <i class="fas fa-box text-primary"></i>
                         </div>
                         <span class="fw-medium">{{ product.nombre }}</span>
+                      </div>
+                    </td>
+                    <td>
+                      <div class="d-flex align-items-center">
+                        <span class="fw-medium">{{ product.marca }}</span>
                       </div>
                     </td>
                     <td class="text-center">
@@ -256,6 +265,26 @@
                   <div class="col-md-6 mb-4">
                     <label for="productStock" class="form-label fw-semibold">
                       <i class="fas fa-warehouse me-1"></i>
+                      Marca
+                    </label>
+                    <input type="text" class="form-control form-control-lg" id="productStock"
+                      v-model.number="productForm.marca" required placeholder="Digite la marca">
+                  </div>
+
+                  <div class="col-md-6 mb-4">
+                    <label for="productStock" class="form-label fw-semibold">
+                      <i class="fas fa-warehouse me-1"></i>
+                      Ubicación
+                    </label>
+                    <input type="text" class="form-control form-control-lg" id="productStock"
+                      v-model.number="productForm.location" required placeholder="Digite la ubicación">
+                  </div>
+                </div>
+
+                <div class="row">
+                  <div class="col-md-6 mb-4">
+                    <label for="productStock" class="form-label fw-semibold">
+                      <i class="fas fa-warehouse me-1"></i>
                       Stock Inicial
                     </label>
                     <input type="number" class="form-control form-control-lg" id="productStock"
@@ -314,7 +343,7 @@ export default {
     return {
       products: [],
       searchTerm: '',
-      productForm: { id: '', nombre: '', precioCompra: 0, precioVenta: 0, stock: 0 },
+      productForm: { id: '', nombre: '', precioCompra: 0, precioVenta: 0, stock: 0, marca: '', location: '' },
       isEditing: false,
       role: localStorage.getItem("role") || "" 
     };
@@ -362,7 +391,7 @@ export default {
     },
     openModal() {
       this.isEditing = false;
-      this.productForm = { id: '', nombre: '', precioCompra: 0, precioVenta: 0, stock: 0 };
+      this.productForm = { id: '', nombre: '', precioCompra: 0, precioVenta: 0, stock: 0 , marca: '', location: ''};
       this.showProductModal();
     },
     closeModal() {

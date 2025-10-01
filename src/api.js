@@ -54,11 +54,11 @@ api.interceptors.response.use(
         if (!isRedirecting) {
           isRedirecting = true;
           Swal.fire("Error del servidor", "¡Contacta al ADMIN!", "error");
-          localStorage.removeItem("token");
+          /*localStorage.removeItem("token");
           localStorage.removeItem("role");
           router.push("/login").finally(() => {
             isRedirecting = false;
-          });
+          });*/
         }
       }
     } else {
