@@ -8,7 +8,7 @@ body {
   background: linear-gradient(135deg, #f5f7fa 0%, #dbe5f7 100%);
 }
 
-/* Para navegadores WebKit (Chrome, Safari, Edge, Opera) */
+/* Para navegadores WebKit (Chrome, Safari, Edge, Oper) */
 .content-scrollable::-webkit-scrollbar {
   width: 8px; /* Ancho de la barra de desplazamiento vertical */
   height: 8px; /* Altura de la barra de desplazamiento horizontal */
