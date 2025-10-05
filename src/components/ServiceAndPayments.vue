@@ -26,24 +26,6 @@
                     💰 Pagar Trabajador
                 </button>
             </li>
-            <li class="nav-item" role="presentation">
-                <button class="nav-link" :class="{ active: currentTab === 'pending' }" @click="currentTab = 'pending'"
-                    type="button">
-                    ⚠️ Pendiente
-                </button>
-            </li>
-            <li class="nav-item" role="presentation">
-                <button class="nav-link" :class="{ active: currentTab === 'history' }" @click="currentTab = 'history'"
-                    type="button">
-                    📋 Historial
-                </button>
-            </li>
-            <li class="nav-item" role="presentation">
-                <button class="nav-link" :class="{ active: currentTab === 'summary' }" @click="currentTab = 'summary'"
-                    type="button">
-                    📊 Resumen
-                </button>
-            </li>
         </ul>
 
         <!-- Tab Content -->
@@ -72,7 +54,7 @@
                                     <input type="text" class="form-control form-control-lg"
                                         v-model="service.description"
                                         :class="{ 'is-invalid': serviceErrors.description }"
-                                        placeholder="Trabajo Realizado?" :disabled="loadingRegister">
+                                        placeholder="Trabajo Realizado" :disabled="loadingRegister">
                                     <div v-if="serviceErrors.description" class="invalid-feedback">
                                         {{ serviceErrors.description }}
                                     </div>
@@ -388,7 +370,7 @@
                                         <div class="flex-grow-1 ms-3">
                                             <h6 class="text-muted mb-1">Total Ingresos</h6>
                                             <h3 class="mb-0 fw-bold text-success">
-                                                ${{ totalRevenue.toFixed(0) }}
+                                                ${{ formatMiles(totalRevenue) }}
                                             </h3>
                                         </div>
                                     </div>
@@ -409,7 +391,7 @@
                                         <div class="flex-grow-1 ms-3">
                                             <h6 class="text-muted mb-1">Taller</h6>
                                             <h3 class="mb-0 fw-bold text-info">
-                                                ${{ totalWorkshopShare.toFixed(0) }}
+                                                ${{ formatMiles(totalWorkshopShare) }}
                                             </h3>
                                         </div>
                                     </div>
@@ -429,7 +411,7 @@
                                         <div class="flex-grow-1 ms-3">
                                             <h6 class="text-muted mb-1">Trabajadores</h6>
                                             <h3 class="mb-0 fw-bold text-info">
-                                                ${{ totalWorkerShare.toFixed(0) }}
+                                                ${{ formatMiles(totalWorkerShare) }}
                                             </h3>
                                         </div>
                                     </div>
@@ -452,7 +434,7 @@
                             </div>
                         </div>
                         <div class="card-body p-0">
-                            <div class="table-responsive" style="max-height: 45vh; overflow-y: auto;">
+                            <div class="table-responsive" style="max-height: 40vh; overflow-y: auto;">
                                 <table class="table table-hover table-striped mb-0">
                                     <thead class="table-dark">
                                         <tr>
@@ -460,13 +442,16 @@
                                             <th class="position-sticky top-0">Cliente</th>
                                             <th class="position-sticky top-0">Descripción</th>
                                             <th class="text-end position-sticky top-0" style="width: 140px;">Total</th>
-                                            <th class="text-end position-sticky top-0" style="width: 140px;">Trabajador</th>
+                                            <th class="text-end position-sticky top-0" style="width: 140px;">Trabajador
+                                            </th>
                                             <th class="text-end position-sticky top-0" style="width: 140px;">Taller</th>
+                                            <th class="position-sticky top-0 text-center" style="width: 100px;">Acción
+                                            </th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         <tr v-for="service in services" :key="service.id">
-                                            
+
                                             <td>
                                                 <small class="text-muted">
                                                     <i class="bi bi-calendar3 me-1"></i>
@@ -498,19 +483,26 @@
                                                     ${{ service.workshopShare.toFixed(0) }}
                                                 </span>
                                             </td>
+                                            <td class="text-center">
+                                                <button class="btn btn-sm btn-danger"
+                                                    :disabled="!isToday(service.serviceDate)"
+                                                    @click="deleteService(service.id)">
+                                                    <i class="bi bi-trash"></i>
+                                                </button>
+                                            </td>
                                         </tr>
                                     </tbody>
                                     <tfoot class="table-light">
                                         <tr class="fw-bold">
                                             <td colspan="3" class="text-end">TOTALES:</td>
                                             <td class="text-end text-dark">
-                                                ${{ totalRevenue.toFixed(0) }}
+                                                ${{ formatMiles(totalRevenue) }}
                                             </td>
                                             <td class="text-end text-info">
-                                                ${{ totalWorkerShare.toFixed(0) }}
+                                                ${{ formatMiles(totalWorkerShare) }}
                                             </td>
                                             <td class="text-end text-success">
-                                                ${{ totalWorkshopShare.toFixed(0) }}
+                                                ${{ formatMiles(totalWorkshopShare) }}
                                             </td>
                                         </tr>
                                     </tfoot>
@@ -531,255 +523,246 @@
             </div>
 
             <!-- Pagar Trabajador -->
-            <div v-show="currentTab === 'pay'" class="">
-                <div class="card shadow-sm">
-                    <div class="card-header bg-success text-white">
-                        <h5 class="card-title mb-0">
-                            <i class="fas fa-money-bill-wave me-2"></i>
-                            Registrar Pago
-                        </h5>
+            <div v-show="currentTab === 'pay'" class="container-fluid py-4">
+                <!-- Worker Selection -->
+                <div class="row mb-4">
+                    <div class="col-12">
+                        <div class="card border-0 shadow-sm">
+                            <div class="card-body">
+                                <h5 class="card-title mb-3 d-flex align-items-center">
+                                    <i class="bi bi-person-circle me-2 text-primary"></i>
+                                    Seleccionar Trabajador
+                                </h5>
+                                <select v-model="selectedWorkerId" @change="onWorkerChange"
+                                    class="form-select form-select-lg">
+                                    <option :value="null">Seleccione un trabajador...</option>
+                                    <option v-for="worker in workers" :key="worker.id" :value="worker.id">
+                                        {{ worker.name }}
+                                    </option>
+                                </select>
+                            </div>
+                        </div>
                     </div>
-                    <div class="card-body">
-                        <form @submit.prevent="payWorker">
-                            <div class="row g-3">
-                                <div class="col-md-6">
-                                    <label class="form-label fw-semibold">Trabajador *</label>
-                                    <select class="form-select form-select-lg"
-                                        :class="{ 'is-invalid': paymentErrors.workerId }" v-model="payment.workerId"
-                                        :disabled="loadingPayment || loadingWorkers">
-                                        <option value="">Seleccionar trabajador</option>
-                                        <option v-for="worker in workerOptions" :key="worker.value"
-                                            :value="worker.value">
-                                            {{ worker.label }}
-                                        </option>
-                                    </select>
-                                    <div v-if="paymentErrors.workerId" class="invalid-feedback">
-                                        {{ paymentErrors.workerId }}
-                                    </div>
-                                </div>
+                </div>
 
-                                <div class="col-md-6">
-                                    <label class="form-label fw-semibold">Monto a Pagar *</label>
-                                    <div class="input-group input-group-lg">
-                                        <span class="input-group-text">$</span>
-                                        <input type="number" step="0.01" min="0" class="form-control"
-                                            :class="{ 'is-invalid': paymentErrors.amount }"
-                                            v-model.number="payment.amount" placeholder="0.00"
-                                            :disabled="loadingPayment">
-                                        <div v-if="paymentErrors.amount" class="invalid-feedback">
-                                            {{ paymentErrors.amount }}
+                <!-- Pending Amount & Summary Cards -->
+                <div v-if="selectedWorkerId" class="row mb-4">
+
+                    <!-- Summary Card -->
+                    <div v-if="summary !== null" class="col-lg-12">
+                        <div class="card border-0 shadow-sm h-100">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <h5 class="card-title mb-0">
+                                        <i class="bi bi-bar-chart-line me-2 text-primary"></i>
+                                        Resumen del Trabajador
+                                    </h5>
+                                    <button @click="fetchSummary" :disabled="loadingSummary"
+                                        class="btn btn-sm btn-outline-secondary">
+                                        <i class="bi bi-arrow-clockwise"></i>
+                                    </button>
+                                </div>
+                                <div class="row g-3">
+                                    <div class="col-md-4">
+                                        <div class="p-3 bg-success bg-opacity-10 rounded text-center">
+                                            <i class="bi bi-cash-coin fs-3 text-success mb-2"></i>
+                                            <p class="text-muted mb-1 small">Total Ganado</p>
+                                            <h4 class="mb-0 fw-bold text-success">
+                                                ${{ formatMiles(summary.earned) || '0.00' }}
+                                            </h4>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="p-3 bg-primary bg-opacity-10 rounded text-center">
+                                            <i class="bi bi-check-circle fs-3 text-primary mb-2"></i>
+                                            <p class="text-muted mb-1 small">Total Pagado</p>
+                                            <h4 class="mb-0 fw-bold text-primary">
+                                                ${{ formatMiles(summary.paid) || '0.00' }}
+                                            </h4>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="p-3 bg-warning bg-opacity-10 rounded text-center">
+                                            <i class="bi bi-exclamation-circle fs-3 text-warning mb-2"></i>
+                                            <p class="text-muted mb-1 small">Por Pagar</p>
+                                            <h4 class="mb-0 fw-bold text-warning">
+                                                ${{ formatMiles(summary.pending) || '0.00' }}
+                                            </h4>
                                         </div>
                                     </div>
                                 </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
-                                <div class="col-12">
-                                    <div class="d-flex gap-2">
-                                        <button type="submit" class="btn btn-success btn-lg flex-fill"
-                                            :disabled="loadingPayment">
-                                            <span v-if="loadingPayment"
-                                                class="spinner-border spinner-border-sm me-2"></span>
-                                            <i v-else class="fas fa-check-circle me-2"></i>
-                                            Registrar Pago
+                <div v-if="selectedWorkerId" class="row">
+                    <!-- Payment Form -->
+                    <div class="col-lg-5 mb-4">
+                        <div class="card border-0 shadow-sm sticky-top" style="top: 20px;">
+                            <div class="card-header bg-primary text-white">
+                                <h5 class="mb-0">
+                                    <i class="bi bi-wallet2 me-2"></i>
+                                    Registrar Pago
+                                </h5>
+                            </div>
+
+                            <div v-if="loadingPending" class="text-center py-5">
+                                <div class="spinner-border text-primary" role="status">
+                                    <span class="visually-hidden">Cargando...</span>
+                                </div>
+                                <p class="text-muted mt-3 mb-0">Cargando historial...</p>
+                            </div>
+
+                            <div v-else class="card-body">
+                                <form @submit.prevent="payWorker">
+
+                                    <div class="mb-3">
+                                        <label class="form-label fw-semibold">
+                                            <i class="bi bi-currency-dollar me-1"></i>
+                                            Monto a Pagar
+                                        </label>
+                                        <div class="input-group input-group-lg">
+                                            <span class="input-group-text bg-light">
+                                                <i class="bi bi-currency-dollar"></i>
+                                            </span>
+                                            <input v-model.number="payment.amount" type="number" step="0.01" min="0.01"
+                                                placeholder="0.00" class="form-control" required />
+                                            <button v-if="pending && pending.pending > 0" type="button"
+                                                @click="setFullAmount" class="btn btn-outline-warning"
+                                                title="Liquidar todo">
+                                                <i class="bi bi-clipboard-check"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    <!-- Quick Amount Buttons -->
+                                    <div v-if="pending && pending.pending > 0" class="mb-4">
+                                        <div class="row gap-2 d-flex justify-content-center">
+                                            <div class="col-lg-5">
+                                                <button type="button" @click="setHalfAmount"
+                                                    class="btn btn-outline-secondary btn-sm">
+                                                    <i class="bi bi-percent me-1"></i>
+                                                    Pagar 50% (${{ formatMiles((pending.pending / 2)) }})
+                                                </button>
+                                            </div>
+                                            <div class="col-lg-5">
+                                                <button type="button" @click="setFullAmount"
+                                                    class="btn btn-warning btn-sm">
+                                                    <i class="bi bi-check-all me-1"></i>
+                                                    Liquidar Todo (${{ formatMiles(pending.pending) }})
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="d-grid">
+                                        <button type="submit"
+                                            :disabled="loadingPayment || !payment.amount || payment.amount <= 0"
+                                            class="btn btn-primary btn-lg">
+                                            <span v-if="loadingPayment">
+                                                <span class="spinner-border spinner-border-sm me-2"></span>
+                                                Procesando...
+                                            </span>
+                                            <span v-else>
+                                                <i class="bi bi-cash-stack me-2"></i>
+                                                Registrar Pago
+                                            </span>
                                         </button>
-                                        <button type="button" @click="resetPaymentForm"
-                                            class="btn btn-outline-secondary btn-lg">
-                                            <i class="fas fa-eraser me-2"></i>
-                                            Limpiar
-                                        </button>
                                     </div>
+
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Payment History -->
+                    <div class="col-lg-7">
+                        <div class="card border-0 shadow-sm">
+                            <div class="card-header bg-white border-bottom">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <h5 class="mb-0">
+                                        <i class="bi bi-clock-history me-2 text-primary"></i>
+                                        Historial de Pagos
+                                    </h5>
+                                    <button @click="fetchHistory" :disabled="loadingHistory"
+                                        class="btn btn-sm btn-outline-primary">
+                                        <i class="bi bi-arrow-clockwise me-1"></i>
+                                        {{ loadingHistory ? 'Cargando...' : 'Actualizar' }}
+                                    </button>
                                 </div>
                             </div>
-                        </form>
+                            <div class="card-body p-0">
+                                <!-- Loading State -->
+                                <div v-if="loadingHistory" class="text-center py-5">
+                                    <div class="spinner-border text-primary" role="status">
+                                        <span class="visually-hidden">Cargando...</span>
+                                    </div>
+                                    <p class="text-muted mt-3 mb-0">Cargando historial...</p>
+                                </div>
+
+                                <!-- Empty State -->
+                                <div v-else-if="history.length === 0" class="text-center py-5">
+                                    <i class="bi bi-inbox fs-1 text-muted d-block mb-3"></i>
+                                    <p class="text-muted mb-0">No hay pagos registrados para este trabajador</p>
+                                </div>
+
+                                <!-- History Table -->
+                                <div v-else class="table-responsive">
+                                    <table class="table table-hover mb-0">
+                                        <thead class="table-light">
+                                            <tr>
+                                                <th class="border-0">
+                                                    <i class="bi bi-calendar-event me-1"></i>
+                                                    Fecha
+                                                </th>
+                                                <th class="border-0 text-end">
+                                                    <i class="bi bi-currency-dollar me-1"></i>
+                                                    Monto
+                                                </th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr v-for="item in history" :key="item.id">
+                                                <td class="align-middle">
+                                                    <i class="bi bi-calendar3 text-muted me-2"></i>
+                                                    {{ formatDate(item.paymentDate || item.date || item.createdAt) }}
+                                                </td>
+                                                <td class="align-middle text-end">
+                                                    <span class="badge bg-success fs-6 fw-semibold">
+                                                        ${{ formatMiles(parseFloat(item.amount)) }}
+                                                    </span>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                        <tfoot class="table-light">
+                                            <tr>
+                                                <td class="fw-bold">Total de Registros</td>
+                                                <td class="text-end fw-bold">{{ history.length }}</td>
+                                            </tr>
+                                        </tfoot>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
-            </div>
 
-            <!-- Pendiente -->
-            <div v-show="currentTab === 'pending'" class="">
-                <div class="card shadow-sm">
-                    <div class="card-header bg-warning text-dark">
-                        <h5 class="card-title mb-0">
-                            <i class="fas fa-exclamation-triangle me-2"></i>
-                            Consultar Pendientes
-                        </h5>
-                    </div>
-                    <div class="card-body">
-                        <div class="row g-3 mb-4">
-                            <div class="col-md-8">
-                                <select class="form-select form-select-lg" v-model="selectedWorkerId"
-                                    :disabled="loadingWorkers">
-                                    <option value="">Seleccionar trabajador</option>
-                                    <option v-for="worker in workerOptions" :key="worker.value" :value="worker.value">
-                                        {{ worker.label }}
-                                    </option>
-                                </select>
+                <!-- Empty State - No Worker Selected -->
+                <div v-if="!selectedWorkerId" class="row">
+                    <div class="col-12">
+                        <div class="card border-0 shadow-sm">
+                            <div class="card-body text-center py-5">
+                                <i class="bi bi-person-plus fs-1 text-muted d-block mb-3"></i>
+                                <h5 class="text-muted">Seleccione un trabajador para comenzar</h5>
+                                <p class="text-muted mb-0">Podrá ver el resumen, realizar pagos y consultar el historial
+                                </p>
                             </div>
-                            <div class="col-md-4">
-                                <button @click="fetchPending" class="btn btn-warning btn-lg w-100"
-                                    :disabled="!selectedWorkerId || loadingPending">
-                                    <span v-if="loadingPending" class="spinner-border spinner-border-sm me-2"></span>
-                                    <i v-else class="fas fa-search me-2"></i>
-                                    Consultar
-                                </button>
-                            </div>
-                        </div>
-
-                        <div v-if="pending" class="card" :class="getPendingCardClass()">
-                            <div class="card-body text-center">
-                                <h3 class="card-title">{{ getSelectedWorkerName() }}</h3>
-                                <h2 class="display-4 fw-bold">
-                                    ${{ parseFloat(pending.pending).toFixed(2) }}
-                                </h2>
-                                <p class="card-text text-muted">Monto Pendiente</p>
-                            </div>
-                        </div>
-
-                        <div v-else-if="!loadingPending && selectedWorkerId" class="text-center py-5">
-                            <i class="fas fa-info-circle fa-3x text-muted mb-3"></i>
-                            <p class="text-muted">Selecciona un trabajador y consulta su estado</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Historial -->
-            <div v-show="currentTab === 'history'" class="">
-                <div class="card shadow-sm">
-                    <div class="card-header bg-info text-white">
-                        <h5 class="card-title mb-0">
-                            <i class="fas fa-history me-2"></i>
-                            Historial de Pagos
-                        </h5>
-                    </div>
-                    <div class="card-body">
-                        <div class="row g-3 mb-4">
-                            <div class="col-md-8">
-                                <select class="form-select form-select-lg" v-model="selectedWorkerId"
-                                    :disabled="loadingWorkers">
-                                    <option value="">Seleccionar trabajador</option>
-                                    <option v-for="worker in workerOptions" :key="worker.value" :value="worker.value">
-                                        {{ worker.label }}
-                                    </option>
-                                </select>
-                            </div>
-                            <div class="col-md-4">
-                                <button @click="fetchHistory" class="btn btn-info btn-lg w-100"
-                                    :disabled="!selectedWorkerId || loadingHistory">
-                                    <span v-if="loadingHistory" class="spinner-border spinner-border-sm me-2"></span>
-                                    <i v-else class="fas fa-search me-2"></i>
-                                    Consultar Historial
-                                </button>
-                            </div>
-                        </div>
-
-                        <div v-if="history.length" class="table-responsive">
-                            <table class="table table-striped table-hover">
-                                <thead class="table-dark">
-                                    <tr>
-                                        <th scope="col">
-                                            <i class="fas fa-calendar-alt me-2"></i>
-                                            Fecha
-                                        </th>
-                                        <th scope="col">
-                                            <i class="fas fa-dollar-sign me-2"></i>
-                                            Monto
-                                        </th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr v-for="payment in history" :key="payment.id">
-                                        <td>{{ formatDate(payment.paymentDate) }}</td>
-                                        <td class="fw-bold text-success">
-                                            ${{ parseFloat(payment.amount).toFixed(2) }}
-                                        </td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-
-                        <div v-else-if="!loadingHistory && selectedWorkerId" class="text-center py-5">
-                            <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
-                            <p class="text-muted">No hay pagos registrados para este trabajador</p>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Resumen -->
-            <div v-show="currentTab === 'summary'" class="">
-                <div class="card shadow-sm">
-                    <div class="card-header bg-primary text-white">
-                        <h5 class="card-title mb-0">
-                            <i class="fas fa-chart-bar me-2"></i>
-                            Resumen Financiero
-                        </h5>
-                    </div>
-                    <div class="card-body">
-                        <div class="row g-3 mb-4">
-                            <div class="col-md-8">
-                                <select class="form-select form-select-lg" v-model="selectedWorkerId"
-                                    :disabled="loadingWorkers">
-                                    <option value="">Seleccionar trabajador</option>
-                                    <option v-for="worker in workerOptions" :key="worker.value" :value="worker.value">
-                                        {{ worker.label }}
-                                    </option>
-                                </select>
-                            </div>
-                            <div class="col-md-4">
-                                <button @click="fetchSummary" class="btn btn-primary btn-lg w-100"
-                                    :disabled="!selectedWorkerId || loadingSummary">
-                                    <span v-if="loadingSummary" class="spinner-border spinner-border-sm me-2"></span>
-                                    <i v-else class="fas fa-chart-line me-2"></i>
-                                    Ver Resumen
-                                </button>
-                            </div>
-                        </div>
-
-                        <div v-if="summary" class="row g-4">
-                            <div class="col-md-4">
-                                <div class="card border-success bg-light">
-                                    <div class="card-body text-center">
-                                        <i class="fas fa-arrow-up fa-2x text-success mb-3"></i>
-                                        <h4 class="card-title text-success">Total Ganado</h4>
-                                        <h3 class="display-6 fw-bold text-success">
-                                            ${{ parseFloat(summary.earned).toFixed(2) }}
-                                        </h3>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="col-md-4">
-                                <div class="card border-info bg-light">
-                                    <div class="card-body text-center">
-                                        <i class="fas fa-arrow-down fa-2x text-info mb-3"></i>
-                                        <h4 class="card-title text-info">Total Pagado</h4>
-                                        <h3 class="display-6 fw-bold text-info">
-                                            ${{ parseFloat(summary.paid).toFixed(2) }}
-                                        </h3>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="col-md-4">
-                                <div class="card border-warning bg-light">
-                                    <div class="card-body text-center">
-                                        <i class="fas fa-clock fa-2x text-warning mb-3"></i>
-                                        <h4 class="card-title text-warning">Pendiente</h4>
-                                        <h3 class="display-6 fw-bold text-warning">
-                                            ${{ parseFloat(summary.pending).toFixed(2) }}
-                                        </h3>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div v-else-if="!loadingSummary && selectedWorkerId" class="text-center py-5">
-                            <i class="fas fa-chart-pie fa-3x text-muted mb-3"></i>
-                            <p class="text-muted">Selecciona un trabajador para ver su resumen</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
         </div>
 
         <!-- Toast Container -->
@@ -1136,7 +1119,6 @@ const showCustomerDropdown = ref(false);
 
 // Errores de validación
 const serviceErrors = ref({});
-const paymentErrors = ref({});
 
 // Sistema de toasts
 const toasts = ref([]);
@@ -1189,19 +1171,6 @@ const formatDate = (dateString) => {
     });
 };
 
-const getPendingCardClass = () => {
-    if (!pending.value) return "";
-    const amount = parseFloat(pending.value.pending);
-    if (amount > 1000) return "border-danger bg-danger-subtle";
-    if (amount > 500) return "border-warning bg-warning-subtle";
-    return "border-success bg-success-subtle";
-};
-
-const getSelectedWorkerName = () => {
-    const worker = workerOptions.value.find(w => w.value === selectedWorkerId.value);
-    return worker ? worker.label : "Trabajador";
-};
-
 // Validaciones
 const validateService = () => {
     const errors = {};
@@ -1226,22 +1195,6 @@ const validateService = () => {
     return Object.keys(errors).length === 0;
 };
 
-
-const validatePayment = () => {
-    const errors = {};
-
-    if (!payment.value.workerId) {
-        errors.workerId = "Debe seleccionar un trabajador";
-    }
-
-    if (!payment.value.amount || payment.value.amount <= 0) {
-        errors.amount = "El monto debe ser mayor a 0";
-    }
-
-    paymentErrors.value = errors;
-    return Object.keys(errors).length === 0;
-};
-
 const resetServiceForm = () => {
     service.value = {
         description: "",
@@ -1256,15 +1209,6 @@ const resetServiceForm = () => {
     customerSearch.value = "";
     showCustomerDropdown.value = false;
     loadGenericCustomer();
-};
-
-
-const resetPaymentForm = () => {
-    payment.value = {
-        workerId: null,
-        amount: null
-    };
-    paymentErrors.value = {};
 };
 
 // =======================
@@ -1347,6 +1291,8 @@ const registerService = async () => {
         const { data } = await api.post("/services/register", service.value);
         addToast('success', `✅ Servicio registrado exitosamente con ID ${data.id}`);
         resetServiceForm();
+        resetPaymentForm();
+        searchServices();
     } catch (error) {
         addToast('danger', "Error al registrar el servicio");
     } finally {
@@ -1360,7 +1306,7 @@ const payWorker = async () => {
     loadingPayment.value = true;
     try {
         const { data } = await api.post("/payments/pay", payment.value);
-        addToast('success', `💰 Pago de $${parseFloat(data.amount).toFixed(2)} registrado exitosamente`);
+        addToast('success', `💰 Pago de $${formatMiles(parseFloat(data.amount))} registrado exitosamente`);
         resetPaymentForm();
     } catch (error) {
         addToast('danger', "Error al registrar el pago");
@@ -1377,12 +1323,6 @@ const fetchPending = async () => {
         const { data } = await api.get(`/payments/pending/${selectedWorkerId.value}`);
         pending.value = data;
 
-        const amount = parseFloat(data.pending);
-        if (amount > 0) {
-            addToast('warning', `⚠️ Pendiente: ${amount.toFixed(2)}`);
-        } else {
-            addToast('success', "✅ No hay montos pendientes");
-        }
     } catch (error) {
         addToast('danger', "Error al consultar pendientes");
         pending.value = null;
@@ -1399,9 +1339,6 @@ const fetchHistory = async () => {
         const { data } = await api.get(`/payments/history/${selectedWorkerId.value}`);
         history.value = data;
 
-        if (data.length === 0) {
-            addToast('info', "No se encontraron pagos para este trabajador");
-        }
     } catch (error) {
         addToast('danger', "Error al consultar historial");
         history.value = [];
@@ -1432,16 +1369,16 @@ const fetchSummary = async () => {
 
 // Helper para obtener fecha actual en formato YYYY-MM-DD
 const getTodayDate = () => {
-  const today = new Date();
-  return today.toISOString().split('T')[0];
+    const today = new Date();
+    return today.toISOString().split('T')[0];
 };
 
 // Reactive state
 const filters = ref({
-  startDate: getTodayDate(), // ✅ Por defecto hoy
-  endDate: getTodayDate(),   // ✅ Por defecto hoy
-  workerId: null,
-  customerId: ''
+    startDate: getTodayDate(),
+    endDate: getTodayDate(),
+    workerId: null,
+    customerId: ''
 });
 
 const services = ref([]);
@@ -1453,69 +1390,69 @@ let debounceTimer = null;
 
 // Computed properties
 const totalRevenue = computed(() => {
-  return services.value.reduce((sum, service) => sum + service.total, 0);
+    return services.value.reduce((sum, service) => sum + service.total, 0);
 });
 
 const totalWorkerShare = computed(() => {
-  return services.value.reduce((sum, service) => sum + service.workerShare, 0);
+    return services.value.reduce((sum, service) => sum + service.workerShare, 0);
 });
 
 const totalWorkshopShare = computed(() => {
-  return services.value.reduce((sum, service) => sum + service.workshopShare, 0);
+    return services.value.reduce((sum, service) => sum + service.workshopShare, 0);
 });
 
 // Methods
 const searchServices = async () => {
-  if (!filters.value.startDate || !filters.value.endDate) {
-    error.value = 'Por favor selecciona las fechas de inicio y fin';
-    return;
-  }
-
-  loading.value = true;
-  error.value = null;
-
-  try {
-    const params = {
-      startDate: filters.value.startDate,
-      endDate: filters.value.endDate
-    };
-
-    if (filters.value.workerId) {
-      params.workerId = filters.value.workerId;
+    if (!filters.value.startDate || !filters.value.endDate) {
+        error.value = 'Por favor selecciona las fechas de inicio y fin';
+        return;
     }
 
-    if (filters.value.customerId) {
-      params.customerId = filters.value.customerId;
-    }
+    loading.value = true;
+    error.value = null;
 
-    const { data } = await api.get('/services/history', { params });
-    services.value = data;
-  } catch (err) {
-    console.error('Error cargando historial de servicios:', err);
-    error.value = 'Error al cargar el historial de servicios';
-  } finally {
-    loading.value = false;
-  }
+    try {
+        const params = {
+            startDate: filters.value.startDate,
+            endDate: filters.value.endDate
+        };
+
+        if (filters.value.workerId) {
+            params.workerId = filters.value.workerId;
+        }
+
+        if (filters.value.customerId) {
+            params.customerId = filters.value.customerId;
+        }
+
+        const { data } = await api.get('/services/history', { params });
+        services.value = data;
+    } catch (err) {
+        console.error('Error cargando historial de servicios:', err);
+        error.value = 'Error al cargar el historial de servicios';
+    } finally {
+        loading.value = false;
+    }
 };
 
 // ✅ Búsqueda con debounce para tiempo real
 const debouncedSearch = () => {
-  clearTimeout(debounceTimer);
-  debounceTimer = setTimeout(() => {
-    searchServices();
-  }, 500); // Espera 500ms después de que el usuario deje de escribir
+    clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(() => {
+        searchServices();
+    }, 500); // Espera 500ms después de que el usuario deje de escribir
 };
 
 const clearFilters = () => {
-  filters.value = {
-    startDate: getTodayDate(),
-    endDate: getTodayDate(),
-    workerId: null,
-    customerId: ''
-  };
-  services.value = [];
-  error.value = null;
-  searchServices(); // ✅ Busca automáticamente con fecha de hoy
+    filters.value = {
+        startDate: getTodayDate(),
+        endDate: getTodayDate(),
+        workerId: null,
+        customerId: ''
+    };
+    services.value = [];
+    error.value = null;
+    searchServices(); // ✅ Busca automáticamente con fecha de hoy
 };
 
 // =======================
@@ -1524,7 +1461,8 @@ const clearFilters = () => {
 onMounted(async () => {
     await Promise.all([
         loadGenericCustomer(),
-        loadWorkers()
+        loadWorkers(),
+        searchServices()
     ]);
 });
 
@@ -1534,6 +1472,127 @@ document.addEventListener('click', (e) => {
         showCustomerDropdown.value = false;
     }
 });
+
+// Métodos auxiliares
+const validatePayment = () => {
+    if (!selectedWorkerId.value) {
+        addToast('warning', 'Seleccione un trabajador');
+        return false;
+    }
+    if (!payment.value.amount || payment.value.amount <= 0) {
+        addToast('warning', 'Ingrese un monto válido');
+        return false;
+    }
+    return true;
+};
+
+const resetPaymentForm = () => {
+    payment.value.amount = null;
+    fetchPending();
+    fetchHistory();
+    fetchSummary();
+};
+
+const onWorkerChange = () => {
+    if (selectedWorkerId.value) {
+
+        payment.value.workerId = selectedWorkerId.value;
+        fetchPending();
+        fetchHistory();
+        fetchSummary();
+    } else {
+        payment.value.workerId = null;
+        pending.value = null;
+        history.value = [];
+        summary.value = null;
+    }
+};
+
+// Establecer monto completo pendiente
+const setFullAmount = () => {
+    if (pending.value && pending.value.pending > 0) {
+        payment.value.amount = parseFloat(pending.value.pending);
+    }
+};
+
+// Establecer 50% del monto pendiente
+const setHalfAmount = () => {
+    if (pending.value && pending.value.pending > 0) {
+        payment.value.amount = parseFloat((pending.value.pending / 2).toFixed(0));
+    }
+};
+
+function formatMiles(numero) {
+    if (isNaN(numero)) return '0';
+    return Math.floor(numero).toLocaleString('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+}
+
+// Reemplaza tu isToday por esta versión
+const isToday = (dateStr) => {
+    if (!dateStr) return false
+
+    let d
+
+    // Si viene en formato "YYYY-MM-DD" (solo fecha) lo parseamos como fecha LOCAL
+    const ymd = dateStr.match(/^(\d{4})-(\d{2})-(\d{2})$/)
+    if (ymd) {
+        const year = Number(ymd[1])
+        const month = Number(ymd[2]) - 1 // monthIndex
+        const day = Number(ymd[3])
+        d = new Date(year, month, day) // -> crea fecha en MIDNIGHT local
+    } else {
+        // Para otros formatos (ISO con hora) usamos new Date y comprobamos validez
+        d = new Date(dateStr)
+        if (Number.isNaN(d.getTime())) return false
+    }
+
+    const today = new Date()
+    return (
+        d.getFullYear() === today.getFullYear() &&
+        d.getMonth() === today.getMonth() &&
+        d.getDate() === today.getDate()
+    )
+}
+
+
+const deleteService = async (id) => {
+    const service = services.value.find((s) => s.id === id)
+    if (!service) return
+
+    if (!isToday(service.serviceDate)) {
+        Swal.fire('No permitido', 'Solo se pueden eliminar servicios del día actual.', 'warning')
+        return
+    }
+
+    const result = await Swal.fire({
+        title: '¿Eliminar servicio?',
+        text: 'Esta acción no se puede deshacer.',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Sí, eliminar',
+        cancelButtonText: 'Cancelar',
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#6c757d',
+    })
+
+    if (!result.isConfirmed) return
+
+    try {
+        await api.delete(`/services/${id}`)
+        services.value = services.value.filter((s) => s.id !== id)
+        resetPaymentForm()
+        searchServices()
+        Swal.fire('Eliminado', 'El servicio se eliminó correctamente.', 'success')
+    } catch (error) {
+        console.error(error)
+        if (error.response?.status === 403) {
+            Swal.fire('No permitido', 'No puedes eliminar servicios que no sean del día actual.', 'warning')
+        } else {
+            Swal.fire('Error', 'No se pudo eliminar el servicio.', 'error')
+        }
+    }
+}
+
 </script>
 
 <style scoped>
