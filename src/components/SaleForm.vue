@@ -46,7 +46,7 @@
                           </div>
                         </div>
                         <button class="btn btn-outline-secondary btn-sm" @click="clearCustomerSelection">
-                          <i class="fas fa-exchange-alt me-1"></i> Cambiar
+                          <i class="fas fa-exchange-alt me-1"></i> Asignar Cliente
                         </button>
                       </div>
                     </div>
@@ -106,13 +106,28 @@
                   </button>
                 </div>
 
-                <div v-if="productSuggestions.length > 0" class="mt-3">
+
+                <div v-if="loading" class="d-flex justify-content-center align-items-center mt-3">
+                  <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Cargando...</span>
+                  </div>
+                </div>
+
+                <div v-else-if="productSearchQuery.length > 0 && productSuggestions.length === 0"
+                  class="alert alert-info mt-3 d-flex align-items-center">
+                  <i class="fas fa-info-circle me-2"></i>
+                  No se encontraron productos con la búsqueda actual.
+                </div>
+
+                <div v-else-if="productSuggestions.length > 0" class="mt-3">
                   <div class="product-table-container">
                     <table class="table table-hover table-striped align-middle">
                       <thead class="table-dark sticky-top">
-                        <tr>
-                          <th><i class="fas fa-tag me-1"></i> Nombre</th>
+                        <tr style="font-size: 12px;">
                           <th><i class="fas fa-barcode me-1"></i> Referencia</th>
+                          <th><i class="fas fa-tag me-1"></i> Nombre</th>
+                          <th><i class="bi bi-bookmark-check me-1"></i> Marca</th>
+                          <th><i class="bi bi-geo-alt-fill me-1"></i> Ubicación</th>  
                           <th class="text-end"><i class="fas fa-dollar-sign me-1"></i> Precio</th>
                           <th class="text-center"><i class="fas fa-warehouse me-1"></i> Stock</th>
                         </tr>
@@ -121,12 +136,22 @@
                         <tr v-for="prod in productSuggestions" :key="prod.id" @click="selectProduct(prod)"
                           :class="{ 'table-danger': prod.stock <= 0 }" style="cursor: pointer;">
                           <td>
+                            <span class="badge bg-light text-dark">
+                              {{ prod.id }}
+                            </span>
+                          </td>
+                          <td>
                             <i class="fas fa-box text-secondary me-1"></i>
                             {{ prod.nombre }}
                           </td>
                           <td>
                             <span class="badge bg-light text-dark">
-                              {{ prod.id }}
+                              {{ prod.marca }}
+                            </span>
+                          </td>
+                          <td>
+                            <span class="badge bg-light text-dark">
+                              {{ prod.location }}
                             </span>
                           </td>
                           <td class="text-end fw-semibold text-success">
@@ -144,14 +169,11 @@
                   </div>
                 </div>
 
-                <div v-else-if="productSearchQuery.length > 0 && productSuggestions.length === 0"
-                  class="alert alert-info mt-3 d-flex align-items-center">
-                  <i class="fas fa-info-circle me-2"></i>
-                  No se encontraron productos con la búsqueda actual.
-                </div>
               </div>
 
-              
+
+
+
               <div v-if="showCartSection" class="mb-5 animated-fade-in">
                 <label class="form-label fs-5 fw-bold d-flex align-items-center mb-3">
                   <i class="fas fa-credit-card me-2 text-primary"></i> Tipo de Pago
@@ -225,7 +247,8 @@
         <div class="col-12 col-md-4 d-flex flex-column mt-3 mt-md-0">
           <!-- Panel flotante del carrito -->
           <transition name="slide-fade">
-            <div v-if="showCartPanel" class="cart-floating-panel p-3 flex-grow-1 w-100 h-100 d-flex flex-column" style="max-height: 80vh;">
+            <div v-if="showCartPanel" class="cart-floating-panel p-3 flex-grow-1 w-100 h-100 d-flex flex-column"
+              style="max-height: 80vh;">
 
               <!-- Header con botón cerrar -->
               <h5 class="fw-bold mb-3 border-bottom pb-2 d-flex justify-content-between align-items-center">
@@ -243,7 +266,7 @@
                   <table class="table table-sm align-middle">
                     <tbody>
                       <tr v-for="item in cart" :key="item.id">
-                        <td>
+                        <td class="overflow-y-auto" style="max-width: 100px; white-space: normal; word-wrap: break-word; overflow-wrap: anywhere;">
                           <small class="fw-semibold">{{ item.nombre }}</small><br>
                           <small class="text-muted">Stock: {{ item.stock }}</small>
                         </td>
@@ -274,7 +297,7 @@
 
                         <!-- Precio final -->
                         <td class="text-end fw-bold text-success" style="width: 90px;">
-                          ${{ finalPrice(item).toFixed(2) }}
+                          ${{ formatNumber(finalPrice(item).toFixed(2)) }}
                         </td>
 
                         <!-- Eliminar -->
@@ -297,7 +320,7 @@
               <!-- Total (fijo abajo, fuera del scroll) -->
               <div class="mt-3 pt-2 border-top">
                 <h5 class="text-end fw-bold mb-3">
-                  Total: <span class="badge bg-success fs-6">${{ cartTotal.toFixed(2) }}</span>
+                  Total: <span class="badge bg-success fs-6">${{ formatNumber(cartTotal.toFixed(2)) }}</span>
                 </h5>
                 <div class="d-flex justify-content-between gap-2">
                   <button class="btn btn-outline-danger btn-sm d-flex align-items-center" @click="clearCart">
@@ -379,7 +402,7 @@
 </template>
 
 <script setup>
-import { ref, computed, watch, onUnmounted } from "vue";
+import { ref, computed, watch, onUnmounted, onMounted } from "vue";
 import { useDeudas } from "@/composables/useDeudas";
 import api from "@/api";
 
@@ -398,6 +421,7 @@ const abonoAmount = ref(0);
 const feedbackMessage = ref("");
 const feedbackClass = ref("alert-info");
 const isFinalizing = ref(false);
+const loading = ref(false);
 
 // Modal
 const showRegisterModal = ref(false);
@@ -512,7 +536,6 @@ const selectNoCustomer = async () => {
     selectedCustomer.value = data;
     customerSearchQuery.value = data.nombre;
     customerSuggestions.value = [];
-    showFeedback("Continuando sin cliente ✅", "success");
   } catch (error) {
     console.error("Error selecting generic customer:", error);
     showFeedback("Error al asignar cliente genérico ❌", "danger");
@@ -540,17 +563,22 @@ const registerAndSelectCustomer = async () => {
 
 // -------------------- Productos --------------------
 const fetchInitialProducts = async () => {
+
   try {
+    loading.value = true;
     const { data } = await api.get("/products");
     productSuggestions.value = data;
   } catch (error) {
     console.error("Error fetching initial products:", error);
     productSuggestions.value = [];
+  }finally{
+    loading.value = false;
   }
 };
 
 const clearProductSearch = () => {
   productSearchQuery.value = "";
+  fetchInitialProducts();
 };
 
 const fetchProductSuggestions = async () => {
@@ -559,6 +587,7 @@ const fetchProductSuggestions = async () => {
     return;
   }
   try {
+    loading.value = true;
     const { data } = await api.get(
       `/products/suggestions?query=${productSearchQuery.value}`
     );
@@ -566,6 +595,8 @@ const fetchProductSuggestions = async () => {
   } catch (error) {
     console.error("Error fetching product suggestions:", error);
     productSuggestions.value = [];
+  }finally{
+    loading.value = false;
   }
 };
 
@@ -668,7 +699,7 @@ const finalizeSale = async () => {
     if (error.response) {
       console.error("Backend error:", error.response.data);
       showFeedback(
-        `Error al registrar la venta ❌: ${error.response.data.message || "Error interno"}`,
+        `Error ❌: ${error.response.data.message || "Error interno"}`,
         "danger"
       );
     } else if (error.request) {
@@ -693,6 +724,7 @@ const resetForm = () => {
   cart.value = [];
   paymentType.value = "INMEDIATE";
   abonoAmount.value = 0;
+  selectNoCustomer();
 };
 let feedbackTimeout = null;
 // -------------------- Feedback --------------------
@@ -714,6 +746,19 @@ const showFeedback = (msg, type) => {
 onUnmounted(() => {
   window.removeEventListener("resize", handleResize);
 });
+
+onMounted(() => {
+  selectNoCustomer();});
+
+function formatNumber(value) {
+  if (!value) return "0";
+
+  // Convertir a número entero y quitar decimales
+  let intValue = Math.floor(Number(value));
+
+  // Retornar con separador de miles usando toLocaleString
+  return intValue.toLocaleString("es-ES"); 
+}
 
 </script>
 

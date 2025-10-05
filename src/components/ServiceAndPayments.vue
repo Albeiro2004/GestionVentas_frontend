@@ -15,6 +15,12 @@
                 </button>
             </li>
             <li class="nav-item" role="presentation">
+                <button class="nav-link" :class="{ active: currentTab === 'service' }" @click="currentTab = 'service'"
+                    type="button">
+                    🔧 Servicios Realizados
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
                 <button class="nav-link" :class="{ active: currentTab === 'pay' }" @click="currentTab = 'pay'"
                     type="button">
                     💰 Pagar Trabajador
@@ -51,7 +57,12 @@
                             Nuevo Servicio
                         </h5>
                     </div>
-                    <div class="card-body">
+                    <div v-if="loading" class="loading-state d-flex justify-content-center align-items-center p-5">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Cargando...</span>
+                        </div>
+                    </div>
+                    <div v-else class="card-body">
                         <form @submit.prevent="registerService">
                             <div class="row g-3">
 
@@ -61,8 +72,7 @@
                                     <input type="text" class="form-control form-control-lg"
                                         v-model="service.description"
                                         :class="{ 'is-invalid': serviceErrors.description }"
-                                        placeholder="Ej: Cambio de aceite, Reparación de frenos..."
-                                        :disabled="loadingRegister">
+                                        placeholder="Trabajo Realizado?" :disabled="loadingRegister">
                                     <div v-if="serviceErrors.description" class="invalid-feedback">
                                         {{ serviceErrors.description }}
                                     </div>
@@ -138,7 +148,6 @@
                                     <select class="form-select form-select-lg" v-model="service.paymentType"
                                         :class="{ 'is-invalid': serviceErrors.paymentType }"
                                         :disabled="loadingRegister">
-                                        <option value="">Seleccionar</option>
                                         <option value="INMEDIATE">Contado</option>
                                         <option value="ABONO">Abono</option>
                                         <option value="DEBT">Fiado</option>
@@ -161,22 +170,78 @@
 
                                 <!-- Productos asociados -->
                                 <div class="col-12">
-                                    <label class="form-label fw-semibold">Productos utilizados</label>
+                                    <label class="form-label fw-semibold mb-3">
+                                        <i class="bi bi-box-seam me-2"></i>Productos utilizados
+                                    </label>
 
                                     <!-- Lista de productos agregados -->
-                                    <div v-for="(p, index) in service.products" :key="index" class="d-flex gap-2 mb-2">
-                                        <span class="flex-grow-1">{{ p.name }} (ID: {{ p.productId }})</span>
-                                        <input type="number" min="1" class="form-control w-25"
-                                            v-model.number="p.quantity" placeholder="Cantidad">
-                                        <button type="button" class="btn btn-sm btn-danger"
-                                            @click="removeProduct(index)">X</button>
+                                    <div class="mb-3">
+                                        <div v-if="service.products.length === 0"
+                                            class="alert alert-light text-center py-1 border-2 border-dashed">
+                                            <i class="bi bi-inbox fs-1 text-muted d-block mb-2"></i>
+                                            <p class="text-muted mb-0">No hay productos agregados</p>
+                                            <small class="text-muted">Haz clic en "Agregar producto" para
+                                                comenzar</small>
+                                        </div>
+
+                                        <div v-for="(p, index) in service.products" :key="index"
+                                            class="card mb-2 shadow-sm border-start border-primary border-3">
+                                            <div class="card-body p-3">
+                                                <div class="row align-items-center g-2">
+                                                    <!-- Nombre del producto -->
+                                                    <div class="col-lg-6 col-md-5">
+                                                        <div class="d-flex align-items-center">
+                                                            <div
+                                                                class="bg-primary bg-opacity-10 rounded-circle p-2 me-2">
+                                                                <i class="bi bi-box text-primary"></i>
+                                                            </div>
+                                                            <div>
+                                                                <span class="fw-semibold d-block">{{ p.name }}</span>
+                                                                <small class="text-muted">ID: {{ p.productId }}</small>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    <!-- Input de cantidad -->
+                                                    <div class="col-lg-4 col-md-5">
+                                                        <div class="input-group input-group-sm">
+                                                            <span class="input-group-text bg-light">
+                                                                <i class="bi bi-hash"></i>
+                                                            </span>
+                                                            <input type="number" min="1" :max="p.stock"
+                                                                class="form-control" v-model.number="p.quantity"
+                                                                placeholder="Cantidad" @input="validateQuantity(p)">
+                                                            <span class="input-group-text bg-light text-muted">
+                                                                / {{ p.stock }}
+                                                            </span>
+                                                        </div>
+                                                        <small class="text-muted">Disponible: {{ p.stock }}</small>
+                                                    </div>
+
+                                                    <!-- Botón eliminar -->
+                                                    <div class="col-lg-2 col-md-2 text-end">
+                                                        <button type="button"
+                                                            class="btn btn-sm btn-outline-danger rounded-circle"
+                                                            @click="removeProduct(index)" title="Eliminar producto">
+                                                            <i class="bi bi-trash"></i>
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
 
-                                    <!-- Abrir modal -->
-                                    <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal"
-                                        data-bs-target="#productModal" @click="openProductSelector">
-                                        + Agregar producto
-                                    </button>
+                                    <!-- Botón agregar producto -->
+                                    <div class="d-flex justify-content-center align-items-center">
+                                        <div class="d-grid gap-2 w-25">
+                                            <button type="button" class="btn btn-outline-primary btn-lg"
+                                                data-bs-toggle="modal" data-bs-target="#productModal"
+                                                @click="openProductSelector">
+                                                <i class="bi bi-plus-circle me-2"></i>
+                                                Agregar producto
+                                            </button>
+                                        </div>
+                                    </div>
                                 </div>
 
                                 <!-- Botones -->
@@ -199,6 +264,268 @@
 
                             </div>
                         </form>
+                    </div>
+                </div>
+            </div>
+
+            <div v-show="currentTab === 'service'" class="container-fluid py-4">
+                <!-- Filtros -->
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">
+                            <i class="bi bi-funnel me-2"></i>
+                            Historial de Servicios
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row g-3">
+                            <!-- Fecha Inicio -->
+                            <div class="col-md-3">
+                                <label class="form-label fw-semibold">
+                                    <i class="bi bi-calendar-event me-1"></i>
+                                    Fecha Inicio
+                                </label>
+                                <input type="date" v-model="filters.startDate" class="form-control"
+                                    @change="searchServices" />
+                            </div>
+
+                            <!-- Fecha Fin -->
+                            <div class="col-md-3">
+                                <label class="form-label fw-semibold">
+                                    <i class="bi bi-calendar-check me-1"></i>
+                                    Fecha Fin
+                                </label>
+                                <input type="date" v-model="filters.endDate" class="form-control"
+                                    @change="searchServices" />
+                            </div>
+
+                            <!-- Trabajador -->
+                            <div class="col-md-3">
+                                <label class="form-label fw-semibold">
+                                    <i class="bi bi-person-workspace me-1"></i>
+                                    Trabajador
+                                </label>
+                                <select v-model="filters.workerId" class="form-select" @change="searchServices">
+                                    <option :value="null">Todos los trabajadores</option>
+                                    <option v-for="worker in workers" :key="worker.id" :value="worker.id">
+                                        {{ worker.name }}
+                                    </option>
+                                </select>
+                            </div>
+
+                            <!-- Cliente -->
+                            <div class="col-md-3">
+                                <label class="form-label fw-semibold">
+                                    <i class="bi bi-person me-1"></i>
+                                    Cliente (ID)
+                                </label>
+                                <input type="text" v-model="filters.customerId" placeholder="Buscar por ID..."
+                                    class="form-control" @input="debouncedSearch" />
+                            </div>
+                        </div>
+
+                        <!-- Botones -->
+                        <div class="d-flex gap-2 mt-3">
+                            <button @click="searchServices" :disabled="loading" class="btn btn-primary">
+                                <span v-if="loading" class="spinner-border spinner-border-sm me-1"></span>
+                                <i v-else class="bi bi-search me-1"></i>
+                                {{ loading ? 'Buscando...' : 'Buscar' }}
+                            </button>
+                            <button @click="clearFilters" class="btn btn-outline-secondary">
+                                <i class="bi bi-x-circle me-1"></i>
+                                Limpiar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Loading -->
+                <div v-if="loading && services.length === 0" class="text-center py-5">
+                    <div class="spinner-border text-primary" style="width: 3rem; height: 3rem;" role="status">
+                        <span class="visually-hidden">Cargando...</span>
+                    </div>
+                    <p class="mt-3 text-muted">Cargando historial...</p>
+                </div>
+
+                <!-- Error -->
+                <div v-else-if="error" class="alert alert-danger alert-dismissible fade show" role="alert">
+                    <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                    {{ error }}
+                    <button type="button" class="btn-close" @click="error = null"></button>
+                </div>
+
+                <!-- Resultados -->
+                <div v-else-if="services.length > 0">
+                    <!-- Resumen - Cards mejorados -->
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-3">
+                            <div class="card border-0 shadow-sm h-100">
+                                <div class="card-body">
+                                    <div class="d-flex align-items-center">
+                                        <div class="flex-shrink-0">
+                                            <div class="bg-primary bg-opacity-10 rounded-3 p-3">
+                                                <i class="bi bi-clipboard-check text-primary fs-3"></i>
+                                            </div>
+                                        </div>
+                                        <div class="flex-grow-1 ms-3">
+                                            <h6 class="text-muted mb-1">Total Servicios</h6>
+                                            <h3 class="mb-0 fw-bold">{{ services.length }}</h3>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-3">
+                            <div class="card border-0 shadow-sm h-100">
+                                <div class="card-body">
+                                    <div class="d-flex align-items-center">
+                                        <div class="flex-shrink-0">
+                                            <div class="bg-success bg-opacity-10 rounded-3 p-3">
+                                                <i class="bi bi-cash-stack text-success fs-3"></i>
+                                            </div>
+                                        </div>
+                                        <div class="flex-grow-1 ms-3">
+                                            <h6 class="text-muted mb-1">Total Ingresos</h6>
+                                            <h3 class="mb-0 fw-bold text-success">
+                                                ${{ totalRevenue.toFixed(0) }}
+                                            </h3>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+
+                        <div class="col-md-3">
+                            <div class="card border-0 shadow-sm h-100">
+                                <div class="card-body">
+                                    <div class="d-flex align-items-center">
+                                        <div class="flex-shrink-0">
+                                            <div class="bg-info bg-opacity-10 rounded-3 p-3">
+                                                <i class="bi bi-people text-info fs-3"></i>
+                                            </div>
+                                        </div>
+                                        <div class="flex-grow-1 ms-3">
+                                            <h6 class="text-muted mb-1">Taller</h6>
+                                            <h3 class="mb-0 fw-bold text-info">
+                                                ${{ totalWorkshopShare.toFixed(0) }}
+                                            </h3>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-3">
+                            <div class="card border-0 shadow-sm h-100">
+                                <div class="card-body">
+                                    <div class="d-flex align-items-center">
+                                        <div class="flex-shrink-0">
+                                            <div class="bg-info bg-opacity-10 rounded-3 p-3">
+                                                <i class="bi bi-people text-info fs-3"></i>
+                                            </div>
+                                        </div>
+                                        <div class="flex-grow-1 ms-3">
+                                            <h6 class="text-muted mb-1">Trabajadores</h6>
+                                            <h3 class="mb-0 fw-bold text-info">
+                                                ${{ totalWorkerShare.toFixed(0) }}
+                                            </h3>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tabla con mejor diseño -->
+                    <div class="card shadow-sm">
+                        <div class="card-header bg-light">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <h6 class="mb-0">
+                                    <i class="bi bi-table me-2"></i>
+                                    Detalle de Servicios
+                                </h6>
+                                <span class="badge bg-primary rounded-pill">
+                                    {{ services.length }} registro(s)
+                                </span>
+                            </div>
+                        </div>
+                        <div class="card-body p-0">
+                            <div class="table-responsive" style="max-height: 45vh; overflow-y: auto;">
+                                <table class="table table-hover table-striped mb-0">
+                                    <thead class="table-dark">
+                                        <tr>
+                                            <th class="position-sticky top-0" style="width: 120px;">Fecha</th>
+                                            <th class="position-sticky top-0">Cliente</th>
+                                            <th class="position-sticky top-0">Descripción</th>
+                                            <th class="text-end position-sticky top-0" style="width: 140px;">Total</th>
+                                            <th class="text-end position-sticky top-0" style="width: 140px;">Trabajador</th>
+                                            <th class="text-end position-sticky top-0" style="width: 140px;">Taller</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr v-for="service in services" :key="service.id">
+                                            
+                                            <td>
+                                                <small class="text-muted">
+                                                    <i class="bi bi-calendar3 me-1"></i>
+                                                    {{ formatDate(service.serviceDate) }}
+                                                </small>
+                                            </td>
+                                            <td>
+                                                <i class="bi bi-person-circle me-1 text-muted"></i>
+                                                {{ service.customerName }}
+                                            </td>
+                                            <td>
+                                                <span class="text-truncate d-inline-block" style="max-width: 300px;"
+                                                    :title="service.description">
+                                                    {{ service.description }}
+                                                </span>
+                                            </td>
+                                            <td class="text-end">
+                                                <strong class="text-dark">
+                                                    ${{ service.total.toFixed(0) }}
+                                                </strong>
+                                            </td>
+                                            <td class="text-end">
+                                                <span class="text-info">
+                                                    ${{ service.workerShare.toFixed(0) }}
+                                                </span>
+                                            </td>
+                                            <td class="text-end">
+                                                <span class="text-success">
+                                                    ${{ service.workshopShare.toFixed(0) }}
+                                                </span>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                    <tfoot class="table-light">
+                                        <tr class="fw-bold">
+                                            <td colspan="3" class="text-end">TOTALES:</td>
+                                            <td class="text-end text-dark">
+                                                ${{ totalRevenue.toFixed(0) }}
+                                            </td>
+                                            <td class="text-end text-info">
+                                                ${{ totalWorkerShare.toFixed(0) }}
+                                            </td>
+                                            <td class="text-end text-success">
+                                                ${{ totalWorkshopShare.toFixed(0) }}
+                                            </td>
+                                        </tr>
+                                    </tfoot>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sin resultados -->
+                <div v-else class="card shadow-sm">
+                    <div class="card-body text-center py-5">
+                        <i class="bi bi-inbox text-muted" style="font-size: 4rem;"></i>
+                        <h5 class="mt-3 text-muted">No se encontraron servicios</h5>
+                        <p class="text-muted">Intenta ajustar los filtros de búsqueda</p>
                     </div>
                 </div>
             </div>
@@ -473,7 +800,7 @@
         <!-- Modal de productos -->
         <Teleport to="body">
             <div class="modal fade" id="productModal" tabindex="-1" aria-hidden="true" ref="productModalRef">
-                <div class="modal-dialog modal-lg modal-dialog-scrollable">
+                <div class="modal-dialog modal-dialog-scrollable" style="max-width: 70vw; width: auto;">
                     <div class="modal-content">
                         <div class="modal-header bg-primary text-white">
                             <h5 class="modal-title">Seleccionar producto</h5>
@@ -481,26 +808,116 @@
                                 aria-label="Cerrar"></button>
                         </div>
                         <div class="modal-body">
+                            <!-- Buscador único -->
+                            <div class="mb-3">
+                                <div class="input-group w-50">
+                                    <span class="input-group-text bg-primary text-white">
+                                        <i class="bi bi-search"></i> <!-- Si usas Bootstrap Icons -->
+                                        <!-- O usa este símbolo si no tienes iconos: 🔍 -->
+                                    </span>
+                                    <input type="text" class="form-control form-control-lg"
+                                        placeholder="Buscar por Código, Nombre o Marca..." v-model="searchQuery"
+                                        @input="currentPage = 1">
+                                    <button v-if="searchQuery" class="btn btn-outline-secondary" type="button"
+                                        @click="searchQuery = ''">
+                                        ✕
+                                    </button>
+                                </div>
+                                <small class="text-muted d-block mt-2"><b>
+                                        {{ filteredProducts.length }} </b> productos encontrados
+                                </small>
+                            </div>
+
+                            <!-- Tabla -->
                             <table class="table table-hover">
                                 <thead>
-                                    <tr>
+                                    <tr class="text-white bg-secondary">
                                         <th>ID</th>
                                         <th>Nombre</th>
-                                        <th>Precio</th>
+                                        <th>Marca</th>
+                                        <th>Ubicación</th>
+                                        <th>Stock</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <tr v-for="prod in productOptions" :key="prod.id" @click="addProductFromModal(prod)"
-                                        style="cursor:pointer">
+                                    <tr v-for="prod in paginatedProducts" :key="prod.id"
+                                        @click="prod.stock > 0 && addProductFromModal(prod)"
+                                        :class="{ 'table-danger': prod.stock < 1 }" style="cursor:pointer">
                                         <td>{{ prod.id }}</td>
                                         <td>{{ prod.nombre }}</td>
-                                        <td>${{ prod.precioVenta.toFixed(2) }}</td>
+                                        <td>{{ prod.marca }}</td>
+                                        <td>{{ prod.location }}</td>
+                                        <td>{{ prod.stock }}</td>
                                     </tr>
                                 </tbody>
                             </table>
 
                             <div v-if="loadingProducts" class="text-center my-3">
                                 <div class="spinner-border text-primary" role="status"></div>
+                            </div>
+
+                            <!-- Paginación dinámica -->
+                            <nav v-if="filteredProducts.length > 0" aria-label="Paginación de productos">
+                                <ul class="pagination justify-content-center mb-0">
+                                    <!-- Botón Anterior -->
+                                    <li class="page-item" :class="{ disabled: currentPage === 1 }">
+                                        <a class="page-link" href="#" @click.prevent="currentPage > 1 && currentPage--">
+                                            <span aria-hidden="true">&laquo;</span>
+                                        </a>
+                                    </li>
+
+                                    <!-- Primera página -->
+                                    <li v-if="showFirstPage" class="page-item">
+                                        <a class="page-link" href="#" @click.prevent="currentPage = 1">1</a>
+                                    </li>
+
+                                    <!-- Puntos suspensivos izquierda -->
+                                    <li v-if="showLeftDots" class="page-item disabled">
+                                        <span class="page-link">...</span>
+                                    </li>
+
+                                    <!-- Páginas visibles -->
+                                    <li v-for="page in visiblePages" :key="page" class="page-item"
+                                        :class="{ active: currentPage === page }">
+                                        <a class="page-link" href="#" @click.prevent="currentPage = page">
+                                            {{ page }}
+                                        </a>
+                                    </li>
+
+                                    <!-- Puntos suspensivos derecha -->
+                                    <li v-if="showRightDots" class="page-item disabled">
+                                        <span class="page-link">...</span>
+                                    </li>
+
+                                    <!-- Última página -->
+                                    <li v-if="showLastPage" class="page-item">
+                                        <a class="page-link" href="#" @click.prevent="currentPage = totalPages">
+                                            {{ totalPages }}
+                                        </a>
+                                    </li>
+
+                                    <!-- Botón Siguiente -->
+                                    <li class="page-item" :class="{ disabled: currentPage === totalPages }">
+                                        <a class="page-link" href="#"
+                                            @click.prevent="currentPage < totalPages && currentPage++">
+                                            <span aria-hidden="true">&raquo;</span>
+                                        </a>
+                                    </li>
+                                </ul>
+                            </nav>
+
+                            <!-- Info de paginación -->
+                            <div v-if="filteredProducts.length > 0" class="text-center text-muted small mt-2">
+                                Mostrando {{ ((currentPage - 1) * itemsPerPage) + 1 }} -
+                                {{ Math.min(currentPage * itemsPerPage, filteredProducts.length) }}
+                                de {{ filteredProducts.length }} productos
+                            </div>
+
+                            <!-- Mensaje sin resultados -->
+                            <div v-if="!loadingProducts && filteredProducts.length === 0"
+                                class="text-center text-muted my-3">
+                                <p class="mb-0">No se encontraron productos</p>
+                                <small v-if="searchQuery">Intenta con otro término de búsqueda</small>
                             </div>
                         </div>
                     </div>
@@ -512,17 +929,18 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from "vue";
+import { ref, onMounted, computed, watch } from "vue";
 import api from "@/api";
 import { useModal } from '@/composables/useModal';
+import Swal from "sweetalert2";
 
 // Tabs
 const currentTab = ref("register");
 
 const {
-  modalRef: productModalRef,
-  show: showProductModal,
-  hide: hideProductModal
+    modalRef: productModalRef,
+    show: showProductModal,
+    hide: hideProductModal
 } = useModal('productModal');
 
 // Estados de carga
@@ -533,6 +951,95 @@ const loadingHistory = ref(false);
 const loadingSummary = ref(false);
 const loadingCustomers = ref(false);
 const loadingWorkers = ref(false);
+const loading = ref(false);
+
+// Dentro de data() o ref/reactive
+const searchQuery = ref('');
+const currentPage = ref(1);
+const itemsPerPage = 10;
+const maxVisiblePages = 5;
+
+// Computed properties
+const filteredProducts = computed(() => {
+    if (!searchQuery.value.trim()) {
+        return productOptions.value;
+    }
+
+    const query = searchQuery.value.toLowerCase().trim();
+
+    return productOptions.value.filter(prod => {
+        // Busca en ID (convertido a string)
+        const matchId = prod.id.toString().includes(query);
+
+        // Busca en Nombre
+        const matchNombre = prod.nombre.toLowerCase().includes(query);
+
+        // Busca en Marca
+        const matchMarca = prod.marca.toLowerCase().includes(query);
+
+        // Retorna true si coincide con cualquiera de los campos
+        return matchId || matchNombre || matchMarca;
+    });
+});
+
+const totalPages = computed(() => {
+    return Math.ceil(filteredProducts.value.length / itemsPerPage);
+});
+
+const paginatedProducts = computed(() => {
+    const start = (currentPage.value - 1) * itemsPerPage;
+    const end = start + itemsPerPage;
+    return filteredProducts.value.slice(start, end);
+});
+
+// Lógica de paginación dinámica (igual que antes)
+const visiblePages = computed(() => {
+    const pages = [];
+    const total = totalPages.value;
+    const current = currentPage.value;
+    const maxVisible = maxVisiblePages;
+
+    if (total <= maxVisible + 2) {
+        for (let i = 1; i <= total; i++) {
+            pages.push(i);
+        }
+    } else {
+        let startPage = Math.max(2, current - Math.floor(maxVisible / 2));
+        let endPage = Math.min(total - 1, startPage + maxVisible - 1);
+
+        if (endPage === total - 1) {
+            startPage = Math.max(2, endPage - maxVisible + 1);
+        }
+
+        for (let i = startPage; i <= endPage; i++) {
+            pages.push(i);
+        }
+    }
+
+    return pages;
+});
+
+const showFirstPage = computed(() => {
+    return totalPages.value > 1 && !visiblePages.value.includes(1);
+});
+
+const showLastPage = computed(() => {
+    return totalPages.value > 1 && !visiblePages.value.includes(totalPages.value);
+});
+
+const showLeftDots = computed(() => {
+    return visiblePages.value.length > 0 && visiblePages.value[0] > 2;
+});
+
+const showRightDots = computed(() => {
+    return visiblePages.value.length > 0 &&
+        visiblePages.value[visiblePages.value.length - 1] < totalPages.value - 1;
+});
+
+// Watch para resetear la página cuando cambia la búsqueda
+watch(searchQuery, () => {
+    currentPage.value = 1;
+});
 
 // Estados principales
 const service = ref({
@@ -545,13 +1052,21 @@ const service = ref({
     products: []
 });
 
+const validateQuantity = (p) => {
+    if (p.quantity > p.stock) {
+        p.quantity = p.stock;
+        Swal.fire("Stock máximo", `No puedes pedir más de ${p.stock} unidades.`, "warning");
+    } else if (p.quantity < 1) {
+        p.quantity = 1;
+    }
+};
 
 const productOptions = ref([]);
 const loadingProducts = ref(false);
 
 const openProductSelector = () => {
-  showProductModal();
-  loadProducts();
+    showProductModal();
+    loadProducts();
 };
 
 
@@ -574,6 +1089,11 @@ const addProductFromModal = (prod) => {
         service.value.products = []; // 👈 asegura que sea array
     }
 
+    if (prod.stock < 1) {
+        Swal.fire("Sin stock", "Este producto no tiene stock disponible.", "error");
+        return;
+    }
+
     const exists = service.value.products.find(p => p.productId === prod.id);
 
     if (!exists) {
@@ -581,9 +1101,14 @@ const addProductFromModal = (prod) => {
             productId: prod.id,
             name: prod.nombre,
             quantity: 1,
+            stock: prod.stock,
         });
     } else {
-        exists.quantity += 1;
+        if (exists.quantity < exists.stock) {
+            exists.quantity += 1;
+        } else {
+            Swal.fire("Stock máximo", `No puedes superar el stock (${exists.stock}).`, "warning");
+        }
     }
 
     hideProductModal();
@@ -718,19 +1243,19 @@ const validatePayment = () => {
 };
 
 const resetServiceForm = () => {
-  service.value = {
-    description: "",
-    laborCost: null,
-    customerId: null,
-    workerId: "" ,
-    paymentType: "INMEDIATE",
-    abonoAmount: null,
-    products: [] // 👈 mantener array vacío
-  };
-  serviceErrors.value = {};
-  customerSearch.value = "";
-  showCustomerDropdown.value = false;
-  loadGenericCustomer();
+    service.value = {
+        description: "",
+        laborCost: null,
+        customerId: null,
+        workerId: "",
+        paymentType: "INMEDIATE",
+        abonoAmount: null,
+        products: [] // 👈 mantener array vacío
+    };
+    serviceErrors.value = {};
+    customerSearch.value = "";
+    showCustomerDropdown.value = false;
+    loadGenericCustomer();
 };
 
 
@@ -781,11 +1306,14 @@ const selectCustomer = (customer) => {
 
 const loadGenericCustomer = async () => {
     try {
+        loading.value = true;
         const { data } = await api.get("/customers/generic");
         service.value.customerId = data.documento;
         customerSearch.value = data.nombre;
     } catch (error) {
         addToast('danger', "Error al cargar cliente genérico");
+    } finally {
+        loading.value = false;
     }
 };
 
@@ -800,6 +1328,7 @@ const loadWorkers = async () => {
             label: w.name,
             value: w.id
         }));
+        workers.value = data;
     } catch (error) {
         addToast('danger', "Error al cargar trabajadores");
     } finally {
@@ -895,6 +1424,98 @@ const fetchSummary = async () => {
     } finally {
         loadingSummary.value = false;
     }
+};
+
+// =======================
+// Segundo componente
+// =======================
+
+// Helper para obtener fecha actual en formato YYYY-MM-DD
+const getTodayDate = () => {
+  const today = new Date();
+  return today.toISOString().split('T')[0];
+};
+
+// Reactive state
+const filters = ref({
+  startDate: getTodayDate(), // ✅ Por defecto hoy
+  endDate: getTodayDate(),   // ✅ Por defecto hoy
+  workerId: null,
+  customerId: ''
+});
+
+const services = ref([]);
+const workers = ref([]);
+const error = ref(null);
+
+// Debounce timer
+let debounceTimer = null;
+
+// Computed properties
+const totalRevenue = computed(() => {
+  return services.value.reduce((sum, service) => sum + service.total, 0);
+});
+
+const totalWorkerShare = computed(() => {
+  return services.value.reduce((sum, service) => sum + service.workerShare, 0);
+});
+
+const totalWorkshopShare = computed(() => {
+  return services.value.reduce((sum, service) => sum + service.workshopShare, 0);
+});
+
+// Methods
+const searchServices = async () => {
+  if (!filters.value.startDate || !filters.value.endDate) {
+    error.value = 'Por favor selecciona las fechas de inicio y fin';
+    return;
+  }
+
+  loading.value = true;
+  error.value = null;
+
+  try {
+    const params = {
+      startDate: filters.value.startDate,
+      endDate: filters.value.endDate
+    };
+
+    if (filters.value.workerId) {
+      params.workerId = filters.value.workerId;
+    }
+
+    if (filters.value.customerId) {
+      params.customerId = filters.value.customerId;
+    }
+
+    const { data } = await api.get('/services/history', { params });
+    services.value = data;
+  } catch (err) {
+    console.error('Error cargando historial de servicios:', err);
+    error.value = 'Error al cargar el historial de servicios';
+  } finally {
+    loading.value = false;
+  }
+};
+
+// ✅ Búsqueda con debounce para tiempo real
+const debouncedSearch = () => {
+  clearTimeout(debounceTimer);
+  debounceTimer = setTimeout(() => {
+    searchServices();
+  }, 500); // Espera 500ms después de que el usuario deje de escribir
+};
+
+const clearFilters = () => {
+  filters.value = {
+    startDate: getTodayDate(),
+    endDate: getTodayDate(),
+    workerId: null,
+    customerId: ''
+  };
+  services.value = [];
+  error.value = null;
+  searchServices(); // ✅ Busca automáticamente con fecha de hoy
 };
 
 // =======================
@@ -1034,7 +1655,7 @@ document.addEventListener('click', (e) => {
 }
 
 .table th {
-    background: linear-gradient(135deg, #495057 0%, #343a40 100%);
+    background: rgb(97, 180, 166);
     border: none;
     font-weight: 600;
     text-transform: uppercase;
@@ -1043,13 +1664,9 @@ document.addEventListener('click', (e) => {
 }
 
 .table td {
-    border-color: #f8f9fa;
+    border-color: #f8f9fa !important;
     padding: 1rem 0.75rem;
     vertical-align: middle;
-}
-
-.table-hover tbody tr:hover {
-    background-color: #f8f9fa;
 }
 
 .badge {
@@ -1067,11 +1684,6 @@ document.addEventListener('click', (e) => {
 .toast-header {
     border-radius: 6px 6px 0 0 !important;
     border: none;
-}
-
-.display-4,
-.display-6 {
-    font-family: 'Arial', sans-serif;
 }
 
 .spinner-border-sm {

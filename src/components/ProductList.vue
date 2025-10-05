@@ -117,7 +117,14 @@
                   </tr>
                 </thead>
                 <tbody>
-                  <tr v-for="product in filteredProducts" :key="product.id" class="align-middle">
+                  <tr v-if="loading">
+                    <td colspan="8" class="text-center py-5">
+                      <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Cargando...</span>
+                      </div>
+                    </td>
+                  </tr>
+                  <tr v-else v-for="product in filteredProducts" :key="product.id" class="align-middle">
                     <td class="fw-bold text-primary">{{ product.id }}</td>
                     <td>
                       <div class="d-flex align-items-center">
@@ -166,10 +173,11 @@
                     </td>
                   </tr>
                 </tbody>
+
               </table>
 
               <!-- Empty State -->
-              <div v-if="filteredProducts.length === 0" class="text-center py-5">
+              <div v-if="filteredProducts.length === 0 && !loading" class="text-center py-5">
                 <div class="mb-3">
                   <i class="fas fa-search fs-1 text-muted opacity-50"></i>
                 </div>
@@ -345,7 +353,8 @@ export default {
       searchTerm: '',
       productForm: { id: '', nombre: '', precioCompra: 0, precioVenta: 0, stock: 0, marca: '', location: '' },
       isEditing: false,
-      role: localStorage.getItem("role") || "" 
+      role: localStorage.getItem("role") || "",
+      loading: false
     };
   },
   computed: {
@@ -382,11 +391,14 @@ export default {
   methods: {
     async fetchProducts() {
       try {
+        this.loading = true;
         const { data } = await api.get('/products');
         this.products = data;
       } catch (err) {
         console.error('Error al cargar productos:', err);
         Swal.fire("Error", "No se pudieron cargar los productos", "error");
+      }finally {
+        this.loading = false;
       }
     },
     openModal() {
@@ -486,7 +498,7 @@ export default {
       return 'bg-danger';
     },
     calculateMargin(product) {
-      if (!product.precioCompra || product.precioCompra === 0) return 0;
+      if (!product.precioCompra || product.precioCompra === 0) return 100;
       const margin = ((product.precioVenta - product.precioCompra) / product.precioCompra) * 100;
       return Math.round(margin * 100) / 100;
     },

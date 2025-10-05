@@ -363,34 +363,6 @@ const loadNotifications = async () => {
   }
 };
 
-/* Notificaciones mejoradas
-const notifications = ref([
-  {
-    id: 1,
-    icon: "fas fa-shopping-cart",
-    color: "#28a745",
-    title: "Nueva venta registrada",
-    message: "Producto: Laptop Dell - $1,200",
-    time: "Hace 5 minutos"
-  },
-  {
-    id: 2,
-    icon: "fas fa-exclamation-triangle",
-    color: "#ffc107",
-    title: "Stock bajo",
-    message: "iPhone 13 - Solo 2 unidades",
-    time: "Hace 1 hora"
-  },
-  {
-    id: 3,
-    icon: "fas fa-file-invoice-dollar",
-    color: "#dc3545",
-    title: "Pago pendiente",
-    message: "Cliente: María García - $500",
-    time: "Hace 2 horas"
-  }
-])*/
-
 // Función mejorada para guardar configuración
 function guardarConfig() {
   console.log("Guardando configuración:", {
@@ -424,6 +396,14 @@ const navLinks = [
     description: "Vista general",
     roles: ["ADMIN", "USER"],
     route: "/Home"
+  },
+  { 
+    name: "service", 
+    label: "Taller", 
+    icon: "fas fa-chart-bar",
+    description: "Servicios y Pagos",
+    roles: ["ADMIN"],
+    route: "/Home/service"
   },
   { 
     name: "sales", 
@@ -480,15 +460,8 @@ const navLinks = [
     description: "Análisis y reportes",
     roles: ["ADMIN", "USER"],
     route: "/Home/reports"
-  },
-  { 
-    name: "service", 
-    label: "Taller", 
-    icon: "fas fa-chart-bar",
-    description: "Servicios y Pagos",
-    roles: ["ADMIN"],
-    route: "/Home/service"
   }
+  
 ]
 
 const filteredNavLinks = computed(() => {
