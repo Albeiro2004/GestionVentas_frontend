@@ -310,9 +310,7 @@
                                         </div>
                                         <div class="card-body">
                                             <p><strong>Nombre:</strong> {{ selectedInvoice.customer?.nombre || 'N/A' }}</p>
-                                            <p><strong>Email:</strong> {{ selectedInvoice.customer?.email || 'N/A' }}</p>
-                                            <p><strong>Teléfono:</strong> {{ selectedInvoice.customer?.telefono || 'N/A' }}</p>
-                                            <p><strong>Dirección:</strong> {{ selectedInvoice.customer?.direccion || 'N/A' }}</p>
+                                            <p><strong>Teléfono:</strong> {{ selectedInvoice.customer?.contacto || 'N/A' }}</p>
                                         </div>
                                     </div>
                                 </div>
@@ -375,7 +373,7 @@
                                     <!-- Renderizar items -->
                                     <tr v-else v-for="item in selectedInvoice.items" :key="item.id">
                                         <td>
-                                        <div class="fw-medium">{{ item.product?.nombre || 'Producto eliminado' }}</div>
+                                        <div class="fw-medium">{{ item.productName || 'Producto eliminado' }}</div>
                                         <small class="text-muted">{{ item.product?.codigo }}</small>
                                         </td>
                                         <td class="text-center">

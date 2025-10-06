@@ -102,7 +102,7 @@ export default {
       error.value = ''
 
       try {
-        const { data } = await axios.post('https://sobreruedas.onrender.com/auth/login', {
+        const { data } = await axios.post('https://sobre-ruedas.alvenips.com/auth/login', {
           username: username.value,
           password: password.value
         })

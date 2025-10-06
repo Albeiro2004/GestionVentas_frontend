@@ -471,10 +471,7 @@ const filteredNavLinks = computed(() => {
 // Función de logout mejorada
 async function logout() {
   try {
-    await fetch("https://sobreruedas.onrender.com/Ventas/users/logout", {
-      method: "POST",
-      headers: { "Authorization": `Bearer ${localStorage.getItem("token")}` }
-    });
+    await api.post("/users/logout");
   } catch (error) {
     console.error("Error al cerrar sesión:", error);
   }

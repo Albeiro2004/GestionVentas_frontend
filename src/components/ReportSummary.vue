@@ -390,8 +390,8 @@
 
       <!-- Gráficos interactivos -->
       <div class="row g-4 mb-4">
-        <div class="col-lg-8">
-          <div class="card border-0 shadow-lg">
+        <div class="col-lg-8 d-flex">
+          <div class="card border-0 shadow-lg flex-fill">
             <div class="card-header bg-primary text-white py-3 d-flex justify-content-between align-items-center">
               <h5 class="mb-0 fw-semibold">
                 <i class="fas fa-chart-area me-2"></i>Análisis de Tendencias
@@ -427,7 +427,7 @@
     </div>
 
     <!-- Modal de programación de reportes -->
-    <div class="modal fade" :class="{show: showScheduleModal}" :style="{display: showScheduleModal ? 'block' : 'none'}" tabindex="-1">
+    <div class="modal fade position-absolute" :class="{show: showScheduleModal}" :style="{display: showScheduleModal ? 'block' : 'none'}" tabindex="-1">
       <div class="modal-dialog">
         <div class="modal-content">
           <div class="modal-header bg-warning text-dark">
