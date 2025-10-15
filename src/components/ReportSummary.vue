@@ -402,7 +402,7 @@
                 <button class="btn btn-outline-light" :class="{active: chartType === 'area'}" @click="chartType = 'area'">Área</button>
               </div>
             </div>
-            <div class="card-body p-4">
+            <div class="card-body p-4 bodyChart">
               <canvas ref="trendChart" style="max-height: 400px;"></canvas>
             </div>
           </div>
@@ -414,7 +414,7 @@
                 <i class="fas fa-chart-pie me-2"></i>Distribución de Ventas
               </h5>
             </div>
-            <div class="card-body p-4">
+            <div class="card-body p-4 bodyChart">
               <Pie 
                 :data="pieChartData" 
                 :options="pieChartOptions"
@@ -898,4 +898,10 @@ const calculateProfitMargin = () => {
   border-radius: 1rem;
 }
 
+@media (max-width: 768px) {
+
+  .bodyChart {
+    min-height: 40vh !important;
+  }
+}
 </style>

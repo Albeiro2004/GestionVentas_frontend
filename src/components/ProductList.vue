@@ -1,7 +1,7 @@
 <template>
   <div class="container-fluid p-0">
     <!-- Header Section -->
-    <div class="row mb-4">
+    <div class="row my-0">
       <div class="col-12">
         <div class="card border-0 shadow-lg bg-gradient-primary text-white">
           <div class="card-body py-4">
@@ -26,7 +26,7 @@
     </div>
 
     <!-- Controls Section -->
-    <div class="row mb-4">
+    <div class="row my-0">
       <div class="col-12">
         <div class="card border-0 shadow-sm">
           <div class="card-body py-3">
@@ -62,7 +62,7 @@
     </div>
 
     <!-- Table Section -->
-    <div class="row">
+    <div class="row my-0">
       <div class="col-12">
         <div class="card border-0 shadow-sm h-100">
           <div class="card-header bg-white border-bottom-0 py-3">
@@ -77,8 +77,8 @@
             </div>
           </div>
 
-          <div class="card-body py-0">
-            <div class="table-responsive" style="max-height: 56vh; overflow-y: auto;">
+          <div class="card-body py-0 my-0">
+            <div class="table-responsive" style="max-height: 65vh; overflow-y: auto;">
               <table class="table table-hover table-striped mb-0">
                 <thead class="table-dark sticky-top">
                   <tr>
@@ -175,6 +175,23 @@
                 </tbody>
 
               </table>
+
+              <!-- Controles de paginación -->
+              <div v-if="!loading && totalPages > 1"
+                class="d-flex justify-content-between align-items-center px-3 py-3">
+                <button class="btn btn-outline-primary" :disabled="page === 0" @click="prevPage">
+                  <i class="fas fa-arrow-left me-2"></i> Anterior
+                </button>
+
+                <span class="fw-semibold">
+                  Página {{ page + 1 }} de {{ totalPages }} ({{ totalElements }} registros)
+                </span>
+
+                <button class="btn btn-outline-primary" :disabled="page + 1 >= totalPages" @click="nextPage">
+                  Siguiente <i class="fas fa-arrow-right ms-2"></i>
+                </button>
+              </div>
+
 
               <!-- Empty State -->
               <div v-if="filteredProducts.length === 0 && !loading" class="text-center py-5">
@@ -328,188 +345,183 @@
   </div>
 </template>
 
-<script scoped>
-import api from '@/api';
-import { useModal } from '@/composables/useModal';
-import Swal from "sweetalert2";
+<script setup>
+import { ref, computed, onMounted } from 'vue'
+import api from '@/api'
+import { useModal } from '@/composables/useModal'
+import Swal from 'sweetalert2'
 
-export default {
-  setup() {
-    const {
-      modalRef: productModalRef,
-      show: showProductModal,
-      hide: hideProductModal
-    } = useModal('productModal');
+// --- Modal control ---
+const { modalRef: productModalRef, show: showProductModal, hide: hideProductModal } = useModal('productModal')
 
-    return {
-      productModalRef,
-      showProductModal,
-      hideProductModal
-    };
-  },
-  data() {
-    return {
-      products: [],
-      searchTerm: '',
-      productForm: { id: '', nombre: '', precioCompra: 0, precioVenta: 0, stock: 0, marca: '', location: '' },
-      isEditing: false,
-      role: localStorage.getItem("role") || "",
-      loading: false
-    };
-  },
-  computed: {
-    modalTitle() {
-      return this.isEditing ? 'Actualizar Producto' : 'Crear Nuevo Producto';
-    },
-    modalButton() {
-      return this.isEditing ? 'Actualizar Producto' : 'Crear Producto';
-    },
-    filteredProducts() {
-      if (!this.searchTerm) {
-        return this.products;
-      }
-      const lowerCaseSearch = this.searchTerm.toLowerCase();
-      return this.products.filter(product => {
-        return (
-          product.nombre.toLowerCase().includes(lowerCaseSearch) ||
-          String(product.id).toLowerCase().includes(lowerCaseSearch)
-        );
-      });
-    },
-    isAdmin() {
-      return this.role === "ADMIN";
-    },
-    isPriceInvalid() {
-      return this.productForm.precioVenta < this.productForm.precioCompra &&
-        this.productForm.precioVenta > 0 &&
-        this.productForm.precioCompra > 0;
-    },
-  },
-  mounted() {
-    this.fetchProducts();
-  },
-  methods: {
-    async fetchProducts() {
-      try {
-        this.loading = true;
-        const { data } = await api.get('/products');
-        this.products = data;
-      } catch (err) {
-        console.error('Error al cargar productos:', err);
-        Swal.fire("Error", "No se pudieron cargar los productos", "error");
-      }finally {
-        this.loading = false;
-      }
-    },
-    openModal() {
-      this.isEditing = false;
-      this.productForm = { id: '', nombre: '', precioCompra: 0, precioVenta: 0, stock: 0 , marca: '', location: ''};
-      this.showProductModal();
-    },
-    closeModal() {
-      this.hideProductModal();
-    },
-    editProduct(product) {
-      this.isEditing = true;
-      this.productForm = { ...product };
-      this.showProductModal();
-    },
-    async saveProduct() {
-      // Validación antes de enviar
-      if (this.isPriceInvalid) {
-        Swal.fire({
-          title: "Error de Validación",
-          text: "El precio de venta debe ser mayor al precio de compra",
-          icon: "error",
-          confirmButtonText: "Entendido"
-        });
-        return; // No continúa con el guardado
-      }
-      try {
-        if (this.isEditing) {
-          await api.put(`/products/${this.productForm.id}`, this.productForm);
-          Swal.fire({
-            title: "¡Actualizado!",
-            text: "Producto actualizado correctamente",
-            icon: "success",
-            timer: 2000,
-            showConfirmButton: false
-          });
-        } else {
-          await api.post('/products', this.productForm);
-          Swal.fire({
-            title: "¡Creado!",
-            text: "Producto creado correctamente",
-            icon: "success",
-            timer: 2000,
-            showConfirmButton: false
-          });
-        }
-        this.fetchProducts();
-        this.closeModal();
-      } catch (err) {
-        console.error('Error al guardar el producto:', err);
-        Swal.fire("Error", "No se pudo guardar el producto", "error");
-      }
-    },
-    async deleteProduct(id) {
-      const result = await Swal.fire({
-        title: "¿Estás seguro?",
-        text: "Esta acción no se puede deshacer",
-        icon: "warning",
-        showCancelButton: true,
-        confirmButtonColor: "#dc3545",
-        cancelButtonColor: "#6c757d",
-        confirmButtonText: "Sí, eliminar",
-        cancelButtonText: "Cancelar",
-        reverseButtons: true
-      });
+// --- Estado reactivo ---
+const products = ref([])
+const searchTerm = ref('')
+const productForm = ref({ id: '', nombre: '', precioCompra: 0, precioVenta: 0, stock: 0, marca: '', location: '' })
+const isEditing = ref(false)
+const role = ref(localStorage.getItem('role') || '')
+const loading = ref(false)
 
-      if (result.isConfirmed) {
-        try {
-          await api.delete(`/products/${id}`);
-          this.fetchProducts();
-          Swal.fire({
-            title: "¡Eliminado!",
-            text: "El producto ha sido eliminado correctamente",
-            icon: "success",
-            timer: 2000,
-            showConfirmButton: false
-          });
-        } catch (err) {
-          console.error('Error al eliminar el producto:', err);
-          Swal.fire("Error", "No se pudo eliminar el producto", "error");
-        }
+// --- Paginación ---
+const page = ref(0)
+const size = ref(10)
+const totalElements = ref(0)
+const totalPages = ref(0)
+
+// --- Computed ---
+const modalTitle = computed(() => (isEditing.value ? 'Actualizar Producto' : 'Crear Nuevo Producto'))
+const modalButton = computed(() => (isEditing.value ? 'Actualizar Producto' : 'Crear Producto'))
+const isAdmin = computed(() => role.value === 'ADMIN')
+const isPriceInvalid = computed(() =>
+  productForm.value.precioVenta < productForm.value.precioCompra &&
+  productForm.value.precioVenta > 0 &&
+  productForm.value.precioCompra > 0
+)
+
+const filteredProducts = computed(() => {
+  if (!searchTerm.value) return products.value
+  const lower = searchTerm.value.toLowerCase()
+  return products.value.filter(p =>
+    p.nombre.toLowerCase().includes(lower) || String(p.id).toLowerCase().includes(lower)
+  )
+})
+
+// --- Métodos ---
+const fetchProducts = async () => {
+  try {
+    loading.value = true
+    const { data } = await api.get('/products/page', {
+      params: {
+        page: page.value,
+        size: size.value,
+        sort: 'nombre,asc'
       }
-    },
-    stockBadge(stock) {
-      if (stock > 50) return 'bg-success';
-      if (stock > 20) return 'bg-info';
-      if (stock > 10) return 'bg-warning text-dark';
-      if (stock > 0) return 'bg-warning text-dark';
-      return 'bg-danger';
-    },
-    marginBadge(product) {
-      const margin = this.calculateMargin(product);
-      if (margin >= 50) return 'bg-success';
-      if (margin >= 25) return 'bg-info';
-      if (margin >= 10) return 'bg-warning text-dark';
-      if (margin > 0) return 'bg-secondary';
-      return 'bg-danger';
-    },
-    calculateMargin(product) {
-      if (!product.precioCompra || product.precioCompra === 0) return 100;
-      const margin = ((product.precioVenta - product.precioCompra) / product.precioCompra) * 100;
-      return Math.round(margin * 100) / 100;
-    },
-    formatCurrency(value) {
-      return new Intl.NumberFormat('es-CO', {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2
-      }).format(value);
+    })
+    // Si tu backend devuelve un Page de Spring Boot, debes leer los datos así:
+    products.value = data.content || data
+    totalElements.value = data.totalElements || data.length
+    totalPages.value = data.totalPages || Math.ceil(totalElements.value / size.value)
+  } catch (err) {
+    console.error('Error al cargar productos:', err)
+    Swal.fire('Error', 'No se pudieron cargar los productos', 'error')
+  } finally {
+    loading.value = false
+  }
+}
+
+const openModal = () => {
+  isEditing.value = false
+  productForm.value = { id: '', nombre: '', precioCompra: 0, precioVenta: 0, stock: 0, marca: '', location: '' }
+  showProductModal()
+}
+
+const closeModal = () => hideProductModal()
+
+const editProduct = (product) => {
+  isEditing.value = true
+  productForm.value = { ...product }
+  showProductModal()
+}
+
+const saveProduct = async () => {
+  if (isPriceInvalid.value) {
+    Swal.fire({
+      title: 'Error de Validación',
+      text: 'El precio de venta debe ser mayor al precio de compra',
+      icon: 'error',
+      confirmButtonText: 'Entendido'
+    })
+    return
+  }
+
+  try {
+    if (isEditing.value) {
+      await api.put(`/products/${productForm.value.id}`, productForm.value)
+      Swal.fire('¡Actualizado!', 'Producto actualizado correctamente', 'success')
+    } else {
+      await api.post('/products', productForm.value)
+      Swal.fire('¡Creado!', 'Producto creado correctamente', 'success')
+    }
+    fetchProducts()
+    closeModal()
+  } catch (err) {
+    console.error('Error al guardar el producto:', err)
+    Swal.fire('Error', 'No se pudo guardar el producto', 'error')
+  }
+}
+
+const deleteProduct = async (id) => {
+  const result = await Swal.fire({
+    title: '¿Estás seguro?',
+    text: 'Esta acción no se puede deshacer',
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonColor: '#dc3545',
+    cancelButtonColor: '#6c757d',
+    confirmButtonText: 'Sí, eliminar',
+    cancelButtonText: 'Cancelar',
+    reverseButtons: true
+  })
+
+  if (result.isConfirmed) {
+    try {
+      await api.delete(`/products/${id}`)
+      fetchProducts()
+      Swal.fire('¡Eliminado!', 'El producto ha sido eliminado correctamente', 'success')
+    } catch (err) {
+      console.error('Error al eliminar el producto:', err)
+      Swal.fire('Error', 'No se pudo eliminar el producto', 'error')
     }
   }
+}
+
+// --- Utilidades ---
+const stockBadge = (stock) => {
+  if (stock > 50) return 'bg-success'
+  if (stock > 20) return 'bg-info'
+  if (stock > 10) return 'bg-warning text-dark'
+  if (stock > 0) return 'bg-warning text-dark'
+  return 'bg-danger'
+}
+
+const marginBadge = (product) => {
+  const margin = calculateMargin(product)
+  if (margin >= 50) return 'bg-success'
+  if (margin >= 25) return 'bg-info'
+  if (margin >= 10) return 'bg-warning text-dark'
+  if (margin > 0) return 'bg-secondary'
+  return 'bg-danger'
+}
+
+const calculateMargin = (product) => {
+  if (!product.precioCompra || product.precioCompra === 0) return 100
+  const margin = ((product.precioVenta - product.precioCompra) / product.precioCompra) * 100
+  return Math.round(margin * 100) / 100
+}
+
+const nextPage = () => {
+  if (page.value + 1 < totalPages.value) {
+    page.value++;
+    fetchProducts();
+  }
 };
+
+const prevPage = () => {
+  if (page.value > 0) {
+    page.value--;
+    fetchProducts();
+  }
+};
+
+const formatCurrency = (value) => {
+  return new Intl.NumberFormat("es-CO", {
+    style: "decimal",
+    minimumFractionDigits: 0,
+  }).format(value);
+};
+
+// --- Lifecycle ---
+onMounted(fetchProducts)
 </script>
 
 <style scoped>

@@ -7,6 +7,7 @@ export const usePurchaseStore = defineStore("purchase", {
     // El estado inicial de nuestra lista de compras
     items: [
       {
+        tipo: "",
         productId: null,
         searchQuery: "",
         cantidad: 1,
@@ -19,6 +20,7 @@ export const usePurchaseStore = defineStore("purchase", {
     // Acción para añadir un nuevo ítem a la lista
     addItem() {
       this.items.push({
+        tipo: "",
         productId: null,
         searchQuery: "",
         cantidad: 1,
@@ -46,6 +48,7 @@ export const usePurchaseStore = defineStore("purchase", {
     resetItems() {
       this.items = [
         {
+          tipo: "",
           productId: null,
           searchQuery: "",
           cantidad: 1,

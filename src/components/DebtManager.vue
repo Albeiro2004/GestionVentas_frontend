@@ -69,8 +69,8 @@
       <!-- Encabezado de gestión de deudas -->
       <div class="card shadow-sm border-0 mt-4">
         <div class="card-body d-flex justify-content-between align-items-center">
-          <h3 class="mb-0 text-primary">
-            <i class="fas fa-file-invoice-dollar me-2"></i> Gestión de Deudas
+          <h3 class="mb-0 text-primary fw-bold">
+            <i class="fas fa-file-invoice-dollar me-2"></i> Deudas
           </h3>
           <button class="btn btn-outline-primary btn-sm d-flex align-items-center text-uppercase"
             @click="toggleSummary">
@@ -1337,20 +1337,36 @@ export default {
 
 @media (max-width: 768px) {
   .page-title {
-    font-size: 2rem;
+    font-size: 1.5rem;
+    text-align: center;
   }
   
+  .page-subtitle {
+    font-size: 0.8rem;
+    text-align: center;
+    margin-bottom: 1rem;
+  }
+
   .stats-cards {
     flex-direction: column;
     gap: 0.5rem;
+    width: 85%;
+    margin: 0 auto;
   }
   
   .filter-buttons {
     flex-direction: column;
+    width: 100%;
+    margin-bottom: 10px;
+  }
+
+  .filter-buttons button {
+    width: 100%;
+
   }
   
   .debt-table {
-    font-size: 0.9rem;
+    font-size: 0.8rem;
   }
   
   .customer-info {

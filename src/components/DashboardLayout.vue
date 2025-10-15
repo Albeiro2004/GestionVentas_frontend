@@ -23,7 +23,8 @@
                 </div>
                 <div class="flex-grow-1">
                   <div class="fw-semibold text-warning">{{ link.label }}</div>
-                  <small class="text-muted d-block" style="color: aliceblue !important; font-size: smaller;" v-if="link.description">
+                  <small class="text-muted d-block" style="color: aliceblue !important; font-size: smaller;"
+                    v-if="link.description">
                     {{ link.description }}
                   </small>
                 </div>
@@ -36,23 +37,28 @@
           </li>
         </ul>
 
-        <!-- Información del token JWT -->
-        <div class="mt-4 p-3 bg-dark-subtle rounded-3 system-info">
-          <div class="d-flex align-items-center mb-2">
-            <i class="fas fa-key text-warning me-2 micro-bounce"></i>
-            <small class="text-muted">Token JWT</small>
-            <span class="loading-dots ms-auto text-warning"></span>
+        <!-- Pie del Navbar -->
+        <footer class="navbar-footer text-light border-top border-secondary py-2 small">
+          <div class="d-flex justify-content-center align-items-center flex-wrap gap-3 py-3" style="font-size: 12px;">
+            <!-- Información del sistema -->
+            <div class="d-flex align-items-center text-center">
+              <i class="bi bi-git text-warning me-2"></i>
+              <span class=" ms-2">Sistema de Gestión v1.0.0</span>
+            </div>
+
+            <!-- Estado de sesión -->
+            <div class="d-flex align-items-center text-center">
+              <i class="fas fa-user-circle text-success me-2"></i>
+              <span class="">Sesión activa:</span>
+              <span class="fw-semibold ms-1 text-light">{{ fullName }}</span>
+            </div>
+
+            <!-- Derechos -->
+            <div class="text-center">
+              © 2025 — Todos los derechos reservados
+            </div>
           </div>
-          <div class="progress mb-2" style="height: 6px;">
-            <!-- Aquí el ancho de la barra depende del % de vida restante -->
-            <div class="progress-bar bg-warning animated-progress" :style="{ width: tokenLifePercent + '%' }"
-              role="progressbar"></div>
-          </div>
-          <div class="d-flex justify-content-between">
-            <small class="text-muted">Tiempo restante</small>
-            <small class="text-warning fw-semibold">{{ tokenTimeRemaining }}</small>
-          </div>
-        </div>
+        </footer>
 
       </div>
     </nav>
@@ -308,51 +314,9 @@ const router = useRouter()
 // Estados mejorados
 const lastLogin = ref("Hoy, 10:30 AM")
 const userAvatar = ref("https://imgs.search.brave.com/41T2ZiW65TNJLqsqvfpph6-mImFuGDE8uI221O7FiD4/rs:fit:860:0:0:0/g:ce/aHR0cHM6Ly9jZG4t/aWNvbnMtcG5nLmZs/YXRpY29uLmNvbS8x/MjgvNjA3My82MDcz/ODczLnBuZw")
-const tokenLifePercent = ref(0);
 const tokenTimeRemaining = ref("");
 const notifications = ref([]); 
 const notificationCount = computed(() => notifications.value.length);
-
-function parseJwt(token) {
-  try {
-    const base64Url = token.split(".")[1];
-    const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
-    const jsonPayload = decodeURIComponent(
-      atob(base64)
-        .split("")
-        .map(c => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
-        .join("")
-    );
-    return JSON.parse(jsonPayload);
-  } catch (e) {
-    console.error("Token inválido:", e);
-    return null;
-  }
-}
-
-// 🔹 Calcular tiempo restante y porcentaje
-function updateTokenInfo(token) {
-  const payload = parseJwt(token);
-  if (!payload || !payload.exp || !payload.iat) return;
-
-  const now = Math.floor(Date.now() / 1000); // tiempo actual en segundos
-  const total = payload.exp - payload.iat;   // duración total del token
-  const remaining = payload.exp - now;       // tiempo restante en segundos
-
-  if (remaining <= 0) {
-    tokenLifePercent.value = 0;
-    tokenTimeRemaining.value = "Expirado";
-    return;
-  }
-
-  // Calcular porcentaje de vida restante
-  tokenLifePercent.value = Math.floor((remaining / total) * 100);
-
-  // Formatear tiempo legible (minutos:segundos)
-  const minutes = Math.floor(remaining / 60);
-  const seconds = remaining % 60;
-  tokenTimeRemaining.value = `${minutes}m ${seconds}s`;
-}
 
 const loadNotifications = async () => {
   try {
@@ -430,6 +394,22 @@ const navLinks = [
     route: "/Home/products"
   },
   { 
+    name: "invoices", 
+    label: "Gestión Ventas", 
+    icon: "bi bi-kanban",
+    description: "Gestión Ventas",
+    roles: ["ADMIN", "USER"],
+    route: "/Home/invoices"
+  },
+  { 
+    name: "reports", 
+    label: "Reportes", 
+    icon: "fas fa-chart-bar",
+    description: "Análisis y reportes",
+    roles: ["ADMIN", "USER"],
+    route: "/Home/reports"
+  },
+  { 
     name: "debts", 
     label: "Deudas", 
     icon: "fas fa-file-invoice-dollar",
@@ -445,22 +425,6 @@ const navLinks = [
     roles: ["ADMIN"],
     route: "/Home/users"
   },
-  { 
-    name: "invoices", 
-    label: "Gestión Ventas", 
-    icon: "bi bi-kanban",
-    description: "Gestión Ventas",
-    roles: ["ADMIN", "USER"],
-    route: "/Home/invoices"
-  },
-  { 
-    name: "reports", 
-    label: "Reportes", 
-    icon: "fas fa-chart-bar",
-    description: "Análisis y reportes",
-    roles: ["ADMIN", "USER"],
-    route: "/Home/reports"
-  }
   
 ]
 
@@ -530,11 +494,6 @@ onMounted(async () => {
     tokenTimeRemaining.value = "No disponible";
     return;
   }
-
-  updateTokenInfo(jwt);
-
-  // 🔄 refrescar cada segundo
-  setInterval(() => updateTokenInfo(jwt), 1000);
 
   loadNotifications();
 
@@ -1263,7 +1222,7 @@ onMounted(async () => {
   }
 
   .navega {
-    font-size: 16px !important;
+    font-size: 14px !important;
   }
 
   .nave {

@@ -9,14 +9,14 @@
                             <div>
                                 <h2 class="mb-1 fw-bold">
                                     <i class="fas fa-users me-2"></i>
-                                    Gestión de Usuarios
+                                    Usuarios
                                 </h2>
-                                <p class="mb-0 opacity-75">Administra los usuarios del sistema</p>
+                                <p class="mb-0 opacity-75 accordion-collapse parrafoIni">Administra los usuarios del sistema</p>
                             </div>
                             <div class="text-end">
                                 <div class="fs-3 fw-bold">{{ usuariosFiltrados.length }}</div>
                                 <small class="opacity-75">
-                                    {{ filtroRol ? `${getRoleDisplayName(filtroRol)}` : 'Total usuarios' }}
+                                    {{ filtroRol ? `${getRoleDisplayName(filtroRol)}` : 'Usuarios' }}
                                 </small>
                             </div>
                         </div>
@@ -32,41 +32,34 @@
                     <div class="card-body py-3">
                         <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
                             <div class="d-flex align-items-center gap-3">
-                                <button class="btn btn-primary btn-lg shadow-sm" @click="abrirModal()">
+                                <button class="btn btn-primary btn-lg shadow-sm newUser" @click="abrirModal()">
                                     <i class="fas fa-plus me-2"></i>
                                     Nuevo Usuario
                                 </button>
                                 <div class="btn-group" role="group">
-                                    <button class="btn btn-outline-secondary" @click="exportarUsuarios" title="Exportar a CSV">
+                                    <button class="btn btn-outline-secondary" @click="exportarUsuarios"
+                                        title="Exportar a CSV">
                                         <i class="fas fa-download me-1"></i>
                                         Exportar
                                     </button>
-                                    <button 
-                                        class="btn btn-outline-secondary" 
-                                        @click="actualizarDatos" 
-                                        :disabled="cargando"
-                                        title="Actualizar datos">
-                                        <i :class="cargando ? 'fas fa-spinner fa-spin' : 'fas fa-sync-alt'" class="me-1"></i>
+                                    <button class="btn btn-outline-secondary" @click="actualizarDatos"
+                                        :disabled="cargando" title="Actualizar datos">
+                                        <i :class="cargando ? 'fas fa-spinner fa-spin' : 'fas fa-sync-alt'"
+                                            class="me-1"></i>
                                         {{ cargando ? 'Actualizando...' : 'Actualizar' }}
                                     </button>
                                 </div>
                             </div>
                             <div class="d-flex align-items-center gap-2">
                                 <label class="form-label mb-0 text-muted">Filtrar:</label>
-                                <select 
-                                    class="form-select form-select-sm" 
-                                    style="width: auto;"
-                                    v-model="filtroRol"
+                                <select class="form-select form-select-sm" style="width: auto;" v-model="filtroRol"
                                     @change="aplicarFiltro">
                                     <option value="">Todos los roles</option>
                                     <option value="ADMIN">Administradores</option>
                                     <option value="USER">Usuarios</option>
                                 </select>
-                                <button 
-                                    v-if="filtroRol" 
-                                    class="btn btn-sm btn-outline-secondary ms-1"
-                                    @click="limpiarFiltro"
-                                    title="Limpiar filtro">
+                                <button v-if="filtroRol" class="btn btn-sm btn-outline-secondary ms-1"
+                                    @click="limpiarFiltro" title="Limpiar filtro">
                                     <i class="fas fa-times"></i>
                                 </button>
                             </div>
@@ -118,7 +111,14 @@
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <tr v-for="u in usuariosFiltrados" :key="u.id" class="user-row">
+                                    <tr v-if="cargando">
+                                        <td colspan="8" class="text-center py-5">
+                                            <div class="spinner-border text-primary" role="status">
+                                                <span class="visually-hidden">Cargando...</span>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <tr v-else v-for="u in usuariosFiltrados" :key="u.id" class="user-row">
                                         <td class="px-4 py-3">
                                             <span class="badge bg-light text-dark fs-6">#{{ u.id }}</span>
                                         </td>
@@ -143,22 +143,16 @@
                                         </td>
                                         <td class="py-3">
                                             <div class="d-flex justify-content-center gap-2">
-                                                <button 
-                                                    class="btn btn-outline-warning btn-sm action-btn" 
-                                                    @click="abrirModal(u)"
-                                                    title="Editar usuario">
+                                                <button class="btn btn-outline-warning btn-sm action-btn"
+                                                    @click="abrirModal(u)" title="Editar usuario">
                                                     <i class="fas fa-edit"></i>
                                                 </button>
-                                                <button 
-                                                    class="btn btn-outline-danger btn-sm action-btn" 
-                                                    @click="eliminarUsuario(u.id)"
-                                                    title="Eliminar usuario">
+                                                <button class="btn btn-outline-danger btn-sm action-btn"
+                                                    @click="eliminarUsuario(u.id)" title="Eliminar usuario">
                                                     <i class="fas fa-trash"></i>
                                                 </button>
-                                                <button 
-                                                    class="btn btn-outline-info btn-sm action-btn" 
-                                                    @click="verHistorial(u.id)"
-                                                    title="Ver historial">
+                                                <button class="btn btn-outline-info btn-sm action-btn"
+                                                    @click="verHistorial(u.id)" title="Ver historial">
                                                     <i class="fas fa-history"></i>
                                                 </button>
                                             </div>
@@ -168,9 +162,9 @@
                             </table>
                         </div>
                     </div>
-                    
+
                     <!-- Empty State - Filtered -->
-                    <div v-if="usuariosFiltrados.length === 0 && usuarios.length > 0" class="text-center py-5">
+                    <div v-if="usuariosFiltrados.length === 0 && usuarios.length > 0 && !cargando" class="text-center py-5">
                         <div class="empty-state">
                             <i class="fas fa-filter fa-3x text-muted mb-3"></i>
                             <h5 class="text-muted">No hay usuarios con este filtro</h5>
@@ -181,9 +175,9 @@
                             </button>
                         </div>
                     </div>
-                    
+
                     <!-- Empty State - No users at all -->
-                    <div v-else-if="usuarios.length === 0" class="text-center py-5">
+                    <div v-else-if="usuarios.length === 0 && !cargando" class="text-center py-5">
                         <div class="empty-state">
                             <i class="fas fa-users fa-3x text-muted mb-3"></i>
                             <h5 class="text-muted">No hay usuarios registrados</h5>
@@ -196,13 +190,8 @@
 
         <!-- Modal Usuario -->
         <Teleport to="body">
-            <div 
-                class="modal fade" 
-                id="usuarioModal" 
-                tabindex="-1" 
-                aria-labelledby="usuarioModalLabel"
-                aria-hidden="true" 
-                ref="usuarioModalRef">
+            <div class="modal fade" id="usuarioModal" tabindex="-1" aria-labelledby="usuarioModalLabel"
+                aria-hidden="true" ref="usuarioModalRef">
                 <div class="modal-dialog modal-dialog-centered modal-lg">
                     <div class="modal-content border-0 shadow-lg">
                         <form @submit.prevent="guardarUsuario">
@@ -211,7 +200,8 @@
                                     <i class="fas fa-user-plus me-2"></i>
                                     {{ usuarioSeleccionado.id ? "Editar Usuario" : "Nuevo Usuario" }}
                                 </h5>
-                                <button type="button" class="btn-close btn-close-white" @click="cerrarModal" aria-label="Close"></button>
+                                <button type="button" class="btn-close btn-close-white" @click="cerrarModal"
+                                    aria-label="Close"></button>
                             </div>
                             <div class="modal-body p-4">
                                 <div class="mb-4">
@@ -219,11 +209,8 @@
                                         <i class="fas fa-user me-1"></i>
                                         Nombre completo
                                     </label>
-                                    <input 
-                                        type="text" 
-                                        v-model="usuarioSeleccionado.name" 
-                                        class="form-control form-control-lg"
-                                        placeholder="Ingresa el nombre completo"
+                                    <input type="text" v-model="usuarioSeleccionado.name"
+                                        class="form-control form-control-lg" placeholder="Ingresa el nombre completo"
                                         required />
                                 </div>
                                 <div class="mb-4">
@@ -231,19 +218,16 @@
                                         <i class="fas fa-at me-1"></i>
                                         Usuario
                                     </label>
-                                    <input 
-                                        type="text" 
-                                        v-model="usuarioSeleccionado.username" 
-                                        class="form-control form-control-lg"
-                                        placeholder="Nombre de usuario"
-                                        required/>
+                                    <input type="text" v-model="usuarioSeleccionado.username"
+                                        class="form-control form-control-lg" placeholder="Nombre de usuario" required />
                                 </div>
                                 <div class="mb-4">
                                     <label class="form-label fw-semibold">
                                         <i class="fas fa-shield-alt me-1"></i>
                                         Rol del sistema
                                     </label>
-                                    <select v-model="usuarioSeleccionado.role" class="form-select form-select-lg" required>
+                                    <select v-model="usuarioSeleccionado.role" class="form-select form-select-lg"
+                                        required>
                                         <option value="" disabled>Seleccionar rol</option>
                                         <option value="ADMIN">👑 Administrador</option>
                                         <option value="USER">👤 Usuario estándar</option>
@@ -254,12 +238,8 @@
                                         <i class="fas fa-lock me-1"></i>
                                         Contraseña
                                     </label>
-                                    <input 
-                                        type="password" 
-                                        v-model="usuarioSeleccionado.password" 
-                                        class="form-control form-control-lg"
-                                        placeholder="Contraseña segura"
-                                        required />
+                                    <input type="password" v-model="usuarioSeleccionado.password"
+                                        class="form-control form-control-lg" placeholder="Contraseña segura" required />
                                     <div class="form-text">
                                         <i class="fas fa-info-circle me-1"></i>
                                         La contraseña debe tener al menos 8 caracteres
@@ -284,13 +264,8 @@
 
         <!-- Modal Historial -->
         <Teleport to="body">
-            <div 
-                class="modal fade" 
-                id="historialModal" 
-                tabindex="-1" 
-                aria-labelledby="historialModalLabel"
-                aria-hidden="true" 
-                ref="historialModalRef">
+            <div class="modal fade" id="historialModal" tabindex="-1" aria-labelledby="historialModalLabel"
+                aria-hidden="true" ref="historialModalRef">
                 <div class="modal-dialog modal-xl modal-dialog-centered">
                     <div class="modal-content border-0 shadow-lg">
                         <div class="modal-header bg-info text-white">
@@ -298,7 +273,8 @@
                                 <i class="fas fa-history me-2"></i>
                                 Historial de Accesos
                             </h5>
-                            <button type="button" class="btn-close btn-close-white" @click="cerrarModalHistorial" aria-label="Close"></button>
+                            <button type="button" class="btn-close btn-close-white" @click="cerrarModalHistorial"
+                                aria-label="Close"></button>
                         </div>
                         <div class="modal-body p-0">
                             <div class="table-responsive">
@@ -340,7 +316,7 @@
                                     </tbody>
                                 </table>
                             </div>
-                            
+
                             <!-- Empty State for History -->
                             <div v-if="historial.length === 0" class="text-center py-5">
                                 <div class="empty-state">
@@ -485,8 +461,7 @@ export default {
                     confirmButtonColor: '#d33',
                     cancelButtonColor: '#3085d6',
                     confirmButtonText: 'Sí, eliminar',
-                    cancelButtonText: 'Cancelar',
-                    zIndex: 3000
+                    cancelButtonText: 'Cancelar'
                 });
                 
                 if (result.isConfirmed) {
@@ -494,9 +469,9 @@ export default {
                     this.mostrarExito("Usuario eliminado correctamente");
                     this.cargarUsuarios();
                 }
-            } catch (err) {
-                console.error("Error eliminando usuario:", err);
-                this.mostrarError("Error al eliminar usuario");
+            } catch (error) {
+                console.error("Error eliminando usuario:", error.response.data.message);
+                this.mostrarError(error.response.data.message || 'Error oculto');
             }
         },
         
@@ -585,8 +560,7 @@ export default {
                 text: `${mensaje}`,
                 confirmButtonColor: "#3085d6",
                 timer: 3000,
-                timerProgressBar: true,
-                zIndex: 3000
+                timerProgressBar: true
             });
         },
         
@@ -595,8 +569,7 @@ export default {
                 icon: "error",
                 title: "Error",
                 text: mensaje,
-                confirmButtonColor: "#d33",
-                zIndex: 3000
+                confirmButtonColor: "#d33"
             });
         },
 
@@ -759,7 +732,6 @@ body.modal-open {
 /* Enhanced Cards */
 .card {
     transition: all 0.2s ease;
-    border-radius: 12px;
 }
 
 /* Modal Enhancements */
@@ -857,11 +829,11 @@ body.modal-open {
 
 /* Responsive Improvements */
 @media (max-width: 768px) {
-    .container-fluid {
-        padding-left: 15px;
-        padding-right: 15px;
-    }
     
+    .parrafoIni {
+        font-size: 14px;
+    }
+
     .d-flex.flex-wrap.gap-3 {
         flex-direction: column;
         align-items: stretch !important;
@@ -883,6 +855,10 @@ body.modal-open {
     
     .modal-dialog {
         margin: 1rem;
+    }
+
+    .newUser, .btn-group.btn{
+        font-size: 14px !important;
     }
 }
 

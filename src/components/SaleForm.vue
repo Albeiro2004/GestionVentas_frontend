@@ -113,10 +113,16 @@
                   </div>
                 </div>
 
-                <div v-else-if="productSearchQuery.length > 0 && productSuggestions.length === 0"
+                <div v-else-if="productSearchQuery.length > 1 && productSuggestions.length === 0"
                   class="alert alert-info mt-3 d-flex align-items-center">
                   <i class="fas fa-info-circle me-2"></i>
                   No se encontraron productos con la búsqueda actual.
+                </div>
+
+                <div v-else-if="productSearchQuery.length === 1"
+                  class="alert alert-info mt-3 d-flex align-items-center">
+                  <i class="fas fa-info-circle me-2"></i>
+                  Introduzca al menos 2 caracteres.
                 </div>
 
                 <div v-else-if="productSuggestions.length > 0" class="mt-3">
@@ -124,17 +130,23 @@
                     <table class="table table-hover table-striped align-middle">
                       <thead class="table-dark sticky-top">
                         <tr style="font-size: 12px;">
+                          <th class="text-center"><i class="fas fa-warehouse me-1"></i> Stock</th>
                           <th><i class="fas fa-barcode me-1"></i> Referencia</th>
                           <th><i class="fas fa-tag me-1"></i> Nombre</th>
                           <th><i class="bi bi-bookmark-check me-1"></i> Marca</th>
-                          <th><i class="bi bi-geo-alt-fill me-1"></i> Ubicación</th>  
+                          <th><i class="bi bi-geo-alt-fill me-1"></i> Ubicación</th>
                           <th class="text-end"><i class="fas fa-dollar-sign me-1"></i> Precio</th>
-                          <th class="text-center"><i class="fas fa-warehouse me-1"></i> Stock</th>
                         </tr>
                       </thead>
                       <tbody>
                         <tr v-for="prod in productSuggestions" :key="prod.id" @click="selectProduct(prod)"
                           :class="{ 'table-danger': prod.stock <= 0 }" style="cursor: pointer;">
+                          <td class="text-center">
+                            <span :class="prod.stock > 0 ? 'badge bg-success' : 'badge bg-danger'">
+                              <i :class="prod.stock > 0 ? 'fas fa-check' : 'fas fa-times'"></i>
+                              {{ prod.stock }}
+                            </span>
+                          </td>
                           <td>
                             <span class="badge bg-light text-dark">
                               {{ prod.id }}
@@ -157,22 +169,28 @@
                           <td class="text-end fw-semibold text-success">
                             ${{ prod.precioVenta.toFixed(2) }}
                           </td>
-                          <td class="text-center">
-                            <span :class="prod.stock > 0 ? 'badge bg-success' : 'badge bg-danger'">
-                              <i :class="prod.stock > 0 ? 'fas fa-check' : 'fas fa-times'"></i>
-                              {{ prod.stock }}
-                            </span>
-                          </td>
                         </tr>
                       </tbody>
                     </table>
+                    <!-- Controles de paginación -->
+                    <div v-if="!loading && totalPages > 1"
+                      class="d-flex justify-content-between align-items-center px-3 py-3 page">
+                      <button class="btn btn-outline-primary" :disabled="page === 0" @click="prevPage">
+                        <i class="fas fa-arrow-left me-2"></i> <small class="nextAndPrevious">Anterior</small>
+                      </button>
+
+                      <span class="fw-semibold">
+                        Página {{ page + 1 }} de {{ totalPages }} ({{ totalElements }} registros)
+                      </span>
+
+                      <button class="btn btn-outline-primary" :disabled="page + 1 >= totalPages" @click="nextPage">
+                        <small class="nextAndPrevious">Siguiente</small> <i class="fas fa-arrow-right ms-2"></i>
+                      </button>
+                    </div>
                   </div>
                 </div>
 
               </div>
-
-
-
 
               <div v-if="showCartSection" class="mb-5 animated-fade-in">
                 <label class="form-label fs-5 fw-bold d-flex align-items-center mb-3">
@@ -235,20 +253,13 @@
                 </button>
               </div>
             </div>
-            <transition name="fade">
-              <div v-if="feedbackMessage" class="feedback-fixed-top alert animated-fade-in mt-2 mx-0"
-                :class="feedbackClass">
-                {{ feedbackMessage }}
-              </div>
-            </transition>
           </div>
         </div>
 
         <div class="col-12 col-md-4 d-flex flex-column mt-3 mt-md-0">
           <!-- Panel flotante del carrito -->
-          <transition name="slide-fade">
-            <div v-if="showCartPanel" class="cart-floating-panel p-3 flex-grow-1 w-100 h-100 d-flex flex-column"
-              style="max-height: 80vh;">
+          <transition name="slide-fade h-100">
+            <div v-if="showCartPanel" class="cart-floating-panel p-3 flex-grow-1 w-100 h-100 d-flex flex-column">
 
               <!-- Header con botón cerrar -->
               <h5 class="fw-bold mb-3 border-bottom pb-2 d-flex justify-content-between align-items-center">
@@ -263,57 +274,57 @@
               <!-- Lista de productos (scrollable) -->
               <div class="cart-items-container flex-grow-1 overflow-auto">
                 <template v-if="cart.length > 0">
-                  <table class="table table-sm align-middle">
-                    <tbody>
-                      <tr v-for="item in cart" :key="item.id">
-                        <td class="overflow-y-auto" style="max-width: 100px; white-space: normal; word-wrap: break-word; overflow-wrap: anywhere;">
-                          <small class="fw-semibold">{{ item.nombre }}</small><br>
-                          <small class="text-muted">Stock: {{ item.stock }}</small>
-                        </td>
+                  <div v-for="item in cart" :key="item.id" class="cart-item-row border-bottom py-3">
 
+                    <div class="d-flex gap-2 gap-md-3 align-items-start">
+                      <!-- Columna 1: Nombre del producto (ocupa el espacio disponible) -->
+                      <div class="product-name-column flex-grow-1">
+                        <div class="fw-semibold product-name">{{ item.nombre }}</div>
+                        <small class="text-muted d-block">Stock: {{ item.stock }}</small>
+                      </div>
+
+                      <!-- Columna 2: Cantidad, Descuento y Precio (siempre vertical) -->
+                      <div class="cart-controls-column d-flex flex-column gap-2">
                         <!-- Cantidad -->
-                        <td class="text-center" style="width: 110px;">
-                          <div class="input-group input-group-sm">
-                            <button class="btn btn-outline-secondary" type="button"
-                              @click="item.cantidad > 1 ? item.cantidad-- : null">
-                              <i class="fas fa-minus"></i>
-                            </button>
-                            <input type="number" class="form-control text-center" v-model.number="item.cantidad" min="1"
-                              :max="item.stock" @input="validateCartItem(item)" />
-                            <button class="btn btn-outline-secondary" type="button"
-                              @click="item.cantidad < item.stock ? item.cantidad++ : null">
-                              <i class="fas fa-plus"></i>
-                            </button>
-                          </div>
-                        </td>
+                        <div class="input-group input-group-sm">
+                          <button class="btn btn-outline-secondary px-2" type="button"
+                            @click="item.cantidad > 1 ? item.cantidad-- : null">
+                            <i class="fas fa-minus"></i>
+                          </button>
+                          <input type="number" class="form-control text-center cart-quantity-input"
+                            v-model.number="item.cantidad" min="1" :max="item.stock" @input="validateCartItem(item)" />
+                          <button class="btn btn-outline-secondary px-2" type="button"
+                            @click="item.cantidad < item.stock ? item.cantidad++ : null">
+                            <i class="fas fa-plus"></i>
+                          </button>
+                        </div>
 
                         <!-- Descuento -->
-                        <td class="text-center" style="min-width: 100px;">
-                          <input type="number" class="form-control form-control-sm text-end"
-                            :value="item.descuento === 0 ? '' : item.descuento" placeholder="Descuento" min="0"
-                            :max="item.cantidad * item.precioUnitario - item.precioCompra"
-                            @input="e => { item.descuento = Number(e.target.value) || 0; validateDiscount(item) }" />
-                        </td>
+                        <input type="number" class="form-control form-control-sm cart-discount-input"
+                          :value="item.descuento === 0 ? '' : item.descuento" placeholder="Desc. $" min="0"
+                          :max="item.cantidad * item.precioUnitario - item.precioCompra"
+                          @input="e => { item.descuento = Number(e.target.value) || 0; validateDiscount(item) }" />
 
                         <!-- Precio final -->
-                        <td class="text-end fw-bold text-success" style="width: 90px;">
+                        <div class="text-success fw-bold text-center cart-price">
                           ${{ formatNumber(finalPrice(item).toFixed(2)) }}
-                        </td>
+                        </div>
+                      </div>
 
-                        <!-- Eliminar -->
-                        <td class="text-center" style="width: 40px;">
-                          <button class="btn btn-outline-danger btn-sm" title="Eliminar" @click="removeFromCart(item)">
-                            <i class="fas fa-trash"></i>
-                          </button>
-                        </td>
-                      </tr>
-                    </tbody>
-                  </table>
+                      <!-- Columna 3: Botón eliminar -->
+                      <div class="cart-delete-column">
+                        <button class="btn btn-outline-danger btn-sm" title="Eliminar" @click="removeFromCart(item)">
+                          <i class="fas fa-trash"></i>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
                 </template>
 
                 <!-- Mensaje vacío -->
                 <div v-else class="d-flex align-items-center justify-content-center h-100 text-muted">
-                  <i class="bi bi-bag-x me-2"></i> No hay productos agregados
+                  <i class="bi bi-bag-x me-2 fs-4"></i>
+                  <span>No hay productos agregados</span>
                 </div>
               </div>
 
@@ -378,10 +389,11 @@
       </div>
       <div class="modal-backdrop fade show"></div>
     </div>
-
-    <!-- Botón flotante de carrito (cuando el panel está cerrado) -->
-    <button v-if="!showCartPanel" class="btn btn-primary position-absolute m-2" @click="showCartPanel = true" style="
-    top: 0; 
+  </div>
+  <!-- Botón flotante de carrito (cuando el panel está cerrado) -->
+  <button v-if="!showCartPanel" class="btn btn-primary opacity-75 m-2" @click="openCart" style="
+    position: fixed;
+    top: 90px; 
     right: 0; 
     width: 60px; 
     height: 60px; 
@@ -389,20 +401,23 @@
     display: flex; 
     align-items: center; 
     justify-content: center;
-    z-index: 1100;
-  ">
-      <i class="bi bi-cart fs-3"></i>
-      <span v-if="totalItems > 0" class="badge rounded-pill bg-danger"
-        style="position: absolute; top: 5px; right: 5px; z-index: 1201;">
-        {{ totalItems }}
-      </span>
-    </button>
+    z-index: 1100;">
+    <i class="bi bi-cart fs-3"></i>
+    <span v-if="totalItems > 0" class="badge rounded-pill bg-danger"
+      style="position: absolute; top: 5px; right: 5px; z-index: 1201;">
+      {{ totalItems }}
+    </span>
+  </button>
 
-  </div>
+  <transition name="fade">
+    <div v-if="feedbackMessage" class="feedback-fixed-top alert animated-fade-in mt-2 mx-0" :class="feedbackClass">
+      {{ feedbackMessage }}
+    </div>
+  </transition>
 </template>
 
 <script setup>
-import { ref, computed, watch, onUnmounted, onMounted } from "vue";
+import { ref, computed, watch, onUnmounted, onMounted, nextTick } from "vue";
 import { useDeudas } from "@/composables/useDeudas";
 import api from "@/api";
 
@@ -422,6 +437,11 @@ const feedbackMessage = ref("");
 const feedbackClass = ref("alert-info");
 const isFinalizing = ref(false);
 const loading = ref(false);
+
+const page = ref(0)
+const size = ref(10)
+const totalPages = ref(0)
+const totalElements = ref(0)
 
 // Modal
 const showRegisterModal = ref(false);
@@ -449,6 +469,17 @@ const handleResize = () => {
     showCartPanel.value = true;  // mostrar en escritorio
   }
 };
+
+const openCart = async () => {
+  showCartPanel.value = true
+
+  await nextTick()
+
+  const panel = document.querySelector('.cart-floating-panel')
+  if (panel) {
+    panel.scrollIntoView({ behavior: 'smooth', block: 'center' })
+  }
+}
 
 window.addEventListener("resize", handleResize);
 
@@ -549,7 +580,7 @@ const registerAndSelectCustomer = async () => {
     return;
   }
   try {
-    const { data } = await api.post("/Ventas/customers", newCustomer.value);
+    const { data } = await api.post("/customers", newCustomer.value);
 
     showFeedback("Cliente registrado correctamente ✅", "success");
     showRegisterModal.value = false;
@@ -566,8 +597,12 @@ const fetchInitialProducts = async () => {
 
   try {
     loading.value = true;
-    const { data } = await api.get("/products");
-    productSuggestions.value = data;
+    const { data } = await api.get('/products/page', {
+      params: { page: page.value, size: size.value, sort: 'nombre,asc'}
+    });
+    productSuggestions.value = data.content || data;
+    totalElements.value = data.totalElements || data.length
+    totalPages.value = data.totalPages || Math.ceil(totalElements.value / size.value)
   } catch (error) {
     console.error("Error fetching initial products:", error);
     productSuggestions.value = [];
@@ -748,6 +783,7 @@ onUnmounted(() => {
 });
 
 onMounted(() => {
+  fetchInitialProducts();
   selectNoCustomer();});
 
 function formatNumber(value) {
@@ -759,7 +795,19 @@ function formatNumber(value) {
   // Retornar con separador de miles usando toLocaleString
   return intValue.toLocaleString("es-ES"); 
 }
+const nextPage = () => {
+  if (page.value + 1 < totalPages.value) {
+    page.value++;
+    fetchInitialProducts();
+  }
+};
 
+const prevPage = () => {
+  if (page.value > 0) {
+    page.value--;
+    fetchInitialProducts();
+  }
+};
 </script>
 
 <style scoped>
@@ -839,7 +887,6 @@ function formatNumber(value) {
 }
 
 .product-table-container {
-  max-height: 23vh;
   overflow-y: auto;
   border: 1px solid #dee2e6;
   border-radius: 0.25rem;
@@ -857,14 +904,12 @@ tr:hover {
 
 /* Estilo para el feedback fijo */
 .feedback-fixed-top {
-  position: absolute;
-  top: 0;
+  position: fixed;
+  top: 100px;
   right: 10px;
   z-index: 2000;
   max-width: 20vw;
-  /* Limita el ancho del mensaje */
   text-align: center;
-  /* Asegura que esté por encima de todos los demás elementos */
   border-radius: 0.5rem;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
   padding: 1rem;
@@ -1002,6 +1047,147 @@ tr:hover {
   border-color: #0d6efd;
   background-color: #0d6efd10;
   box-shadow: 0 6px 16px rgba(13, 110, 253, 0.2);
+}
+
+.product-name-column {
+  min-width: 0; /* Permite que flex funcione correctamente */
+  max-width: 100%; /* Evita desbordamiento */
+}
+
+.product-name {
+  word-wrap: break-word;
+  word-break: break-word;
+  overflow-wrap: break-word;
+  hyphens: auto;
+  line-height: 1.3;
+}
+
+/* Columna de controles (cantidad, descuento, precio) */
+.cart-controls-column {
+  min-width: 110px;
+  width: 110px;
+  flex-shrink: 0;
+}
+
+/* Columna del botón eliminar */
+.cart-delete-column {
+  flex-shrink: 0;
+}
+
+/* Input de cantidad más compacto */
+.cart-quantity-input {
+  width: 45px;
+  padding: 0.25rem 0.1rem;
+}
+
+/* Input de descuento */
+.cart-discount-input {
+  font-size: 0.85rem;
+}
+
+/* Precio */
+.cart-price {
+  font-size: 1.1rem;
+}
+
+@media (max-width: 768px) {
+
+  .form-control {
+    font-size: 1rem;
+    text-align: center;
+
+  }
+
+    .product-table-container {
+  max-height: 35vh;
+    }
+
+    .page {
+      gap: 0.5rem;
+      text-align: center;
+      font-size: 0.8rem;
+    }
+
+    .nextAndPrevious {
+      display: none;
+    }
+
+    .feedback-fixed-top {
+      font-size: 1rem;
+      max-width: 70vw;
+      left: 5vw;
+      right: 25vw;
+      padding: 0.5rem;
+    }
+      .cart-controls-column {
+    min-width: 140px;
+    width: 140px;
+  }
+  
+  .cart-quantity-input {
+    width: 50px;
+  }
+  
+  .cart-price {
+    font-size: 1.25rem;
+  }
+}
+@media (max-width: 575.98px) {
+  .cart-item-row {
+    padding: 0.75rem 0 !important;
+  }
+  
+  .cart-controls-column {
+    min-width: 100px;
+    width: 100px;
+  }
+  
+  .product-name {
+    font-size: 0.9rem;
+  }
+  
+  .cart-quantity-input {
+    width: 40px;
+    font-size: 0.85rem;
+  }
+  
+  .cart-discount-input {
+    font-size: 0.8rem;
+  }
+  
+  .cart-price {
+    font-size: 1rem;
+  }
+  
+  .btn-outline-secondary {
+    padding: 0.2rem 0.4rem;
+    font-size: 0.75rem;
+  }
+  
+  .btn-outline-danger {
+    padding: 0.3rem 0.5rem;
+    font-size: 0.85rem;
+  }
+}
+
+/* Responsive: Pantallas extra pequeñas (< 400px) */
+@media (max-width: 399.98px) {
+  .cart-controls-column {
+    min-width: 90px;
+    width: 90px;
+  }
+  
+  .product-name {
+    font-size: 0.85rem;
+  }
+  
+  .cart-quantity-input {
+    width: 35px;
+  }
+  
+  .cart-price {
+    font-size: 0.95rem;
+  }
 }
 
 </style>

@@ -11,19 +11,19 @@
             <li class="nav-item" role="presentation">
                 <button class="nav-link" :class="{ active: currentTab === 'register' }" @click="currentTab = 'register'"
                     type="button">
-                    🔧 Registrar Servicio
+                    <i class="bi bi-clipboard2-plus me-2"></i> Registrar Servicio
                 </button>
             </li>
             <li class="nav-item" role="presentation">
                 <button class="nav-link" :class="{ active: currentTab === 'service' }" @click="currentTab = 'service'"
                     type="button">
-                    🔧 Servicios Realizados
+                    <i class="bi bi-clock-history me-2"></i> Servicios Realizados
                 </button>
             </li>
             <li class="nav-item" role="presentation">
                 <button class="nav-link" :class="{ active: currentTab === 'pay' }" @click="currentTab = 'pay'"
                     type="button">
-                    💰 Pagar Trabajador
+                    <i class="bi bi-credit-card-2-back me-2"></i> Pagar Trabajador
                 </button>
             </li>
         </ul>
@@ -153,7 +153,7 @@
                                 <!-- Productos asociados -->
                                 <div class="col-12">
                                     <label class="form-label fw-semibold mb-3">
-                                        <i class="bi bi-box-seam me-2"></i>Productos utilizados
+                                        <i class="bi bi-box-seam me-2"></i> Productos utilizados
                                     </label>
 
                                     <!-- Lista de productos agregados -->
@@ -161,9 +161,9 @@
                                         <div v-if="service.products.length === 0"
                                             class="alert alert-light text-center py-1 border-2 border-dashed">
                                             <i class="bi bi-inbox fs-1 text-muted d-block mb-2"></i>
-                                            <p class="text-muted mb-0">No hay productos agregados</p>
-                                            <small class="text-muted">Haz clic en "Agregar producto" para
-                                                comenzar</small>
+                                            <p class="text-muted mb-0">Servicio Sin Producto</p>
+                                            <small class="text-muted addProductSmall">Haz clic en "Agregar producto"
+                                                para comenzar</small>
                                         </div>
 
                                         <div v-for="(p, index) in service.products" :key="index"
@@ -178,36 +178,50 @@
                                                                 <i class="bi bi-box text-primary"></i>
                                                             </div>
                                                             <div>
-                                                                <span class="fw-semibold d-block">{{ p.name }}</span>
-                                                                <small class="text-muted">ID: {{ p.productId }}</small>
+                                                                <span class="fw-semibold d-block spanProd">{{ p.name
+                                                                    }}</span>
+                                                                <small class="text-muted smallProd">Cod: {{ p.productId
+                                                                    }}</small>
                                                             </div>
                                                         </div>
                                                     </div>
 
-                                                    <!-- Input de cantidad -->
-                                                    <div class="col-lg-4 col-md-5">
-                                                        <div class="input-group input-group-sm">
-                                                            <span class="input-group-text bg-light">
-                                                                <i class="bi bi-hash"></i>
-                                                            </span>
-                                                            <input type="number" min="1" :max="p.stock"
-                                                                class="form-control" v-model.number="p.quantity"
-                                                                placeholder="Cantidad" @input="validateQuantity(p)">
-                                                            <span class="input-group-text bg-light text-muted">
-                                                                / {{ p.stock }}
-                                                            </span>
+                                                    <div class="listProduct d-flex flex-row w-100">
+                                                        <div class="col-lg-4 col-md-5">
+                                                            <div class="input-group input-group-sm">
+                                                                <button class="btn btn-outline-secondary bg-dark-subtle"
+                                                                    type="button"
+                                                                    @click="p.quantity > 1 ? p.quantity-- : null">
+                                                                    <i class="bi bi-dash"></i>
+                                                                </button>
+
+                                                                <input type="number" min="1" :max="p.stock"
+                                                                    class="form-control text-center"
+                                                                    v-model.number="p.quantity" placeholder="Cantidad"
+                                                                    @input="validateQuantity(p)">
+
+                                                                <span class="input-group-text bg-light text-muted">
+                                                                    / {{ p.stock }}
+                                                                </span>
+
+                                                                <button class="btn btn-outline-secondary bg-dark-subtle"
+                                                                    type="button"
+                                                                    @click="p.quantity < p.stock ? p.quantity++ : null">
+                                                                    <i class="bi bi-plus"></i>
+                                                                </button>
+                                                            </div>
                                                         </div>
-                                                        <small class="text-muted">Disponible: {{ p.stock }}</small>
-                                                    </div>
 
                                                     <!-- Botón eliminar -->
                                                     <div class="col-lg-2 col-md-2 text-end">
                                                         <button type="button"
-                                                            class="btn btn-sm btn-outline-danger rounded-circle"
+                                                            class="btn btn-sm btn-outline-danger rounded-circle p-3"
                                                             @click="removeProduct(index)" title="Eliminar producto">
                                                             <i class="bi bi-trash"></i>
                                                         </button>
                                                     </div>
+                                                </div>
+
                                                 </div>
                                             </div>
                                         </div>
@@ -215,8 +229,8 @@
 
                                     <!-- Botón agregar producto -->
                                     <div class="d-flex justify-content-center align-items-center">
-                                        <div class="d-grid gap-2 w-25">
-                                            <button type="button" class="btn btn-outline-primary btn-lg"
+                                        <div class="d-grid gap-2 w-25 addProductBtn">
+                                            <button type="button" class="btn btn-outline-primary btn-lg fs-6"
                                                 data-bs-toggle="modal" data-bs-target="#productModal"
                                                 @click="openProductSelector">
                                                 <i class="bi bi-plus-circle me-2"></i>
@@ -250,7 +264,7 @@
                 </div>
             </div>
 
-            <div v-show="currentTab === 'service'" class="container-fluid py-4">
+            <div v-show="currentTab === 'service'" class="container-fluid py-4 px-0">
                 <!-- Filtros -->
                 <div class="card shadow-sm mb-4">
                     <div class="card-header bg-primary text-white">
@@ -299,9 +313,9 @@
                             <div class="col-md-3">
                                 <label class="form-label fw-semibold">
                                     <i class="bi bi-person me-1"></i>
-                                    Cliente (ID)
+                                    Cliente (CC)
                                 </label>
-                                <input type="text" v-model="filters.customerId" placeholder="Buscar por ID..."
+                                <input type="text" v-model="filters.customerId" placeholder="Buscar por CC..."
                                     class="form-control" @input="debouncedSearch" />
                             </div>
                         </div>
@@ -384,13 +398,13 @@
                                 <div class="card-body">
                                     <div class="d-flex align-items-center">
                                         <div class="flex-shrink-0">
-                                            <div class="bg-info bg-opacity-10 rounded-3 p-3">
-                                                <i class="bi bi-people text-info fs-3"></i>
+                                            <div class="bg-warning bg-opacity-10 rounded-3 p-3">
+                                                <i class="bi bi-shop-window text-warning fs-3"></i>
                                             </div>
                                         </div>
                                         <div class="flex-grow-1 ms-3">
                                             <h6 class="text-muted mb-1">Taller</h6>
-                                            <h3 class="mb-0 fw-bold text-info">
+                                            <h3 class="mb-0 fw-bold text-warning">
                                                 ${{ formatMiles(totalWorkshopShare) }}
                                             </h3>
                                         </div>
@@ -435,7 +449,7 @@
                         </div>
                         <div class="card-body p-0">
                             <div class="table-responsive" style="max-height: 40vh; overflow-y: auto;">
-                                <table class="table table-hover table-striped mb-0">
+                                <table class="table table-hover table-striped mb-0 tableService">
                                     <thead class="table-dark">
                                         <tr>
                                             <th class="position-sticky top-0" style="width: 120px;">Fecha</th>
@@ -492,7 +506,7 @@
                                             </td>
                                         </tr>
                                     </tbody>
-                                    <tfoot class="table-light">
+                                    <tfoot class="table-light pieTabla">
                                         <tr class="fw-bold">
                                             <td colspan="3" class="text-end">TOTALES:</td>
                                             <td class="text-end text-dark">
@@ -523,7 +537,7 @@
             </div>
 
             <!-- Pagar Trabajador -->
-            <div v-show="currentTab === 'pay'" class="container-fluid py-4">
+            <div v-show="currentTab === 'pay'" class="container-fluid py-4 px-0">
                 <!-- Worker Selection -->
                 <div class="row mb-4">
                     <div class="col-12">
@@ -798,7 +812,7 @@
                                         <i class="bi bi-search"></i> <!-- Si usas Bootstrap Icons -->
                                         <!-- O usa este símbolo si no tienes iconos: 🔍 -->
                                     </span>
-                                    <input type="text" class="form-control form-control-lg"
+                                    <input type="text" class="form-control form-control-lg fs-6"
                                         placeholder="Buscar por Código, Nombre o Marca..." v-model="searchQuery"
                                         @input="currentPage = 1">
                                     <button v-if="searchQuery" class="btn btn-outline-secondary" type="button"
@@ -1766,13 +1780,18 @@ const deleteService = async (id) => {
 
 /* Responsive improvements */
 @media (max-width: 768px) {
+
+    .badge.bg-info {
+        display: none;
+    }
+
     .container-fluid {
         padding: 1rem;
     }
 
     .nav-tabs .nav-link {
-        font-size: 0.875rem;
-        padding: 0.5rem 1rem;
+        font-size: 0.9rem;
+        padding: 1rem;
     }
 
     .display-4 {
@@ -1782,10 +1801,131 @@ const deleteService = async (id) => {
     .display-6 {
         font-size: 1.5rem;
     }
-}
 
-@keyframes fadeIn {
-    from {
+    .addProductBtn {
+        width: 100% !important;
+        margin-top: 0.5rem;
+        margin-bottom: 15px;
+    }
+    
+    .addProductSmall {
+        display: none;
+    }
+
+    .spanProd {
+        font-size: 0.8rem;
+    }
+
+    .smallProd {
+        font-size: 0.7rem;
+    }
+
+    .listProduct{
+        align-items: center;
+        justify-content: center;
+        flex-wrap: wrap;
+        gap: 1rem !important;
+    }
+    
+    #productModal .modal-dialog {
+        max-width: 95vw !important;
+    }
+    
+    #productModal .modal-content {
+        height: 90vh;
+        border-radius: 10px;
+        overflow-y: auto;
+    }
+    
+    #productModal .modal-header {
+        position: sticky;
+        top: 0;
+        z-index: 10;
+    }
+    
+    #productModal .modal-body {
+        padding: 1rem;
+    }
+    
+    #productModal table {
+        font-size: 0.85rem;
+        /* Ajusta el texto para mejor lectura */
+    }
+    
+    #productModal .input-group {
+        width: 100% !important;
+        /* Buscador ocupa todo el ancho */
+    }
+    
+    #productModal .page-link {
+        padding: 0.35rem 0.6rem;
+        font-size: 0.85rem;
+    }
+    
+    .tableService.table {
+        font-size: 0.85rem;
+        white-space: nowrap;
+    }
+    
+    /* Ocultar encabezados menos importantes */
+    .tableService thead th:nth-child(1),
+    .tableService thead th:nth-child(5),
+    .tableService thead th:nth-child(6) {
+        display: none;
+    }
+    
+    /* Ocultar las mismas columnas en el cuerpo */
+    .tableService tbody td:nth-child(1),
+    .tableService tbody td:nth-child(5),
+    .tableService tbody td:nth-child(6),
+    .tableService tfoot td:nth-child(5),
+    .tableService tfoot td:nth-child(6) {
+        display: none;
+    }
+
+    .pieTabla {
+        display: none;
+    }
+    
+    /* Compactar celdas */
+    .tableService td,
+    .tableService th {
+        padding: 0.4rem 0.5rem;
+        vertical-align: middle;
+    }
+    
+    /* Botón eliminar más pequeño */
+    table .btn-sm {
+        padding: 0.25rem 0.4rem;
+        font-size: 0.8rem;
+    }
+    
+    /* Centrar columnas principales */
+    .tableService td:nth-child(1),
+    .tableService td:nth-child(2),
+    .tableService td:nth-child(4),
+    .tableService td:nth-child(7) {
+        text-align: center;
+    }
+    
+    /* Mostrar totales en formato simplificado */
+    tfoot td {
+        font-size: 0.9rem;
+    }
+    
+    /* Ajuste de header y badge */
+    .card-header h6 {
+        font-size: 0.9rem;
+    }
+    
+    .card-header .badge {
+        font-size: 0.75rem;
+        padding: 0.4em 0.6em;
+    }
+}
+    
+    @keyframes fadeIn {
+        from {
         opacity: 0;
         transform: translateY(10px);
     }

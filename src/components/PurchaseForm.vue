@@ -1,141 +1,248 @@
 <template>
-  <div class="container">
-
-    <div class="bg-white p-5 rounded-3 shadow-sm">
-      <h2 class="mb-4 text-primary fw-bold">🛒 Registrar Nueva Compra</h2>
-      <p class="text-muted mb-4">Añade los productos que deseas registrar en la compra, busca por nombre, código o ID.
-      </p>
-
-      <form @submit.prevent="submitPurchase">
-        <div class="purchase-items-container">
-          <div v-for="(item, index) in purchaseItems" :key="index"
-            class="row g-3 align-items-center mb-4 p-3 border rounded-3 bg-light item-row animated-fade-in">
-
-            <div class="col-md-5 position-relative">
-              <label class="form-label fw-bold">Producto</label>
-              <div class="input-group">
-                <input type="text" class="form-control" v-model="item.searchQuery"
-                  :class="{ 'is-invalid': item.searchQuery && !item.productId }"
-                  placeholder="Buscar por nombre, código o ID..." @input="filterProducts(index)"
-                  @focus="item.showSuggestions = true" @blur="hideSuggestions(index)" />
-                <button v-if="item.searchQuery" class="btn btn-outline-secondary" type="button"
-                  @click="clearSearch(index)">
-                  <i class="fas fa-times"></i>
-                </button>
-              </div>
-              <div v-if="item.searchQuery && !item.productId" class="invalid-feedback d-block">
-                Debes seleccionar un producto de la lista.
-              </div>
-
-              <ul v-if="item.showSuggestions && filteredSuggestions[index] && filteredSuggestions[index].length"
-                class="list-group position-absolute w-100 mt-1 shadow-lg z-2000 suggestions-list">
-                <li v-for="product in filteredSuggestions[index]" :key="product.id"
-                  class="list-group-item list-group-item-action d-flex justify-content-between align-items-center"
-                  @mousedown.prevent="selectProduct(index, product)">
-                  <div>
-                    <strong>{{ product.nombre }}</strong> <br />
-                    <small class="text-muted">Ref: {{ product.id }} | Stock: {{ product.stock }}</small>
-                  </div>
-                  <span v-if="product.stock <= 5" class="badge bg-warning text-dark">Bajo</span>
-                </li>
-              </ul>
-
-              <button v-if="!item.productId && !filteredSuggestions[index]?.length" type="button"
-                class="btn btn-sm btn-link mt-2 p-0 text-success" @click="openQuickProductModal(index)">
-                <i class="fas fa-plus-circle me-1"></i> ¿No encuentras el producto? ¡Crear nuevo!
-              </button>
-            </div>
-
-            <div class="col-md-2">
-              <label class="form-label fw-bold">Cantidad</label>
-              <input type="number" class="form-control" v-model.number="item.cantidad" min="1" required />
-            </div>
-
-            <div class="col-md-3">
-              <label class="form-label fw-bold">Costo Unitario</label>
-              <div class="input-group">
-                <span class="input-group-text">$</span>
-                <input type="number" class="form-control" v-model.number="item.costoUnitario" min="0" step="0.01" />
-              </div>
-            </div>
-
-            <div class="col-md-2 d-flex justify-content-end align-items-center gap-2">
-              <span class="fw-bold fs-5 text-success d-none d-md-block">${{ itemSubtotal(item).toFixed(2) }}</span>
-              <button type="button" class="btn btn-danger" @click="removeItem(index)"
-                :disabled="purchaseItems.length === 1" data-bs-toggle="tooltip" data-bs-placement="top">
-                <i class="fas fa-trash-alt"></i>
-              </button>
-            </div>
+  <div class="container py-4">
+    <div class="card border-0 shadow-sm">
+      <div class="card-header bg-gradient bg-primary text-white py-3">
+        <div class="d-flex align-items-center">
+          <i class="fas fa-shopping-cart fs-4 me-3"></i>
+          <div>
+            <h2 class="mb-0 h4 fw-bold">Nueva Compra</h2>
+            <small class="opacity-75">Gestiona productos, servicios y herramientas</small>
           </div>
         </div>
+      </div>
 
-        <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4 pt-3 border-top">
-          <button type="button" class="btn btn-outline-primary d-flex align-items-center" @click="addItem">
-            <i class="fas fa-plus-circle me-2"></i> Añadir Otro
-          </button>
-          <span class="h4 fw-bold">Total: <span class="text-primary">${{ total.toFixed(2) }}</span></span>
-        </div>
-
-        <hr class="my-4">
-
-        <div class="text-center mt-4">
-          <button type="submit" class="btn btn-primary w-25 py-2" :disabled="!hasValidItems">
-            <i class="fas fa-shopping-cart me-2"></i> Culminar Compra
-          </button>
-        </div>
-      </form>
-    </div>
-
-    <Teleport to="body">
-      <div class="modal fade" id="quickProductModal" tabindex="-1" aria-hidden="true" ref="quickProductModalRef">
-        <div class="modal-dialog modal-static">
-          <div class="modal-content">
-            <div class="modal-header bg-primary text-white">
-              <h5 class="modal-title">📦 Nuevo Producto</h5>
-              <button type="button" class="btn-close btn-close-white" @click="closeQuickProductModal"
-                aria-label="Cerrar"></button>
-            </div>
-            <div class="modal-body">
-              <form @submit.prevent="registerQuickProduct">
-                <div class="mb-3">
-                  <label for="newProductId" class="form-label">Código</label>
-                  <input type="text" id="newProductId" class="form-control" v-model="newProduct.id" required>
+      <div class="card-body p-4">
+        <form @submit.prevent="submitPurchase">
+          <!-- Items Container -->
+          <div class="purchase-items-container">
+            <div v-for="(item, index) in purchaseItems" :key="index"
+              class="card mb-3 border-0 shadow-sm item-card animated-fade-in">
+              <div class="card-body p-4">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                  <h6 class="text-muted mb-0 fw-semibold">
+                    <i class="fas fa-cube me-2"></i>Ítem #{{ index + 1 }}
+                  </h6>
+                  <button type="button" class="btn btn-outline-danger btn-sm rounded-pill" 
+                    @click="removeItem(index)" :disabled="purchaseItems.length === 1">
+                    <i class="fas fa-trash-alt me-1"></i> Eliminar
+                  </button>
                 </div>
-                <div class="mb-3">
-                  <label for="newProductName" class="form-label">Nombre</label>
-                  <input type="text" id="newProductName" class="form-control" v-model="newProduct.nombre" required>
-                </div>
-                <div class="mb-3">
-                  <label for="newProductStock" class="form-label">Cantidad (Stock inicial)</label>
-                  <input type="number" id="newProductStock" class="form-control" v-model.number="newProduct.stock"
-                    min="1" required>
-                </div>
-                <div class="mb-3">
-                  <label for="newProductPrecioCompra" class="form-label">Precio de Compra</label>
-                  <div class="input-group">
-                    <span class="input-group-text">$</span>
-                    <input type="number" id="newProductPrecioCompra" class="form-control"
-                      v-model.number="newProduct.precioCompra" min="0" step="0.01" required>
+
+                <div class="row g-3">
+                  <!-- Tipo de ítem -->
+                  <div class="col-md-3">
+                    <label class="form-label text-muted small fw-semibold">TIPO DE ÍTEM</label>
+                    <select class="form-select form-select-lg" v-model="item.tipo" 
+                      @change="onTipoChange(index)" required>
+                      <option value="">Seleccione...</option>
+                      <option value="PRODUCTO">📦 Producto</option>
+                      <option value="SERVICIO">⚙️ Servicio</option>
+                      <option value="HERRAMIENTA">🔧 Herramienta</option>
+                      <option value="OTRO">📌 Otro</option>
+                    </select>
                   </div>
-                </div>
-                <div class="col">
-                  <label for="newProductPrecioVenta" class="form-label">Precio de Venta</label>
-                  <div class="input-group has-validation">
-                    <span class="input-group-text">$</span>
-                    <input type="number" id="newProductPrecioVenta" class="form-control"
-                      :class="{ 'is-invalid': hasPriceError }" v-model.number="newProduct.precioVenta" min="0"
-                      step="0.01" required>
-                    <div v-if="hasPriceError" class="invalid-feedback">
-                      El precio de venta no puede ser menor al de compra.
+
+                  <!-- Producto (solo si tipo === PRODUCTO) -->
+                  <div v-if="item.tipo === 'PRODUCTO'" class="col-md-5 position-relative">
+                    <label class="form-label text-muted small fw-semibold">BUSCAR PRODUCTO</label>
+                    <div class="input-group input-group-lg">
+                      <span class="input-group-text bg-light border-end-0">
+                        <i class="fas fa-search text-muted"></i>
+                      </span>
+                      <input type="text" class="form-control border-start-0 ps-0" 
+                        v-model="item.searchQuery"
+                        :class="{ 'is-invalid': item.searchQuery && !item.productId }"
+                        placeholder="Nombre o ID del producto..." 
+                        @input="filterProducts(index)"
+                        @focus="item.showSuggestions = true" 
+                        @blur="hideSuggestions(index)" />
+                      <button v-if="item.searchQuery" class="btn btn-outline-secondary" 
+                        type="button" @click="clearSearch(index)">
+                        <i class="fas fa-times"></i>
+                      </button>
+                    </div>
+                    <div v-if="item.searchQuery && !item.productId" class="invalid-feedback d-block">
+                      <i class="fas fa-exclamation-circle me-1"></i>
+                      Debes seleccionar un producto de la lista.
+                    </div>
+
+                    <!-- Suggestions -->
+                    <ul v-if="item.showSuggestions && filteredSuggestions[index] && filteredSuggestions[index].length"
+                      class="list-group position-absolute w-100 mt-1 shadow-lg suggestions-list">
+                      <li v-for="product in filteredSuggestions[index]" :key="product.id"
+                        class="list-group-item list-group-item-action d-flex justify-content-between align-items-center py-3"
+                        @mousedown.prevent="selectProduct(index, product)">
+                        <div>
+                          <div class="fw-semibold text-dark">{{ product.nombre }}</div>
+                          <small class="text-muted">
+                            <span class="badge bg-light text-dark me-2">ID: {{ product.id }}</span>
+                            <span class="badge" :class="product.stock <= 5 ? 'bg-warning text-dark' : 'bg-success'">
+                              Stock: {{ product.stock }}
+                            </span>
+                          </small>
+                        </div>
+                      </li>
+                    </ul>
+
+                    <button v-if="!item.productId && !filteredSuggestions[index]?.length" 
+                      type="button" class="btn btn-link text-success text-decoration-none mt-2 p-0" 
+                      @click="openQuickProductModal(index)">
+                      <i class="fas fa-plus-circle me-1"></i> 
+                      <small>¿No encuentras el producto? Crear nuevo</small>
+                    </button>
+                  </div>
+
+                  <!-- Descripción (solo si tipo !== PRODUCTO) -->
+                  <div v-else class="col-md-5">
+                    <label class="form-label text-muted small fw-semibold">DESCRIPCIÓN</label>
+                    <input type="text" class="form-control form-control-lg" 
+                      v-model="item.descripcion"
+                      placeholder="Ej: Mantenimiento de equipos" required />
+                  </div>
+
+                  <!-- Cantidad -->
+                  <div v-if="item.tipo === 'PRODUCTO'" class="col-md-2">
+                    <label class="form-label text-muted small fw-semibold">CANTIDAD</label>
+                    <input type="number" class="form-control form-control-lg text-center" 
+                      v-model.number="item.cantidad" min="1" required />
+                  </div>
+
+                  <!-- Costo Unitario -->
+                  <div class="col-md-2">
+                    <label class="form-label text-muted small fw-semibold">
+                      {{ item.tipo === 'PRODUCTO' ? 'COSTO/UNIDAD' : 'VALOR' }}
+                    </label>
+                    <div class="input-group input-group-lg">
+                      <span class="input-group-text bg-light">$</span>
+                      <input type="number" class="form-control" 
+                        v-model.number="item.costoUnitario" 
+                        min="0" step="0.01" required />
                     </div>
                   </div>
                 </div>
+
+                <!-- Subtotal -->
+                <div class="mt-3 pt-3 border-top">
+                  <div class="d-flex justify-content-end align-items-center">
+                    <span class="text-muted me-2">Subtotal:</span>
+                    <span class="fs-6 fw-bold text-success">
+                      ${{ formatCurrency(itemSubtotal(item)) }}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Add Item & Total -->
+          <div class="card border-0 bg-light mb-4">
+            <div class="card-body p-4">
+              <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+                <button type="button" class="btn btn-outline-primary btn-lg rounded-pill px-4 fs-6" 
+                  @click="addItem">
+                  <i class="fas fa-plus-circle me-2"></i> Añadir Otro
+                </button>
+                <div class="text-end">
+                  <div class="text-muted small mb-1 fs-6">TOTAL DE LA COMPRA</div>
+                  <div class="fs-3 fw-bold text-primary">
+                    ${{ formatCurrency(total) }}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Submit Button -->
+          <div class="d-grid gap-2 d-md-flex justify-content-md-center">
+            <button type="submit" class="btn btn-primary btn-lg px-5 rounded-pill shadow" 
+              :disabled="!hasValidItems">
+              <i class="fas fa-check-circle me-2"></i> 
+              Registrar Compra
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Modal Producto Rápido -->
+    <Teleport to="body">
+      <div class="modal fade" id="quickProductModal" tabindex="-1" aria-hidden="true" ref="quickProductModalRef">
+        <div class="modal-dialog modal-dialog-centered">
+          <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header bg-gradient bg-primary text-white border-0">
+              <div>
+                <h5 class="modal-title fw-bold mb-0">
+                  <i class="fas fa-box-open me-2"></i>Crear Nuevo Producto
+                </h5>
+                <small class="opacity-75">Completa la información básica</small>
+              </div>
+              <button type="button" class="btn-close btn-close-white" 
+                @click="closeQuickProductModal" aria-label="Cerrar"></button>
+            </div>
+            <div class="modal-body p-4">
+              <form @submit.prevent="registerQuickProduct">
+                <div class="mb-3">
+                  <label for="newProductNombre" class="form-label text-muted small fw-semibold">
+                    NOMBRE DEL PRODUCTO *
+                  </label>
+                  <input type="text" id="newProductNombre" class="form-control form-control-lg" 
+                    v-model="newProduct.nombre" placeholder="Ej: Tornillo hexagonal" required>
+                </div>
+                
+                <div class="mb-3">
+                  <label for="newProductMarca" class="form-label text-muted small fw-semibold">
+                    MARCA
+                  </label>
+                  <input type="text" id="newProductMarca" class="form-control form-control-lg" 
+                    v-model="newProduct.marca" placeholder="Ej: Stanley">
+                </div>
+                
+                <div class="row g-3">
+                  <div class="col-md-6">
+                    <label for="newProductPrecioCompra" class="form-label text-muted small fw-semibold">
+                      PRECIO DE COMPRA *
+                    </label>
+                    <div class="input-group input-group-lg">
+                      <span class="input-group-text bg-light">$</span>
+                      <input type="number" id="newProductPrecioCompra" class="form-control"
+                        v-model.number="newProduct.precioCompra" min="0" step="0.01" 
+                        placeholder="0.00" required>
+                    </div>
+                  </div>
+                  
+                  <div class="col-md-6">
+                    <label for="newProductPrecioVenta" class="form-label text-muted small fw-semibold">
+                      PRECIO DE VENTA *
+                    </label>
+                    <div class="input-group input-group-lg has-validation">
+                      <span class="input-group-text bg-light">$</span>
+                      <input type="number" id="newProductPrecioVenta" class="form-control"
+                        :class="{ 'is-invalid': hasPriceError }" 
+                        v-model.number="newProduct.precioVenta" min="0" step="0.01" 
+                        placeholder="0.00" required>
+                      <div v-if="hasPriceError" class="invalid-feedback">
+                        <i class="fas fa-exclamation-triangle me-1"></i>
+                        Debe ser mayor al precio de compra
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div v-if="!hasPriceError && newProduct.precioCompra && newProduct.precioVenta" 
+                  class="alert alert-success mt-3 mb-0">
+                  <i class="fas fa-chart-line me-2"></i>
+                  <strong>Margen:</strong> 
+                  {{ ((newProduct.precioVenta - newProduct.precioCompra) / newProduct.precioCompra * 100).toFixed(1) }}%
+                </div>
               </form>
             </div>
-            <div class="modal-footer">
-              <button type="button" class="btn btn-secondary" @click="closeQuickProductModal">Cancelar</button>
-              <button type="button" class="btn btn-success" @click="registerQuickProduct"
-                :disabled="hasPriceError || !isFormValid">
+            <div class="modal-footer border-0 bg-light">
+              <button type="button" class="btn btn-lg btn-secondary rounded-pill px-4" 
+                @click="closeQuickProductModal">
+                Cancelar
+              </button>
+              <button type="button" class="btn btn-lg btn-success rounded-pill px-4 shadow-sm" 
+                @click="registerQuickProduct" :disabled="hasPriceError || !isFormValid">
                 <i class="fas fa-save me-2"></i> Guardar Producto
               </button>
             </div>
@@ -143,11 +250,10 @@
         </div>
       </div>
     </Teleport>
-
   </div>
 </template>
 
-<script scoped>
+<script>
 import api from '@/api';
 import Swal from "sweetalert2";
 import { usePurchaseStore } from '@/stores/purchaseStore';
@@ -160,16 +266,13 @@ export default {
     const purchaseStore = usePurchaseStore();
     const { items: purchaseItems } = storeToRefs(purchaseStore);
 
-    // 🔹 Estado local
     const allProducts = ref([]);
     const filteredSuggestions = ref([]);
-    const newProduct = ref({ id: '', nombre: '', precioCompra: 0, precioVenta: 0, stock: 0 });
+    const newProduct = ref({ nombre: '', marca: '', precioCompra: 0, precioVenta: 0 });
     const editingItemIndex = ref(null);
 
-    // 🔹 Modal
     const quickProductModal = useModal('quickProductModal');
 
-    // 🔹 Watch para mantener sugerencias sincronizadas
     watch(
       purchaseItems,
       (newItems) => {
@@ -180,13 +283,17 @@ export default {
       { deep: true, immediate: true }
     );
 
-    // 🔹 Computed
     const total = computed(() =>
-      purchaseItems.value.reduce((sum, item) => sum + (item.costoUnitario || 0) * (item.cantidad || 0), 0)
+      purchaseItems.value.reduce((sum, item) => sum + itemSubtotal(item), 0)
     );
 
     const hasValidItems = computed(() =>
-      purchaseItems.value.some((item) => item.productId && item.cantidad > 0)
+      purchaseItems.value.some((item) => {
+        if (item.tipo === 'PRODUCTO') {
+          return item.productId && item.cantidad > 0 && item.costoUnitario > 0;
+        }
+        return item.descripcion && item.cantidad > 0 && item.costoUnitario > 0;
+      })
     );
 
     const hasPriceError = computed(() => newProduct.value.precioVenta < newProduct.value.precioCompra);
@@ -194,18 +301,29 @@ export default {
     const isFormValid = computed(() => {
       const product = newProduct.value;
       return (
-        product.id &&
         product.nombre &&
         product.precioCompra !== null &&
         product.precioVenta !== null &&
-        product.stock !== null
+        product.precioVenta >= product.precioCompra
       );
     });
 
-    // 🔹 Funciones de producto rápido
+    const onTipoChange = (index) => {
+      purchaseStore.updateItem(index, {
+        productId: null,
+        searchQuery: '',
+        descripcion: '',
+        cantidad: 1,
+        costoUnitario: 0
+      });
+      if (filteredSuggestions.value[index]) {
+        filteredSuggestions.value[index] = [];
+      }
+    };
+
     const openQuickProductModal = (index) => {
       editingItemIndex.value = index;
-      newProduct.value = { id: '', nombre: '', precioCompra: 0, precioVenta: 0, stock: 0 };
+      newProduct.value = { nombre: '', marca: '', precioCompra: 0, precioVenta: 0 };
       quickProductModal.show();
     };
 
@@ -214,11 +332,8 @@ export default {
     };
 
     const registerQuickProduct = async () => {
-      if (hasPriceError.value) {
-        return Swal.fire("Error", "❌ El precio de venta no puede ser menor al de compra.", "error");
-      }
-      if (!isFormValid.value) {
-        return Swal.fire("Error", "❌ Por favor, complete todos los campos requeridos.", "warning");
+      if (hasPriceError.value || !isFormValid.value) {
+        return Swal.fire("Error", "❌ Por favor, complete los campos correctamente.", "warning");
       }
       try {
         const { data } = await api.post('/products', newProduct.value);
@@ -231,7 +346,6 @@ export default {
       }
     };
 
-    // 🔹 Acciones sobre productos en la compra
     const fetchProducts = async () => {
       try {
         const { data } = await api.get('/products');
@@ -250,7 +364,6 @@ export default {
       filteredSuggestions.value[index] = allProducts.value.filter(
         (product) =>
           product.nombre.toLowerCase().includes(query) ||
-          (product.codigo && product.codigo.toLowerCase().includes(query)) ||
           (product.id && product.id.toString().includes(query))
       );
     };
@@ -274,6 +387,11 @@ export default {
       }, 200);
     };
 
+    const formatCurrency = (amount) => {
+      if (amount === undefined || amount === null) return '0.00';
+      return Number(amount).toLocaleString('es-MX', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+    };
+
     const clearSearch = (index) => {
       purchaseStore.updateItem(index, {
         productId: null,
@@ -288,68 +406,73 @@ export default {
 
     const itemSubtotal = (item) => (item.costoUnitario || 0) * (item.cantidad || 0);
 
-    // 🔹 Enviar compra
     const submitPurchase = async () => {
       if (!hasValidItems.value) {
-        return Swal.fire("Atención", "Agregue al menos un producto válido.", "warning");
+        return Swal.fire("Atención", "Agregue al menos un ítem válido.", "warning");
       }
+
       try {
         const purchaseData = {
+          fecha: new Date().toISOString().split('T')[0],
           items: purchaseItems.value
-            .filter((item) => item.productId)
+            .filter((item) => {
+              if (item.tipo === 'PRODUCTO') {
+                return item.productId && item.cantidad > 0;
+              }
+              return item.descripcion && item.cantidad > 0;
+            })
             .map((item) => ({
-              productId: item.productId,
+              tipo: item.tipo,
               cantidad: item.cantidad,
-              costoUnitario: item.costoUnitario
+              costoUnitario: item.costoUnitario,
+              productId: item.tipo === 'PRODUCTO' ? item.productId : null,
+              descripcion: item.tipo !== 'PRODUCTO' ? item.descripcion : null
             }))
         };
+
         await api.post('/purchases', purchaseData);
         Swal.fire("Éxito", "✅ Compra registrada correctamente.", "success");
         purchaseStore.resetItems();
       } catch (error) {
+        console.error(error);
         Swal.fire("Error", "❌ Error al registrar la compra.", "error");
       }
     };
 
-    // 🔹 Ciclo de vida
     onMounted(() => {
       fetchProducts();
     });
 
     return {
-      // store
       purchaseItems,
       addItem: purchaseStore.addItem,
       removeItem: purchaseStore.removeItem,
       updateItem: purchaseStore.updateItem,
       resetItems: purchaseStore.resetItems,
 
-      // locales
       allProducts,
       filteredSuggestions,
       newProduct,
       editingItemIndex,
 
-      // modal
       quickProductModalRef: quickProductModal.modalRef,
       openQuickProductModal,
       closeQuickProductModal,
       registerQuickProduct,
 
-      // computed
       total,
       hasValidItems,
       hasPriceError,
       isFormValid,
 
-      // utils
+      onTipoChange,
       filterProducts,
       selectProduct,
       hideSuggestions,
       clearSearch,
       itemSubtotal,
+      formatCurrency,
 
-      // compra
       submitPurchase
     };
   }
@@ -357,17 +480,17 @@ export default {
 </script>
 
 <style scoped>
-
-.bg-white {
-  background-color: #fff;
+.bg-gradient {
+  background: linear-gradient(135deg, var(--bs-primary) 0%, #0056b3 100%);
 }
 
-.text-primary {
-  color: #007bff !important;
+.item-card {
+  transition: all 0.3s ease;
+  border-left: 4px solid transparent;
 }
 
 .animated-fade-in {
-  animation: fadeIn 0.5s ease-in-out;
+  animation: fadeIn 0.4s ease-in;
 }
 
 @keyframes fadeIn {
@@ -375,78 +498,48 @@ export default {
     opacity: 0;
     transform: translateY(10px);
   }
-
   to {
     opacity: 1;
     transform: translateY(0);
   }
 }
 
-.fade-enter-active,
-.fade-leave-active {
-  transition: opacity 0.5s ease;
-}
-
-.fade-enter-from,
-.fade-leave-to {
-  opacity: 0;
-}
-
-.item-row {
-  transition: all 0.3s ease;
-}
-
-.purchase-items-container {
-  padding-right: 1rem;
-}
-
 .suggestions-list {
-  z-index: 2000;
-  border-top: none;
-  max-height: 250px;
+  max-height: 300px;
   overflow-y: auto;
-}
-
-.suggestions-list li:hover {
-  background-color: #f0f8ff;
-}
-
-.feedback-fixed-top {
-  position: fixed;
-  top: 0;
-  left: 50%;
-  transform: translateX(-50%);
+  border-radius: 0.5rem;
   z-index: 2000;
-  width: 100%;
-  max-width: 500px;
-  border-radius: 0 0 0.5rem 0.5rem;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-  background-color: rgba(255, 255, 255, 0.95);
 }
 
-.alert-success {
-  background-color: rgba(209, 231, 221, 0.9);
+.suggestions-list .list-group-item {
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border-left: 3px solid transparent;
 }
 
-.alert-danger {
-  background-color: rgba(248, 215, 218, 0.9);
+.suggestions-list .list-group-item:hover {
+  background-color: #f8f9fa;
+  border-left-color: var(--bs-primary);
+  padding-left: 1.5rem;
 }
 
-.btn-outline-danger {
-  --bs-btn-border-color: #dc3545;
-  --bs-btn-hover-bg: #dc3545;
-  --bs-btn-hover-border-color: #dc3545;
+.form-control:focus,
+.form-select:focus {
+  border-color: var(--bs-primary);
+  box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.15);
 }
 
-.btn-outline-secondary {
-  --bs-btn-border-color: #6c757d;
-  --bs-btn-hover-bg: #6c757d;
-  --bs-btn-hover-border-color: #6c757d;
+.btn-lg.rounded-pill {
+  padding-left: 2rem;
+  padding-right: 2rem;
 }
 
-.btn-link {
-    font-size: 0.9rem;
-    padding-left: 0 !important;
-    text-decoration: none;
+.modal-content {
+  border-radius: 1rem;
+  overflow: hidden;
+}
+
+.card {
+  border-radius: 1rem;
 }
 </style>

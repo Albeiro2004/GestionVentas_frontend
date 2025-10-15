@@ -19,16 +19,15 @@
 
       <!-- Header con filtros de tiempo -->
       <div class="col-12">
-        <div class="border-light p-4 m-0">
-          <div class="container-fluid">
-            <div class="row align-items-center">
-              <div class="col-lg-8 col-md-7">
+        <div class="border-light p-4 m-0 panel">
+            <div class="row align-items-center justify-content-md-center">
+              <div class="col-lg-8 col-md-7 panelEjecutivo">
                 <div class="d-flex align-items-center mb-2 mb-md-0">
                   <div class="bg-primary bg-gradient rounded-circle p-2 me-3">
                     <i class="fas fa-chart-line text-white fs-5"></i>
                   </div>
                   <div>
-                    <h1 class="fw-bold text-dark mb-1 fs-2">Panel Ejecutivo</h1>
+                    <h1 class="fw-bold text-dark mb-2 fs-2">Panel Ejecutivo</h1>
                     <div class="d-flex align-items-center text-muted small">
                       <i class="fas fa-clock me-2"></i>
                       <span class="me-3">Último actualizado: {{ lastUpdated }}</span>
@@ -37,9 +36,8 @@
                 </div>
               </div>
 
-              <div class="col-lg-4 col-md-5">
-                <div
-                  class="d-flex flex-column flex-md-row align-items-stretch align-items-md-center gap-2 justify-content-md-end">
+              <div class="col-lg-4 col-md-12">
+                <div class="d-flex flex-column flex-md-row align-items-stretch align-items-md-center gap-2 justify-content-md-end">
                   <div class="input-group input-group-sm" style="max-width: 200px;">
                     <span class="input-group-text bg-light border-end-0">
                       <i class="fas fa-calendar-alt text-muted"></i>
@@ -68,7 +66,6 @@
                 </div>
               </div>
             </div>
-          </div>
         </div>
       </div>
 
@@ -86,7 +83,7 @@
                     <div class="metric-icon" :class="card.iconBg">
                       <i :class="card.icon" class="fs-4 text-white"></i>
                     </div>
-                    <button v-if="userRole === 'ADMIN'" class="btn btn-link btn-sm text-muted p-0 fs-5"
+                    <button v-if="userRole === 'ADMIN'" class="btn btn-link btn-sm text-muted p-0 fs-6"
                       @click.prevent="goToCardRoute(card.id)">
                       <i class="fas fa-eye"></i>
                     </button>
@@ -114,7 +111,7 @@
                   <div v-if="card.goal" class="mt-3">
                     <div class="d-flex justify-content-between align-items-center mb-2">
                       <small class="text-muted">Objetivo del {{ selectedPeriod === 'month' ? 'mes' : 'período'
-                      }}</small>
+                        }}</small>
                       <small class="fw-semibold">{{ Math.round((card.value / card.goal) * 100) }}%</small>
                     </div>
                     <div class="progress" style="height: 6px;">
@@ -129,64 +126,72 @@
         </div>
       </div>
 
-      <!-- Gráficos y análisis -->
-      <div class="col-xl-8 col-12">
-        <div class="card border-0 shadow-sm h-100">
-          <div class="card-header bg-white border-bottom py-3">
-            <div class="d-flex justify-content-between align-items-center">
-              <div>
-                <h5 class="fw-bold mb-1">Tendencias de Ventas</h5>
-                <p class="text-muted small mb-0">Análisis comparativo por período</p>
-              </div>
-              <div class="btn-group" role="group">
-                <input type="radio" class="btn-check" name="chartType" id="lineChart" value="line" v-model="chartType">
-                <label class="btn btn-outline-primary btn-sm" for="lineChart">
-                  <i class="fas fa-chart-line me-1"></i>Líneas
-                </label>
-                <input type="radio" class="btn-check" name="chartType" id="barChart" value="bar" v-model="chartType">
-                <label class="btn btn-outline-primary btn-sm" for="barChart">
-                  <i class="fas fa-chart-bar me-1"></i>Barras
-                </label>
-              </div>
-            </div>
-          </div>
-          <div class="card-body">
-            <div class="chart-container" style="height: 350px;">
-              <canvas ref="salesChart" width="400" height="200"></canvas>
-            </div>
-          </div>
-        </div>
-      </div>
+        <!-- 🔹 Gráfico de Ventas -->
+        <div class="col-xl-6 col-12">
+          <div class="card border-0 shadow-sm h-100">
+            <div class="card-header bg-white border-bottom py-3">
+              <div class="d-flex justify-content-between align-items-center">
+                <div>
+                  <h5 class="fw-bold mb-1">Tendencias de Ventas</h5>
+                  <p class="text-muted small mb-0">Análisis comparativo por período</p>
+                </div>
+                <div class="btn-group" role="group">
+                  <input type="radio" class="btn-check" name="chartTypeSales" id="lineChartSales" value="line"
+                    v-model="chartTypeSales" @change="updateSalesChart" />
+                  <label class="btn btn-outline-primary btn-sm" for="lineChartSales">
+                    <i class="fas fa-chart-line me-1"></i>Líneas
+                  </label>
 
-      <div class="col-xl-4 col-12">
-        <div class="card border-0 shadow-sm h-100">
-          <div class="card-header bg-white border-bottom py-3">
-            <h5 class="fw-bold mb-1">Alertas del Sistema</h5>
-            <p class="text-muted small mb-0">Notificaciones importantes</p>
-          </div>
-          <div class="card-body">
-            <div class="alerts-container">
-              <div v-for="alert in systemAlerts" :key="alert.id" class="alert-item mb-3 p-3 rounded-3"
-                :class="alert.alertClass">
-                <div class="d-flex align-items-start">
-                  <div class="alert-icon me-3">
-                    <i :class="[alert.icon, alert.iconClass || '']"></i>
-                  </div>
-                  <div class="flex-grow-1">
-                    <div class="fw-semibold mb-1">{{ alert.title }}</div>
-                    <div class="small">{{ alert.message }}</div>
-                    <div class="text-muted small mt-1">
-                      <i class="fas fa-clock me-1"></i>
-                      {{ alert.time }}
-                    </div>
-                  </div>
+                  <input type="radio" class="btn-check" name="chartTypeSales" id="barChartSales" value="bar"
+                    v-model="chartTypeSales" @change="updateSalesChart" />
+                  <label class="btn btn-outline-primary btn-sm" for="barChartSales">
+                    <i class="fas fa-chart-bar me-1"></i>Barras
+                  </label>
                 </div>
               </div>
             </div>
+
+            <div class="card-body">
+              <div class="chart-container" style="height: 350px;">
+                <canvas ref="salesChart"></canvas>
+              </div>
+            </div>
           </div>
         </div>
-      </div>
 
+        <!-- 🔹 Gráfico de Servicios -->
+        <div class="col-xl-6 col-12">
+          <div class="card border-0 shadow-sm h-100">
+            <div class="card-header bg-white border-bottom py-3">
+              <div class="d-flex justify-content-between align-items-center">
+                <div>
+                  <h5 class="fw-bold mb-1">Reporte de Servicios del Taller</h5>
+                  <p class="text-muted small mb-0">Análisis comparativo por período</p>
+                </div>
+                <div class="btn-group" role="group">
+                  <input type="radio" class="btn-check" name="chartTypeServices" id="lineChartServices" value="line"
+                    v-model="chartTypeServices" @change="updateServicesChart" />
+                  <label class="btn btn-outline-primary btn-sm" for="lineChartServices">
+                    <i class="fas fa-chart-line me-1"></i>Líneas
+                  </label>
+
+                  <input type="radio" class="btn-check" name="chartTypeServices" id="barChartServices" value="bar"
+                    v-model="chartTypeServices" @change="updateServicesChart" />
+                  <label class="btn btn-outline-primary btn-sm" for="barChartServices">
+                    <i class="fas fa-chart-bar me-1"></i>Barras
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            <div class="card-body">
+              <div class="chart-container" style="height: 350px;">
+                <canvas ref="serviceChart"></canvas>
+              </div>
+            </div>
+          </div>
+        </div>
+      
       <!-- Productos top y alertas -->
       <div class="col-xl-6 col-12">
         <div class="card border-0 shadow-sm h-100">
@@ -222,33 +227,25 @@
       <div class="col-xl-6 col-12">
         <div class="card border-0 shadow-sm h-100">
           <div class="card-header bg-white border-bottom py-3">
-            <div class="d-flex justify-content-between align-items-center">
-              <div>
-                <h5 class="fw-bold mb-1">Actividad Reciente</h5>
-                <p class="text-muted small mb-0">Últimas transacciones</p>
-              </div>
-              <button class="btn btn-link btn-sm text-primary p-0">
-                Ver todas <i class="fas fa-arrow-right ms-1"></i>
-              </button>
-            </div>
+            <h5 class="fw-bold mb-1">Alertas del Sistema</h5>
+            <p class="text-muted small mb-0">Notificaciones importantes</p>
           </div>
-          <div class="card-body p-0">
-            <div class="activity-list">
-              <div v-for="activity in recentActivities" :key="activity.id"
-                class="activity-item d-flex align-items-center p-3 border-bottom">
-                <div class="activity-icon me-3" :class="activity.iconBg">
-                  <i :class="activity.icon" class="text-white"></i>
-                </div>
-                <div class="flex-grow-1">
-                  <div class="fw-semibold">{{ activity.title }}</div>
-                  <div class="text-muted small">{{ activity.description }}</div>
-                  <div class="text-muted small">
-                    <i class="fas fa-clock me-1"></i>
-                    {{ activity.time }}
+          <div class="card-body">
+            <div class="alerts-container">
+              <div v-for="alert in systemAlerts" :key="alert.id" class="alert-item mb-3 p-3 rounded-3"
+                :class="alert.alertClass">
+                <div class="d-flex align-items-start">
+                  <div class="alert-icon me-3">
+                    <i :class="[alert.icon, alert.iconClass || '']"></i>
                   </div>
-                </div>
-                <div class="activity-amount fw-bold" :class="activity.amountClass">
-                  {{ activity.amount }}
+                  <div class="flex-grow-1">
+                    <div class="fw-semibold mb-1">{{ alert.title }}</div>
+                    <div class="small">{{ alert.message }}</div>
+                    <div class="text-muted small mt-1">
+                      <i class="fas fa-clock me-1"></i>
+                      {{ alert.time }}
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -272,14 +269,19 @@ const globalLoading = ref(true)
 const loadingProgress = ref(0)
 const isRefreshing = ref(false)
 const selectedPeriod = ref('month')
-const chartType = ref('line')
+const chartTypeSales = ref('line')
+const chartTypeServices = ref('line')
 const salesChart = ref(null)
 const chartInstance = ref(null)
 const salesData = ref({ labels: [], actual: [], previous: [] })
 const top = ref([])
 const systemAlerts = ref([])
 const router = useRouter()
-const userRole = ref(localStorage.getItem('role') || 'USER') // 'admin' o 'user'
+const userRole = ref(localStorage.getItem('role') || 'USER')
+const serviceChart = ref(null)
+const serviceChartInstance = ref(null)
+const serviceData = ref({ labels: [], totals: [] })
+
 
 // Datos del dashboard
 const summaryCards = ref([
@@ -351,49 +353,6 @@ const goToCardRoute = (cardId) => {
   }
 }
 
-const recentActivities = ref([
-  {
-    id: 1,
-    title: 'Nueva Venta Registrada',
-    description: 'Laptop Dell Inspiron 15 - Cliente: Juan Pérez',
-    time: 'Hace 5 minutos',
-    amount: '+$1,299.00',
-    amountClass: 'text-success',
-    icon: 'fas fa-shopping-bag',
-    iconBg: 'bg-success'
-  },
-  {
-    id: 2,
-    title: 'Compra de Inventario',
-    description: '50 unidades de iPhone 13 Pro',
-    time: 'Hace 1 hora',
-    amount: '-$24,950.00',
-    amountClass: 'text-danger',
-    icon: 'fas fa-truck',
-    iconBg: 'bg-primary'
-  },
-  {
-    id: 3,
-    title: 'Pago de Cliente',
-    description: 'María García - Abono a cuenta',
-    time: 'Hace 2 horas',
-    amount: '+$500.00',
-    amountClass: 'text-success',
-    icon: 'fas fa-credit-card',
-    iconBg: 'bg-success'
-  },
-  {
-    id: 4,
-    title: 'Nuevo Cliente Registrado',
-    description: 'Carlos Mendoza - Cliente Premium',
-    time: 'Hace 3 horas',
-    amount: 'Nuevo',
-    amountClass: 'text-info',
-    icon: 'fas fa-user-plus',
-    iconBg: 'bg-info'
-  }
-])
-
 // Computed properties
 const lastUpdated = computed(() => {
   return new Date().toLocaleString('es-ES', {
@@ -449,14 +408,15 @@ const loadData = async () => {
     }
 
     // Llamadas reales al backend
-    const [salesRes, expensesRes, productsRes, customersRes, chartRes, topProducts, alert] = await Promise.all([
+    const [salesRes, expensesRes, productsRes, customersRes, chartRes, topProducts, alert, servicesRes] = await Promise.all([
       api.get(`/dashboard/sales?period=${selectedPeriod.value}`),
       api.get(`/dashboard/expenses?period=${selectedPeriod.value}`),
       api.get("/dashboard/products"),
       api.get("/dashboard/customers"),
       api.get(`/dashboard/chart?period=${selectedPeriod.value}`),
       api.get("/dashboard/topProducts"),
-      api.get("/dashboard/alerts")
+      api.get("/dashboard/alerts"),
+      api.get(`/dashboard/services?period=${selectedPeriod.value}`)
     ]);
 
     // Extraer datos de las respuestas
@@ -468,6 +428,7 @@ const loadData = async () => {
     systemAlerts.value = alert.data || []
 
     salesData.value = chartRes.data || { labels: [], actual: [], previous: [] }
+    serviceData.value = servicesRes.data || { labels: [], totals: [] }
 
     // Actualizar cards
     summaryCards.value[0].value = sales.total_sales
@@ -501,6 +462,7 @@ const refreshData = async () => {
   isRefreshing.value = true
   await loadData()
   updateChart()
+  updateServiceChart()
   setTimeout(() => {
     isRefreshing.value = false
   }, 1000)
@@ -530,7 +492,7 @@ const createChart = () => {
   }
 
   chartInstance.value = new Chart(ctx, {
-    type: chartType.value,
+    type: chartTypeSales.value,
     data: {
       labels: salesData.value.labels,
       datasets: [
@@ -540,7 +502,7 @@ const createChart = () => {
           borderColor: "#0d6efd",
           backgroundColor: "rgba(13, 110, 253, 0.1)",
           borderWidth: 3,
-          fill: chartType.value === "line",
+          fill: chartTypeSales.value === "line",
           tension: 0.4
         },
         {
@@ -577,22 +539,113 @@ const createChart = () => {
   })
 }
 
+const createServiceChart = () => {
+  if (!serviceChart.value) {
+    console.warn("⚠️ Canvas de servicios no encontrado")
+    return
+  }
+
+  const ctx = serviceChart.value.getContext("2d")
+  if (!ctx) {
+    console.warn("⚠️ Contexto inválido del canvas de servicios")
+    return
+  }
+
+  if (!serviceData.value.labels.length) {
+    console.warn("⚠️ No hay datos de servicios para graficar")
+    return
+  }
+
+  if (serviceChartInstance.value) {
+    serviceChartInstance.value.destroy()
+    serviceChartInstance.value = null
+  }
+
+  // Verificar si hay datos "previous" (para comparación)
+  const tieneComparacion = serviceData.value.previous && serviceData.value.previous.length > 0
+
+  serviceChartInstance.value = new Chart(ctx, {
+    type: chartTypeServices.value,
+    data: {
+      labels: serviceData.value.labels,
+      datasets: [
+        {
+          label: "Semana actual",
+          data: serviceData.value.actual,
+          borderColor: "#198754",
+          backgroundColor: "rgba(25, 135, 84, 0.2)",
+          borderWidth: 3,
+          fill: chartTypeServices.value === "line",
+          tension: 0.4,
+          pointRadius: 4,
+          pointHoverRadius: 6
+        },
+        ...(tieneComparacion
+          ? [
+              {
+                label: "Semana anterior",
+                data: serviceData.value.previous,
+                borderColor: "#adb5bd",
+                backgroundColor: "rgba(173, 181, 189, 0.2)",
+                borderWidth: 2,
+                borderDash: [5, 5],
+                tension: 0.4,
+                pointRadius: 3,
+                pointHoverRadius: 5
+              }
+            ]
+          : [])
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      animation: false,
+      plugins: {
+        legend: {
+          position: "top",
+          labels: { usePointStyle: true }
+        },
+        tooltip: {
+          callbacks: {
+            label: (ctx) => ` $${ctx.parsed.y.toLocaleString()}`
+          }
+        }
+      },
+      scales: {
+        y: { beginAtZero: true },
+        x: { grid: { display: false } }
+      }
+    }
+  })
+}
+
+
 // 🔹 Watcher simplificado
-watch(chartType, () => {
+watch(chartTypeSales, () => {
   updateChart()
+})
+watch(chartTypeServices, () => {
+  updateServiceChart()
 })
 
 // 🔹 UpdateChart solo redibuja
 const updateChart = () => {
   nextTick(() => createChart())
 }
+const updateServiceChart = () => {
+  nextTick(() => createServiceChart())
+}
 
 // 🔹 Montaje seguro
 onMounted(async () => {
   await loadData()
   globalLoading.value = false
-  await nextTick()
-  createChart()
+  
+  setTimeout(() => {
+    createChart()
+    createServiceChart()
+  }, 100) 
 })
 
 // 🔹 Limpieza al desmontar
@@ -601,6 +654,10 @@ onBeforeUnmount(() => {
     chartInstance.value.destroy()
     chartInstance.value = null
   }
+  if (serviceChartInstance.value) {
+    serviceChartInstance.value.destroy()
+    serviceChartInstance.value = null
+}
 })
 
 </script>
@@ -1011,6 +1068,20 @@ onBeforeUnmount(() => {
 
 /* Responsive improvements */
 @media (max-width: 768px) {
+
+  .panel {
+    padding: 0 !important;
+  }
+
+  .panelEjecutivo {
+    padding: 0 !important;
+    margin-bottom: 10px;
+  }
+
+  .input-group {
+    margin-bottom: 10px;
+  }
+
   .metric-value {
     font-size: 1.5rem;
   }
@@ -1045,10 +1116,6 @@ onBeforeUnmount(() => {
 }
 
 @media (max-width: 576px) {
-  .d-flex.justify-content-between {
-    flex-direction: column;
-    gap: 1rem;
-  }
 
   .btn-group {
     width: 100%;
