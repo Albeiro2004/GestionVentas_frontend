@@ -35,10 +35,10 @@
                     <select class="form-select form-select-lg" v-model="item.tipo" 
                       @change="onTipoChange(index)" required>
                       <option value="">Seleccione...</option>
-                      <option value="PRODUCTO">📦 Producto</option>
-                      <option value="SERVICIO">⚙️ Servicio</option>
-                      <option value="HERRAMIENTA">🔧 Herramienta</option>
-                      <option value="OTRO">📌 Otro</option>
+                      <option value="PRODUCTO">Producto</option>
+                      <option value="SERVICIO">Servicio</option>
+                      <option value="HERRAMIENTA">Herramienta</option>
+                      <option value="OTRO">Otro</option>
                     </select>
                   </div>
 
@@ -389,7 +389,7 @@ export default {
 
     const formatCurrency = (amount) => {
       if (amount === undefined || amount === null) return '0.00';
-      return Number(amount).toLocaleString('es-MX', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+      return Number(amount).toLocaleString('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
     };
 
     const clearSearch = (index) => {

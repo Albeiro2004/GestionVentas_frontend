@@ -180,15 +180,15 @@
               <div v-if="!loading && totalPages > 1"
                 class="d-flex justify-content-between align-items-center px-3 py-3">
                 <button class="btn btn-outline-primary" :disabled="page === 0" @click="prevPage">
-                  <i class="fas fa-arrow-left me-2"></i> Anterior
+                  <i class="fas fa-arrow-left me-2"></i> <small class="previousAndNext">Anterior</small>
                 </button>
 
-                <span class="fw-semibold">
+                <span class="fw-semibold px-3 textPage">
                   Página {{ page + 1 }} de {{ totalPages }} ({{ totalElements }} registros)
                 </span>
 
                 <button class="btn btn-outline-primary" :disabled="page + 1 >= totalPages" @click="nextPage">
-                  Siguiente <i class="fas fa-arrow-right ms-2"></i>
+                  <small class="previousAndNext">Siguiente</small> <i class="fas fa-arrow-right ms-2"></i>
                 </button>
               </div>
 
@@ -346,7 +346,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import api from '@/api'
 import { useModal } from '@/composables/useModal'
 import Swal from 'sweetalert2'
@@ -378,13 +378,26 @@ const isPriceInvalid = computed(() =>
   productForm.value.precioCompra > 0
 )
 
-const filteredProducts = computed(() => {
-  if (!searchTerm.value) return products.value
-  const lower = searchTerm.value.toLowerCase()
-  return products.value.filter(p =>
-    p.nombre.toLowerCase().includes(lower) || String(p.id).toLowerCase().includes(lower)
-  )
-})
+const filteredProducts = ref([])
+
+const filterProducts = async (query) => {
+  if (!query || query.trim().length < 1) {
+    await fetchProducts() // vuelve a cargar los productos base
+    filteredProducts.value = products.value
+    return
+  }
+
+  try {
+    loading.value = true
+    const { data } = await api.get(`/products/suggestions`, { params: { query } })
+    filteredProducts.value = Array.isArray(data) ? data : []
+  } catch (error) {
+    console.error('Error fetching product suggestions:', error)
+    filteredProducts.value = []
+  } finally {
+    loading.value = false
+  }
+}
 
 // --- Métodos ---
 const fetchProducts = async () => {
@@ -520,8 +533,16 @@ const formatCurrency = (value) => {
   }).format(value);
 };
 
+watch(searchTerm, (newQuery) => {
+  filterProducts(newQuery)
+})
+
 // --- Lifecycle ---
-onMounted(fetchProducts)
+onMounted(async () => {
+  await fetchProducts()
+  filteredProducts.value = products.value
+})
+
 </script>
 
 <style scoped>
@@ -614,5 +635,14 @@ onMounted(fetchProducts)
 .btn-secondary:disabled {
   background-color: #6c757d;
   border-color: #6c757d;
+}
+
+@media (max-width: 768px) {
+  .previousAndNext {
+    display: none;
+  }
+  .textPage {
+    font-size: 0.875rem;
+  }
 }
 </style>
