@@ -78,12 +78,6 @@
                             <table class="table table-hover mb-0">
                                 <thead class="table-dark">
                                     <tr>
-                                        <th class="px-4 py-3">
-                                            <div class="d-flex align-items-center">
-                                                <i class="fas fa-hashtag me-2"></i>
-                                                ID
-                                            </div>
-                                        </th>
                                         <th class="py-3">
                                             <div class="d-flex align-items-center">
                                                 <i class="fas fa-user me-2"></i>
@@ -119,9 +113,6 @@
                                         </td>
                                     </tr>
                                     <tr v-else v-for="u in usuariosFiltrados" :key="u.id" class="user-row">
-                                        <td class="px-4 py-3">
-                                            <span class="badge bg-light text-dark fs-6">#{{ u.id }}</span>
-                                        </td>
                                         <td class="py-3">
                                             <div class="d-flex align-items-center">
                                                 <div class="avatar-circle me-3">

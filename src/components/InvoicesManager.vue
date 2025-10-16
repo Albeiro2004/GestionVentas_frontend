@@ -145,16 +145,6 @@
                                     <th class="px-3 py-3">
                                         <button 
                                             class="btn btn-link p-0 text-decoration-none text-dark fw-semibold"
-                                            @click="sortBy('id')"
-                                        >
-                                            ID
-                                            <i class="fas fa-sort ms-1" 
-                                            :class="getSortIcon('id')"></i>
-                                        </button>
-                                    </th>
-                                    <th class="px-3 py-3">
-                                        <button 
-                                            class="btn btn-link p-0 text-decoration-none text-dark fw-semibold"
                                             @click="sortBy('customer.nombre')"
                                         >
                                             Cliente
@@ -190,9 +180,6 @@
                                 <tr v-for="invoice in paginatedInvoices" :key="invoice.id" 
                                     class="align-middle">
                                     <td class="px-3">
-                                        <span class="badge bg-light text-dark">#{{ invoice.id }}</span>
-                                    </td>
-                                    <td class="px-3">
                                         <div class="d-flex align-items-center">
                                             <div class="avatar-circle me-2">
                                                 {{ getInitials(invoice.customer?.nombre) }}
@@ -210,7 +197,7 @@
                                         </div>
                                     </td>
                                     <td class="px-3">
-                                        <span class="fw-bold text-success">${{ invoice.total.toFixed(2) }}</span>
+                                        <span class="fw-bold text-success">{{ formatCurrency(invoice.total) }}</span>
                                     </td>
                                     <td class="px-3">
                                         <div class="d-flex align-items-center">
@@ -596,7 +583,7 @@ export default {
         },
 
         formatDate(date) {
-            return new Date(date).toLocaleDateString("es-ES", {
+            return new Date(date).toLocaleDateString("es-CO", {
                 year: "numeric",
                 month: "2-digit",
                 day: "2-digit",
@@ -604,10 +591,18 @@ export default {
         },
 
         formatTime(date) {
-            return new Date(date).toLocaleTimeString("es-ES", {
+            return new Date(date).toLocaleTimeString("es-CO", {
                 hour: "2-digit",
                 minute: "2-digit",
             });
+        },
+
+        formatCurrency(value) {
+            return new Intl.NumberFormat("es-CO", {
+                style: "currency",
+                currency: "COP",
+                minimumFractionDigits: 0,
+            }).format(value);
         },
 
         getInitials(name) {

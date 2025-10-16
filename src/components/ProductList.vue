@@ -84,7 +84,7 @@
                   <tr>
                     <th scope="col" class="fw-semibold">
                       <i class="fas fa-hashtag me-1"></i>
-                      ID
+                      Código
                     </th>
                     <th scope="col" class="fw-semibold">
                       <i class="fas fa-tag me-1"></i>
@@ -105,10 +105,6 @@
                     <th scope="col" class="fw-semibold text-center">
                       <i class="fas fa-warehouse me-1"></i>
                       Stock
-                    </th>
-                    <th scope="col" class="fw-semibold text-center">
-                      <i class="fas fa-chart-line me-1"></i>
-                      Margen
                     </th>
                     <th v-if="isAdmin" scope="col" class="fw-semibold text-center">
                       <i class="fas fa-cogs me-1"></i>
@@ -152,11 +148,6 @@
                     <td class="text-center">
                       <span class="badge rounded-pill px-3 py-2" :class="stockBadge(product.stock)">
                         {{ product.stock }} unidades
-                      </span>
-                    </td>
-                    <td class="text-center">
-                      <span class="badge rounded-pill px-3 py-2" :class="marginBadge(product)">
-                        {{ calculateMargin(product) }}%
                       </span>
                     </td>
                     <td v-if="isAdmin" class="text-center">
@@ -414,6 +405,7 @@ const fetchProducts = async () => {
     products.value = data.content || data
     totalElements.value = data.totalElements || data.length
     totalPages.value = data.totalPages || Math.ceil(totalElements.value / size.value)
+    filteredProducts.value = products.value
   } catch (err) {
     console.error('Error al cargar productos:', err)
     Swal.fire('Error', 'No se pudieron cargar los productos', 'error')
