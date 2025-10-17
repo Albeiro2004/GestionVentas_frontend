@@ -33,14 +33,13 @@
                         <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
                             <div class="d-flex align-items-center gap-3">
                                 <button class="btn btn-primary btn-lg shadow-sm newUser" @click="abrirModal()">
-                                    <i class="fas fa-plus me-2"></i>
-                                    Nuevo Usuario
+                                    <i class="fas fa-plus"></i>
+                                    <small class="newUserText"> Nuevo Usuario</small>
                                 </button>
                                 <div class="btn-group" role="group">
                                     <button class="btn btn-outline-secondary" @click="exportarUsuarios"
                                         title="Exportar a CSV">
                                         <i class="fas fa-download me-1"></i>
-                                        Exportar
                                     </button>
                                     <button class="btn btn-outline-secondary" @click="actualizarDatos"
                                         :disabled="cargando" title="Actualizar datos">
@@ -81,7 +80,7 @@
                                         <th class="py-3">
                                             <div class="d-flex align-items-center">
                                                 <i class="fas fa-user me-2"></i>
-                                                Nombre Completo
+                                                Nombre
                                             </div>
                                         </th>
                                         <th class="py-3">
@@ -127,7 +126,7 @@
                                             <span class="text-muted">{{ u.username }}</span>
                                         </td>
                                         <td class="py-3">
-                                            <span :class="getRoleBadgeClass(u.role)" class="badge fs-6">
+                                            <span :class="getRoleBadgeClass(u.role)" class="badge">
                                                 <i :class="getRoleIcon(u.role)" class="me-1"></i>
                                                 {{ u.role }}
                                             </span>
@@ -276,7 +275,7 @@
                                                 <i class="fas fa-calendar me-2"></i>
                                                 Fecha y Hora
                                             </th>
-                                            <th class="py-3">
+                                            <th class="py-3 ipModal">
                                                 <i class="fas fa-globe me-2"></i>
                                                 Dirección IP
                                             </th>
@@ -294,7 +293,7 @@
                                                     {{ h.fecha }}
                                                 </div>
                                             </td>
-                                            <td class="py-3">
+                                            <td class="py-3 ipModal">
                                                 <span class="badge bg-light text-dark font-monospace">{{ h.ip }}</span>
                                             </td>
                                             <td class="py-3">
@@ -828,6 +827,18 @@ body.modal-open {
     .d-flex.flex-wrap.gap-3 {
         flex-direction: column;
         align-items: stretch !important;
+    }
+
+    .newUserText {
+        display: none;
+    }
+
+    .ipModal {
+        display: none;
+    }
+
+    .table th, .table td {
+        font-size: 13px;
     }
     
     .btn-group {

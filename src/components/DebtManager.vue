@@ -14,7 +14,7 @@
           <div class="col-lg-6 text-lg-end">
             <div class="stats-cards">
               <div class="stat-card">
-                <div class="stat-value">${{ totalPendingAmount.toFixed(2) }}</div>
+                <div class="stat-value">${{ formatCurrency(totalPendingAmount) }}</div>
                 <div class="stat-label">Total Pendiente</div>
               </div>
               <div class="stat-card">
@@ -27,9 +27,8 @@
       </div>
     </div>
 
-    <div class="container">
       <!-- Controles y filtros -->
-      <div class="controls-section mb-4">
+      <div class="controls-section">
         <div class="row align-items-center">
           <div class="col-md-6">
             <div class="filter-group">
@@ -67,7 +66,7 @@
       </div>
 
       <!-- Encabezado de gestión de deudas -->
-      <div class="card shadow-sm border-0 mt-4">
+      <div class="card shadow-sm border-0 px-4" style="background-color: aliceblue;">
         <div class="card-body d-flex justify-content-between align-items-center">
           <h3 class="mb-0 text-primary fw-bold">
             <i class="fas fa-file-invoice-dollar me-2"></i> Deudas
@@ -99,10 +98,10 @@
           </p>
         </div>
 
-        <div v-else class="table-responsive">
+        <div v-else class="table-responsive px-2">
           <table class="table debt-table">
             <thead>
-              <tr>
+              <tr class="">
                 <th class="sortable" @click="sortBy('customerName')">
                   <i class="fas fa-user me-2"></i>
                   Cliente
@@ -134,8 +133,8 @@
               </tr>
             </thead>
             <tbody>
-              <tr v-for="debt in paginatedDebts" :key="debt.id" class="debt-row"
-                :class="{ 'overdue': isOverdue(debt) }">
+              <tr v-for="debt in paginatedDebts" :key="debt.id" class="debt-row py-5"
+                :class="{ 'overdue': isOverdue(debt) } ">
                 <td>
                   <div class="customer-info">
                     <div class="customer-avatar">
@@ -147,15 +146,15 @@
                     </div>
                   </div>
                 </td>
-                <td class="text-end">
-                  <div class="text-center text-uppercase text-muted">{{ debt.description }}</div>
+                <td class="text-end" style="max-width: 25vw;">
+                  <div class="text-center text-muted">{{ debt.description }}</div>
                 </td>
                 <td class="text-end">
-                  <div class="amount-total">${{ debt.totalAmount.toFixed(2) }}</div>
+                  <div class="amount-total">${{ formatCurrency(debt.totalAmount) }}</div>
                 </td>
                 <td class="text-end">
                   <div class="amount-pending" :class="{ 'text-danger': debt.pendingAmount > 0 }">
-                    ${{ debt.pendingAmount.toFixed(2) }}
+                    ${{ formatCurrency(debt.pendingAmount) }}
                   </div>
                   <div class="progress progress-sm mt-1">
                     <div class="progress-bar" :class="getProgressBarClass(debt)"
@@ -211,7 +210,7 @@
           </nav>
         </div>
       </div>
-    </div>
+    
 
     <!-- Modal de Detalles y Abonos -->
     <div v-if="selectedDebt" class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.7);"
@@ -235,20 +234,20 @@
               <div class="row">
                 <div class="col-4">
                   <div class="summary-item">
-                    <div class="summary-value">${{ selectedDebt.totalAmount.toFixed(2) }}</div>
+                    <div class="summary-value">${{ formatCurrency(selectedDebt.totalAmount) }}</div>
                     <div class="summary-label">Monto Total</div>
                   </div>
                 </div>
                 <div class="col-4">
                   <div class="summary-item">
-                    <div class="summary-value paid">${{ (selectedDebt.totalAmount -
-                      selectedDebt.pendingAmount).toFixed(2) }}</div>
+                    <div class="summary-value paid">${{ formatCurrency(selectedDebt.totalAmount -
+                      selectedDebt.pendingAmount) }}</div>
                     <div class="summary-label">Pagado</div>
                   </div>
                 </div>
                 <div class="col-4">
                   <div class="summary-item">
-                    <div class="summary-value pending">${{ selectedDebt.pendingAmount.toFixed(2) }}</div>
+                    <div class="summary-value pending">${{ formatCurrency(selectedDebt.pendingAmount) }}</div>
                     <div class="summary-label">Pendiente</div>
                   </div>
                 </div>
@@ -296,7 +295,7 @@
                 <small class="text-muted me-3">Montos rápidos:</small>
                 <button v-for="amount in getQuickAmounts(selectedDebt)" :key="amount"
                   class="btn btn-outline-secondary btn-sm me-1" @click="newPaymentAmount = amount">
-                  ${{ amount }}
+                  ${{ formatCurrency(amount) }}
                 </button>
               </div>
             </div>
@@ -321,7 +320,7 @@
                     <i class="fas fa-money-bill-wave"></i>
                   </div>
                   <div class="payment-details">
-                    <div class="payment-amount">${{ payment.amount.toFixed(2) }}</div>
+                    <div class="payment-amount">${{ formatCurrency(payment.amount) }}</div>
                     <div class="payment-date">
                       {{ formatDate(payment.paymentDate) }}
                       <span v-if="isRecentPayment(payment)" class="recent-badge">Nuevo</span>
@@ -392,7 +391,7 @@
 
             <div v-else>
               <!-- Tabla con altura máxima -->
-              <div class="table-responsive" style="max-height: 40vh; overflow-y: auto;">
+              <div class="table-responsive w-100" style="max-height: 40vh; overflow-y: auto;">
                 <table class="table debt-table">
                   <thead>
                     <tr>
@@ -415,7 +414,7 @@
                       </td>
                       <td class="text-end">
                         <div class="amount-pending" :class="{ 'text-danger': customer.totalPending > 0 }">
-                          ${{ customer.totalPending.toFixed(0) }}
+                          ${{ formatCurrency(customer.totalPending) }}
                         </div>
                       </td>
                       <td class="text-center">
@@ -492,7 +491,7 @@ export default {
       sortField: "pendingAmount",
       sortDirection: "desc",
       currentPage: 1,
-      pageSize: 5,
+      pageSize: 6,
       toast: {
         show: false,
         type: "",
@@ -526,7 +525,7 @@ export default {
         const term = this.searchTerm.toLowerCase();
         filtered = filtered.filter(d =>
           d.customerName.toLowerCase().includes(term) ||
-          d.id.toString().includes(term)
+          d.id.toString().includes(term) || d.description.toLowerCase().includes(term)
         );
       }
 
@@ -891,12 +890,19 @@ export default {
 
     hideToast() {
       this.toast.show = false;
+    },
+
+    formatCurrency(value){
+      return new Intl.NumberFormat("es-CO", {
+        style: "decimal",
+        minimumFractionDigits: 0,
+      }).format(value);
     }
+
   },
 
   mounted() {
     this.fetchData();
-    this.fetchDebts();
   }
 };
 </script>
@@ -911,7 +917,6 @@ export default {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
   padding: 2rem 0;
-  margin-bottom: 2rem;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
@@ -956,7 +961,6 @@ export default {
 .controls-section {
   background: white;
   padding: 1.5rem;
-  border-radius: 15px;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
 }
 
@@ -986,6 +990,7 @@ export default {
   border-color: #667eea;
   color: white;
   box-shadow: 0 4px 8px rgba(102, 126, 234, 0.3);
+  padding: 0.5rem;
 }
 
 .search-box .input-group-text {
@@ -1005,7 +1010,8 @@ export default {
 
 .table-container {
   background: rgb(233, 233, 233);
-  border-radius: 15px;
+  border-bottom-left-radius: 15px;
+  border-bottom-right-radius: 15px;
   overflow: hidden;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
 }
@@ -1017,15 +1023,16 @@ export default {
 .debt-table thead th {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
-  font-weight: 600;
-  padding: 1rem;
   border: none;
+  font-size: medium;
+  padding: 1rem;
 }
 
 .debt-table .sortable {
   cursor: pointer;
   user-select: none;
   transition: all 0.2s ease;
+  font-size: medium;
 }
 
 .debt-table .sortable:hover {
@@ -1084,6 +1091,7 @@ export default {
 
 .progress-sm {
   height: 4px;
+  background-color: #ececec;
 }
 
 .progress-lg {

@@ -231,23 +231,36 @@
               </h5>
               <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
+
             <div class="modal-body">
               <form @submit.prevent="guardarConfig">
                 <div class="mb-3">
                   <label class="form-label fw-semibold">Nombre Completo</label>
-                  <input type="text" v-model="fullName" class="form-control enhanced-input" />
+                  <input type="text" v-model="fullName" class="form-control enhanced-input" required />
                 </div>
-                <div class="mb-3">
-                  <label class="form-label fw-semibold">Usuario de Acceso</label>
-                  <input type="email" v-model="usuario" class="form-control enhanced-input" />
-                </div>
+
+                <hr />
+
                 <div class="mb-3">
                   <label class="form-label fw-semibold">Nueva Contraseña</label>
-                  <input type="password" v-model="password" class="form-control enhanced-input" />
-                  <small class="form-text text-muted">Deja en blanco para mantener la actual</small>
+                  <input type="password" v-model="password" class="form-control enhanced-input" minlength="6"
+                    placeholder="Nueva contraseña" />
                 </div>
+
+                <div class="mb-3">
+                  <label class="form-label fw-semibold">Confirmar Contraseña</label>
+                  <input type="password" v-model="confirmPassword" class="form-control enhanced-input"
+                    placeholder="Repite la nueva contraseña" />
+                  <small v-if="password && confirmPassword" :class="{
+                    'text-success': passwordsMatch,
+                    'text-danger': !passwordsMatch,
+                  }">
+                    {{ passwordsMatch ? 'Las contraseñas coinciden' : 'Las contraseñas no coinciden' }}
+                  </small>
+                </div>
+
                 <div class="d-grid">
-                  <button type="submit" class="btn btn-primary enhanced-btn">
+                  <button type="submit" class="btn btn-primary enhanced-btn" :disabled="password && !passwordsMatch">
                     <i class="fas fa-save me-2"></i>Guardar Cambios
                   </button>
                 </div>
@@ -256,6 +269,7 @@
           </div>
         </div>
       </div>
+
 
       <!-- Modal Ayuda -->
       <div class="modal fade" id="ayudaModal" tabindex="-1" aria-hidden="true">
@@ -273,11 +287,11 @@
                 <div class="contact-info">
                   <div class="d-flex align-items-center mb-2">
                     <i class="fas fa-envelope text-primary me-3"></i>
-                    <span>soporte@sobreruedas.com</span>
+                    <span>albeirolhg@gmail.com</span>
                   </div>
                   <div class="d-flex align-items-center mb-2">
                     <i class="fas fa-phone text-success me-3"></i>
-                    <span>+57 320 000 0000</span>
+                    <span>+57 301 4117982</span>
                   </div>
                   <div class="d-flex align-items-center">
                     <i class="fas fa-clock text-info me-3"></i>
@@ -299,6 +313,7 @@ import * as bootstrap from "bootstrap"
 import { useDeudas } from '@/composables/useDeudas'
 import { useRouter, useRoute} from 'vue-router'
 import api from '@/api'
+import Swal from 'sweetalert2'
 
 const { deudasPendientes, fetchDeudasPendientes } = useDeudas()
 const route = useRoute()
@@ -310,13 +325,14 @@ const fullName = ref("")
 const usuario = ref("")
 const password = ref("")
 const router = useRouter()
-
+const confirmPassword = ref('')
 // Estados mejorados
-const lastLogin = ref("Hoy, 10:30 AM")
+const lastLogin = ref('Cargando...');
 const userAvatar = ref("https://imgs.search.brave.com/41T2ZiW65TNJLqsqvfpph6-mImFuGDE8uI221O7FiD4/rs:fit:860:0:0:0/g:ce/aHR0cHM6Ly9jZG4t/aWNvbnMtcG5nLmZs/YXRpY29uLmNvbS8x/MjgvNjA3My82MDcz/ODczLnBuZw")
 const tokenTimeRemaining = ref("");
 const notifications = ref([]); 
 const notificationCount = computed(() => notifications.value.length);
+const passwordsMatch = computed(() => password.value === confirmPassword.value)
 
 const loadNotifications = async () => {
   try {
@@ -327,31 +343,6 @@ const loadNotifications = async () => {
   }
 };
 
-// Función mejorada para guardar configuración
-function guardarConfig() {
-  console.log("Guardando configuración:", {
-    fullName: fullName.value,
-    usuario: usuario.value,
-    password: password.value,
-  });
-
-  localStorage.setItem("name", fullName.value);
-  localStorage.setItem("username", usuario.value);
-
-  if (password.value) {
-    console.log("Nueva contraseña:", password.value);
-    // Aquí llamarías a tu API para actualizar la contraseña
-  }
-
-  // Cerrar modal con feedback visual
-  const modal = bootstrap.Modal.getInstance(document.getElementById("configModal"));
-  modal.hide();
-  
-  // Mostrar notificación de éxito (podrías agregar un toast aquí)
-  console.log("Configuración guardada exitosamente");
-}
-
-// Configuración de navegación (mantenida igual)
 const navLinks = [
   { 
     name: "home", 
@@ -464,12 +455,61 @@ function closeSidebar() {
   }
 }
 
+async function guardarConfig() {
+  try {
+    if (password.value && !passwordsMatch.value) {
+      Swal.fire('Advertencia', 'Las contraseñas no coinciden.', 'warning')
+      return
+    }
+
+    const payload = {
+      name: fullName.value,
+      username: null, // No se permite cambiar usuario
+      password: password.value || null,
+    }
+
+    await api.put('/users/me', payload)
+
+    Swal.fire('Éxito', 'Configuración actualizada correctamente.', 'success')
+    password.value = ''
+    confirmPassword.value = ''
+
+  } catch (error) {
+    console.error('Error al actualizar:', error)
+    Swal.fire('Error', 'No se pudo actualizar la configuración.', 'error')
+  }
+}
+
+async function fetchLastLogin() {
+  try {
+    const userResponse = await api.get('/users/me')
+    const userId = userResponse.data.id
+    fullName.value = userResponse.data.name
+
+    const historyResponse = await api.get(`/users/${userId}/historial`)
+
+    const logins = historyResponse.data
+      .filter(h => h.estado === 'LOGIN')
+      .sort((a, b) => new Date(b.fecha) - new Date(a.fecha))
+
+    if (logins.length > 0) {
+      const fecha = new Date(logins[0].fecha)
+      lastLogin.value = fecha.toLocaleString('es-CO', { dateStyle: 'medium', timeStyle: 'short' })
+    } else {
+      lastLogin.value = 'Sin registros de login'
+    }
+
+  } catch (err) {
+    console.error('Error obteniendo historial:', err)
+    lastLogin.value = 'Error al cargar'
+  }
+}
+
 // Lifecycle mejorado
 onMounted(async () => {
   await fetchDeudasPendientes();
   
   // Cargar datos del usuario
-  fullName.value = localStorage.getItem("name") || "Usuario";
   usuario.value = localStorage.getItem("username") || "correo@ejemplo.com";
   role.value = localStorage.getItem("role") || "Rol";
 
@@ -496,6 +536,8 @@ onMounted(async () => {
   }
 
   loadNotifications();
+
+  fetchLastLogin();
 
 })
 </script>
