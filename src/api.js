@@ -1,20 +1,21 @@
-// src/api.js
 import axios from "axios";
 import router from "@/router";
 import Swal from "sweetalert2";
 
-const apiUrl = process.env.VUE_APP_API_URL;
+/*const apiUrl = process.env.VUE_APP_API_URL;
 if (!apiUrl) {
   console.error("VUE_APP_API_URL no está definida!");
-}
+}*/
 
-//const apiUrl = "http://localhost:8080/Ventas";
+// const apiUrl = "http://localhost:8080/Ventas";
+
+const apiUrl = "https://sobreruedas.onrender.com/Ventas";
 
 const api = axios.create({
   baseURL: apiUrl,
 });
 
-// 🔹 Inyectar token en cada request
+// Inyectar token en cada request
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem("token");
   if (token) {
@@ -23,10 +24,10 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
-// 👉 flag para no redirigir varias veces
+// flag para no redirigir varias veces
 let isRedirecting = false;
 
-// 🔹 Manejar respuestas de error globalmente
+// Manejar respuestas de error globalmente
 api.interceptors.response.use(
   (response) => response,
   (error) => {

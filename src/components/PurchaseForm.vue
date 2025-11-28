@@ -108,9 +108,9 @@
                   </div>
 
                   <!-- Costo Unitario -->
-                  <div class="col-md-2">
+                  <div v-if="item.tipo !== 'PRODUCTO' " class="col-md-2">
                     <label class="form-label text-muted small fw-semibold">
-                      {{ item.tipo === 'PRODUCTO' ? 'COSTO/UNIDAD' : 'VALOR' }}
+                      VALOR
                     </label>
                     <div class="input-group input-group-lg">
                       <span class="input-group-text bg-light">$</span>
@@ -431,7 +431,7 @@ export default {
         };
 
         await api.post('/purchases', purchaseData);
-        Swal.fire("Éxito", "✅ Compra registrada correctamente.", "success");
+        Swal.fire("Éxito", " Compra registrada correctamente.", "success");
         purchaseStore.resetItems();
       } catch (error) {
         console.error(error);
